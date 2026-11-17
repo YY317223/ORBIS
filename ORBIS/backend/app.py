@@ -30,6 +30,8 @@ import fetch_wb
 import fetch_fx
 import mailer
 import auth
+import admin_auth
+import admin_api
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -39,6 +41,7 @@ FX = os.path.join(DATA, "fx.json")
 FX_HOURS = float(os.environ.get("FX_HOURS", "6"))   # 汇率刷新间隔（央行牌价每天发布，6h 足够跟上）
 DB = os.path.join(DATA, "subs.db")
 PAGE = os.path.join(ROOT, "orbis.html")
+ADMIN_PAGE = os.path.join(ROOT, "admin.html")
 
 HOST = os.environ.get("HOST", "127.0.0.1")   # 公网部署：HOST=0.0.0.0
 PORT = int(os.environ.get("PORT", "8765"))
@@ -458,10 +461,62 @@ class Handler(BaseHTTPRequestHandler):
     def do_HEAD(self):
         self.do_GET()
 
+    def _admin_token(self):
+        return admin_auth.token_from_cookie(self.headers.get("Cookie"))
+
+    def _admin_guard(self):
+        """管理接口统一鉴权。未登录返回 False（调用方需直接 return）。"""
+        if not admin_auth.valid(self._admin_token()):
+            self._send(401, {"ok": False, "error": "管理员未登录"})
+            return False
+        return True
+
     def do_GET(self):
         u = urlparse(self.path)
         p = unquote(u.path)   # 中文路径在请求行里是 %XX 编码，解出来才能匹配
         q = parse_qs(u.query)
+        # ---- 管理后台：静态页 + 需鉴权的 GET 接口 ----
+        if p in ("/admin", "/admin/"):
+            if not os.path.exists(ADMIN_PAGE):
+                return self._send(404, "admin.html 不存在", "text/plain; charset=utf-8")
+            body = open(ADMIN_PAGE, "rb").read()
+            return self._send(200, body, "text/html; charset=utf-8",
+                              {"Cache-Control": "no-store"})
+        if p == "/api/admin/login":
+            return self._send(200, {"ok": True, "authed": bool(admin_auth.valid(self._admin_token()))})
+        if p.startswith("/api/admin/"):
+            if not self._admin_guard():
+                return
+            ep = p[len("/api/admin/"):]
+            one = lambda k, d="": (q.get(k, [d])[0] or d)
+            if ep == "me":
+                return self._send(200, {"ok": True, "admin": True})
+            if ep == "overview":
+                code, data = admin_api.overview(STATE, status_payload)
+                return self._send(code, data)
+            if ep == "users":
+                code, data = admin_api.users(one("page", 1), one("size", 20), one("q"))
+                return self._send(code, data)
+            if ep == "subscriptions":
+                code, data = admin_api.subscriptions(one("page", 1), one("size", 20), one("q"))
+                return self._send(code, data)
+            if ep == "data/status":
+                code, data = admin_api.data_status(load_doc, load_fx)
+                return self._send(code, data)
+            if ep == "events":
+                code, data = admin_api.events(one("limit", 50))
+                return self._send(code, data)
+            if ep == "mail/outbox":
+                code, data = admin_api.outbox()
+                return self._send(code, data)
+            if ep == "mail/read":
+                code, data = admin_api.outbox_read(one("name"), one("raw") == "1")
+                ctype = "text/plain; charset=utf-8" if one("raw") == "1" and code == 200 else "application/json; charset=utf-8"
+                return self._send(code, data, ctype)
+            if ep == "settings":
+                code, data = admin_api.settings()
+                return self._send(code, data)
+            return self._send(404, {"ok": False, "error": "unknown admin api"})
         if p in ("/", "/index.html", "/orbis.html", "/太空地球.html"):
             return self.serve_page()
         if p == "/api/auth/me":
@@ -533,6 +588,40 @@ class Handler(BaseHTTPRequestHandler):
             body = json.loads(raw.decode("utf-8") or "{}")
         except (UnicodeDecodeError, json.JSONDecodeError):
             return self._send(400, {"ok": False, "error": "bad json"})
+
+        # ---- 管理后台 POST 接口（登录免鉴权，其余统一鉴权）----
+        if u.path == "/api/admin/login":
+            ip = self.client_address[0] if self.client_address else "unknown"
+            ok, payload = admin_auth.login(body.get("username"), body.get("password"), ip)
+            extra = None
+            if ok:
+                extra = {"Set-Cookie": admin_auth.cookie_header(payload["token"])}
+            return self._send(200 if ok else 401, {"ok": ok, **payload}, extra=extra)
+        if u.path.startswith("/api/admin/"):
+            if not self._admin_guard():
+                return
+            ep = u.path[len("/api/admin/"):]
+            if ep == "logout":
+                admin_auth.logout(self._admin_token())
+                return self._send(200, {"ok": True},
+                                  extra={"Set-Cookie": admin_auth.cookie_header("", 0)})
+            if ep == "data/refresh":
+                code, data = admin_api.refresh(body.get("kind"), refresh, refresh_fx)
+                return self._send(code, data)
+            if ep == "subs/delete":
+                code, data = admin_api.delete_subscription((body.get("email") or "").strip().lower())
+                return self._send(code, data)
+            if ep == "mail/test":
+                code, data = admin_api.mail_test(body.get("to"), body.get("subject"),
+                                                 body.get("text"), mailer.send)
+                return self._send(code, data)
+            if ep == "password":
+                code, data = admin_api.change_password(body.get("old"), body.get("new"))
+                return self._send(code, data)
+            if ep == "username":
+                ok, err = admin_auth.set_username(body.get("username"), body.get("password"))
+                return self._send(200 if ok else 400, {"ok": ok, "error": err})
+            return self._send(404, {"ok": False, "error": "unknown admin api"})
 
         # ---- 真实账号系统 ----
         if u.path == "/api/auth/register":

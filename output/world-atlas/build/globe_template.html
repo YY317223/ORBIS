@@ -81,9 +81,16 @@ body{color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","P
 .ag-guest:hover{background:rgba(120,170,205,.08)}
 .ag-err{min-height:18px;font-size:11.5px;color:#ff9a8a;margin-bottom:8px}
 .ag-foot{text-align:center;font-size:10.5px;color:#6b8da2;margin:16px 0 0;line-height:1.6}
+.ag-admin{text-align:center;font-size:10px;color:#6b8da2;margin-top:10px}
+.ag-admin a{color:#f0a868;text-decoration:none}
+.ag-admin a:hover{text-decoration:underline}
+.ag-admin span{opacity:.65}
 .ag-warn{margin-top:14px;padding:11px 12px;border-radius:8px;background:rgba(240,168,104,.1);
   border:1px solid rgba(240,168,104,.3);color:#f0c08a;font-size:11px;line-height:1.7}
 .ag-warn a{color:#8fd6f3;text-decoration:underline;word-break:break-all}
+.ag-switch{width:100%;margin-top:14px;padding:9px;border-radius:8px;background:none;
+  border:1px dashed rgba(127,200,239,.3);color:#8fc4dc;font:inherit;font-size:11px;cursor:pointer}
+.ag-switch:hover{border-color:var(--acc2);color:#bfe8f8;background:rgba(127,200,239,.07)}
 @media (max-width:820px){.ag-wrap{grid-template-columns:1fr;gap:28px}.ag-brand{text-align:center}
   .ag-feats,.ag-src{display:none}.ag-orb{margin:0 auto 16px;width:60px;height:60px}.ag-brand h1{font-size:30px}}
 
@@ -740,7 +747,9 @@ body.introing #zoom,body.introing #foot,body.introing #cx{transition:opacity .8s
       <div class="ag-or"><span>或</span></div>
       <button id="ag-guest" class="ag-guest">以访客身份浏览</button>
       <p class="ag-foot" id="ag-foot">登录后可使用完整账户功能 · 游客可免费浏览地球</p>
+      <p class="ag-admin"><a href="/admin">管理员入口 →</a> <span>· 此处请用邮箱登录，不是管理员账号</span></p>
       <div class="ag-warn" id="ag-warn" style="display:none"></div>
+      <button id="ag-switch" class="ag-switch" style="display:none">当前已登录 · 切换账号 / 退出</button>
     </div>
   </div>
 </div>
@@ -2140,8 +2149,8 @@ $('#auto').onclick=function(e){
   markDirty();
 };
 function setPolVis(){
-  // 数据染色时政区层必须常显，否则切到「卫星」就看不到颜色了
-  var show=state.pol || DS.ind!=='cont';
+  // 洲别=显示政区边界与染色；卫星=纯影像，隐藏政区层与染色（行为始终一致）
+  var show=!!state.pol;
   polMesh.visible=show; edgeMesh.visible=show;
   // 球面有日照叠加，同一色值比 2D 视图亮一档；染色模式下压暗抵消
   polMesh.material.color.setScalar(DS.ind==='cont'?1:0.84);
@@ -5507,7 +5516,23 @@ function initAuthGate(){
   /* 先问后端：已登录就直接进 */
   fetch(API_BASE+'/api/auth/me',{credentials:'include'})
     .then(function(r){return r.json();})
-    .then(function(d){ if(d&&d.user) authEnter(d.user,false); })
+    .then(function(d){
+      if(d&&d.user){
+        /* 已登录：显示登录页并给出明确选择，不再静默跳过（避免"没输入就进入"的困惑） */
+        var w=$('#ag-warn');
+        if(w){
+          w.style.display='block';
+          w.innerHTML='<b>当前已登录：'+String(d.user.email||'').replace(/[<>&]/g,'')+'</b><br>'+
+            '可直接进入，或点下方按钮退出后重新登录。';
+        }
+        var sw=$('#ag-switch'); if(sw) sw.style.display='';
+        var goBtn=$('#ag-go');
+        if(goBtn){
+          goBtn.textContent='以 '+d.user.email+' 直接进入';
+          goBtn.onclick=function(){ authEnter(d.user,false); };
+        }
+      }
+    })
     .catch(function(){
       var w=$('#ag-warn');
       if(w){ w.style.display='block'; w.textContent='连不上账号服务，请检查网络后刷新页面；也可先以访客身份浏览。'; }
@@ -5539,6 +5564,12 @@ function initAuthGate(){
   $('#ag-pass').onkeydown=function(e){ if(e.key==='Enter') go(); };
   $('#ag-email').onkeydown=function(e){ if(e.key==='Enter') $('#ag-pass').focus(); };
   $('#ag-guest').onclick=function(){ authEnter(null,false); };
+  /* 清除残留登录态：调后端 logout 删 session + 过期 Cookie，然后刷新回登录页 */
+  var sw=$('#ag-switch');
+  if(sw) sw.onclick=function(){
+    sw.disabled=true; sw.textContent='正在清除…';
+    authAPI('/api/auth/logout',{}).then(function(){ location.reload(); });
+  };
 }
 /* 后端会员开通（登录后走真接口，游客沿用本地演示） */
 function accBuyRemote(){

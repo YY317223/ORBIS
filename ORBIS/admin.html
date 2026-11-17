@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ORBIS 管理控制台</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#050a12;--panel:#0a1420;--panel2:#0d1a28;--line:rgba(120,160,210,.16);
+ --ink:#e6f0f8;--ink2:#a8bfd2;--ink3:#6b869c;--acc:#f0a868;--acc2:#7fc8ef;--ok:#48d08a;--warn:#e8ae3e;--err:#ef7a7a}
+body{background:var(--bg);color:var(--ink);font:13px/1.6 "PingFang SC","Microsoft YaHei",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh}
+button,input,select{font:inherit}
+button{cursor:pointer}
+a{color:var(--acc2)}
+
+/* 登录 */
+#login{position:fixed;inset:0;z-index:100;display:grid;place-items:center;
+ background:radial-gradient(ellipse at 50% 40%,#0d2740 0%,#071524 45%,#03070e 85%)}
+#login.gone{display:none}
+.lg{width:min(380px,92vw);padding:34px;border-radius:16px;background:rgba(9,18,30,.94);
+ border:1px solid rgba(120,170,215,.22);box-shadow:0 24px 70px rgba(0,0,0,.6)}
+.lg .mark{display:flex;align-items:center;gap:11px;margin-bottom:8px}
+.lg .orb{width:28px;height:28px;border-radius:50%;background:radial-gradient(circle at 34% 30%,#8FD0FF,#2E7BD6 45%,#123A73 80%,#0A1C38);box-shadow:0 0 18px rgba(80,150,255,.5)}
+.lg h1{font-size:17px;letter-spacing:.24em;font-weight:700}
+.lg .sub{font-size:11px;color:var(--ink3);letter-spacing:.1em;margin:0 0 24px 39px}
+.lg label{display:block;font-size:11.5px;color:var(--ink2);margin-bottom:16px}
+.lg input{display:block;width:100%;margin-top:8px;padding:12px 13px;border-radius:9px;
+ background:rgba(255,255,255,.04);border:1px solid rgba(130,180,215,.25);color:var(--ink);outline:none}
+.lg input:focus{border-color:var(--acc2)}
+.lg .go{width:100%;padding:12px;border:0;border-radius:9px;background:linear-gradient(135deg,#f6b877,#e89350);
+ color:#1a1206;font-weight:700;font-size:13px;margin-top:4px}
+.lg .err{min-height:20px;color:var(--err);font-size:11.5px;margin-top:10px}
+.lg .note{margin-top:14px;font-size:10.5px;color:var(--ink3);line-height:1.7}
+.lg .back{display:block;text-align:center;margin-top:16px;font-size:11px}
+
+/* 布局 */
+#app{display:none;min-height:100vh}
+#app.on{display:flex}
+.side{width:212px;flex:none;background:#070e18;border-right:1px solid var(--line);
+ position:sticky;top:0;height:100vh;display:flex;flex-direction:column}
+.side .brand{padding:22px 18px 18px;border-bottom:1px solid var(--line)}
+.side .brand .r{display:flex;align-items:center;gap:10px}
+.side .brand h2{font-size:14px;letter-spacing:.2em}
+.side .brand small{display:block;margin:6px 0 0 34px;font-size:9px;letter-spacing:.16em;color:var(--ink3)}
+.nav{padding:10px 8px;flex:1;overflow:auto}
+.nav button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;
+ color:var(--ink2);font-size:12.5px;padding:11px 12px;border-radius:9px;margin-bottom:3px;transition:.14s}
+.nav button:hover{background:rgba(120,170,255,.08);color:var(--ink)}
+.nav button.on{background:rgba(240,168,104,.13);color:var(--acc)}
+.nav button i{font-style:normal;width:18px;text-align:center;opacity:.8;font-size:14px}
+.side .ft{padding:14px 16px;border-top:1px solid var(--line);font-size:10.5px;color:var(--ink3)}
+.side .ft button{display:block;background:none;border:0;color:var(--ink3);font-size:11px;padding:4px 0}
+.side .ft button:hover{color:var(--err)}
+.main{flex:1;min-width:0;padding:26px 32px 60px}
+.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;gap:16px;flex-wrap:wrap}
+.top h1{font-size:20px;font-weight:600;letter-spacing:.03em}
+.top h1 small{font-size:10px;letter-spacing:.14em;color:var(--ink3);font-weight:400;margin-left:10px}
+.top .who{font-size:11px;color:var(--ink3);display:flex;align-items:center;gap:8px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 3px rgba(72,208,138,.18)}
+.page{display:none}.page.on{display:block}
+
+/* 通用卡片/组件 */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:22px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:17px 18px}
+.card .k{font-size:10.5px;color:var(--ink3);letter-spacing:.08em;margin-bottom:8px}
+.card .v{font-size:26px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+.card .d{font-size:10px;color:var(--ink3);margin-top:6px}
+.card .v.ok{color:var(--ok)}.card .v.warn{color:var(--warn)}.card .v.err{color:var(--err)}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:18px 20px;margin-bottom:18px}
+.box>h3{font-size:13px;font-weight:600;color:var(--acc2);letter-spacing:.04em;margin-bottom:14px;
+ padding-bottom:10px;border-bottom:1px solid var(--line)}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid rgba(120,160,210,.08);flex-wrap:wrap}
+.row:last-child{border-bottom:0}
+.row .k{color:var(--ink3);font-size:11.5px}
+.row .v{color:var(--ink2);font-size:12px;text-align:right;word-break:break-all}
+.row .v b{color:var(--ink)}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600}
+.badge.ok{background:rgba(72,208,138,.14);color:var(--ok)}
+.badge.warn{background:rgba(232,174,62,.14);color:var(--warn)}
+.badge.err{background:rgba(239,122,122,.14);color:var(--err)}
+.badge.info{background:rgba(127,200,239,.14);color:var(--acc2)}
+.bar{display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.bar input,.bar select{padding:8px 11px;border-radius:8px;background:rgba(255,255,255,.04);
+ border:1px solid var(--line);color:var(--ink);outline:none;font-size:12px}
+.bar input:focus,.bar select:focus{border-color:var(--acc2)}
+.btn{padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:rgba(255,255,255,.04);
+ color:var(--ink2);font-size:11.5px;transition:.14s}
+.btn:hover{border-color:var(--acc2);color:var(--ink)}
+.btn.pri{background:rgba(240,168,104,.16);border-color:rgba(240,168,104,.45);color:var(--acc)}
+.btn.pri:hover{background:rgba(240,168,104,.28)}
+.btn.danger{color:var(--err);border-color:rgba(239,122,122,.3)}
+.btn:disabled{opacity:.45;cursor:default}
+table{width:100%;border-collapse:collapse;font-size:11.5px}
+th,td{padding:10px 10px;text-align:left;border-bottom:1px solid rgba(120,160,220,.09)}
+th{color:var(--ink3);font-weight:500;font-size:10.5px;letter-spacing:.06em;background:rgba(120,160,220,.04)}
+td{color:var(--ink2)}td b{color:var(--ink)}
+tr:hover td{background:rgba(120,160,220,.04)}
+.empty{text-align:center;color:var(--ink3);padding:36px 10px;font-size:12px}
+.empty span{display:block;font-size:26px;opacity:.35;margin-bottom:10px}
+.pager{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-top:14px;font-size:11px;color:var(--ink3)}
+.hint{font-size:10.5px;color:var(--ink3);line-height:1.8;margin-top:10px}
+pre{white-space:pre-wrap;word-break:break-all;font:11px/1.7 ui-monospace,Consolas,monospace;
+ background:rgba(0,0,0,.3);border:1px solid var(--line);border-radius:9px;padding:14px;max-height:340px;overflow:auto;color:var(--ink2)}
+#toast{position:fixed;right:24px;bottom:24px;z-index:200;padding:11px 17px;border-radius:10px;
+ background:rgba(12,22,34,.97);border:1px solid rgba(240,168,104,.45);color:var(--acc);
+ font-size:12px;box-shadow:0 14px 40px rgba(0,0,0,.5);opacity:0;transform:translateY(8px);
+ pointer-events:none;transition:.22s}
+#toast.on{opacity:1;transform:none}
+#toast.err{border-color:rgba(239,122,122,.5);color:var(--err)}
+@media(max-width:820px){.side{width:62px}.side .brand .r h2,.side .brand small,.nav button span,.side .ft{display:none}
+ .nav button{justify-content:center}.main{padding:20px 16px 50px}}
+</style>
+</head>
+<body>
+
+<!-- 登录 -->
+<div id="login">
+  <div class="lg">
+    <div class="mark"><span class="orb"></span><h1>ORBIS</h1></div>
+    <p class="sub">ADMIN CONSOLE · 管理控制台</p>
+    <label>管理员账号<input id="user" type="text" placeholder="管理员账号（默认 admin）" autocomplete="username" value="admin"></label>
+    <label>管理员密码<input id="pw" type="password" placeholder="请输入管理员密码" autocomplete="current-password"></label>
+    <button class="go" id="lgGo">进入控制台</button>
+    <button class="btn" id="lgDirect" style="display:none;width:100%;margin-top:8px">已有会话 · 直接进入控制台</button>
+    <div class="err" id="lgErr"></div>
+    <p class="note">默认账号 <b>admin</b> / 密码 <b>orbis2026</b>（登录后请修改）。独立管理员账号，与普通用户无关。连续 5 次错误锁定 15 分钟。</p>
+    <a class="back" href="/">← 返回主站</a>
+  </div>
+</div>
+
+<div id="app">
+  <aside class="side">
+    <div class="brand"><div class="r"><span class="orb" style="width:20px;height:20px;border-radius:50%;background:radial-gradient(circle at 34% 30%,#8FD0FF,#2E7BD6 45%,#123A73 80%);display:inline-block"></span><h2>ORBIS</h2></div><small>ADMIN CONSOLE</small></div>
+    <nav class="nav" id="nav">
+      <button data-p="overview" class="on"><i>◈</i><span>总览</span></button>
+      <button data-p="users"><i>◎</i><span>用户管理</span></button>
+      <button data-p="subs"><i>✉</i><span>订阅管理</span></button>
+      <button data-p="data"><i>▤</i><span>数据管理</span></button>
+      <button data-p="mail"><i>✦</i><span>邮件中心</span></button>
+      <button data-p="settings"><i>⚙</i><span>系统设置</span></button>
+    </nav>
+    <div class="ft"><div id="whoSide">管理员</div><button id="logout">退出登录</button><a href="/" style="font-size:11px;color:var(--ink3);text-decoration:none;display:block;padding-top:4px">← 返回主站</a></div>
+  </aside>
+  <main class="main">
+    <div class="top"><h1 id="ptitle">总览<small>OVERVIEW</small></h1><div class="who"><span class="dot"></span>数据服务在线</div></div>
+
+    <!-- 总览 -->
+    <section class="page on" id="p-overview">
+      <div class="cards" id="ovCards"></div>
+      <div class="box"><h3>数据管道状态</h3><div id="ovStatus"></div></div>
+      <div class="box"><h3>最近数据事件</h3><div id="ovEvents"></div></div>
+    </section>
+
+    <!-- 用户 -->
+    <section class="page" id="p-users">
+      <div class="bar"><input id="uq" placeholder="搜索邮箱" style="width:220px"><button class="btn pri" id="uSearch">搜索</button><span class="hint" style="margin:0">共 <b id="uTotal">0</b> 个用户</span></div>
+      <div class="box"><table><thead><tr><th>ID</th><th>邮箱</th><th>虚拟币</th><th>会员</th><th>开通时间</th><th>注册时间</th></tr></thead><tbody id="uRows"></tbody></table><div class="pager"><button class="btn" id="uPrev">← 上一页</button><span id="uPage">1</span><button class="btn" id="uNext">下一页 →</button></div></div>
+    </section>
+
+    <!-- 订阅 -->
+    <section class="page" id="p-subs">
+      <div class="bar"><input id="sq" placeholder="搜索邮箱或国家代码" style="width:240px"><button class="btn pri" id="sSearch">搜索</button><span class="hint" style="margin:0">共 <b id="sTotal">0</b> 条订阅</span></div>
+      <div class="box"><table><thead><tr><th>ID</th><th>邮箱</th><th>关注国家</th><th>订阅时间</th><th>操作</th></tr></thead><tbody id="sRows"></tbody></table><div class="pager"><button class="btn" id="sPrev">← 上一页</button><span id="sPage">1</span><button class="btn" id="sNext">下一页 →</button></div></div>
+    </section>
+
+    <!-- 数据 -->
+    <section class="page" id="p-data">
+      <div class="box"><h3>数据源状态</h3><div id="dStatus"></div></div>
+      <div class="box"><h3>手动刷新</h3>
+        <div class="bar"><button class="btn pri" data-refresh="wb">刷新世行数据</button><button class="btn pri" data-refresh="fx">刷新汇率</button><button class="btn pri" data-refresh="all">全部刷新</button></div>
+        <p class="hint">刷新在后台异步执行，世行数据约需数十秒。可到「总览」查看状态灯变化。</p>
+      </div>
+      <div class="box"><h3>数据事件（大变记录）</h3><div id="dEvents"></div></div>
+    </section>
+
+    <!-- 邮件 -->
+    <section class="page" id="p-mail">
+      <div class="box"><h3>发信测试</h3>
+        <div class="bar"><input id="mtTo" placeholder="收件邮箱" style="width:200px"><input id="mtSub" placeholder="主题（可选）" style="width:220px"></div>
+        <div class="bar"><input id="mtText" placeholder="正文（可选）" style="width:400px"><button class="btn pri" id="mtGo">发送测试邮件</button></div>
+        <p class="hint" id="mtMode"></p>
+      </div>
+      <div class="box"><h3>发件箱（outbox）</h3><div id="mList"></div></div>
+      <div class="box" id="mDetail" style="display:none"><h3>邮件详情</h3><div id="mDetailBody"></div></div>
+    </section>
+
+    <!-- 设置 -->
+    <section class="page" id="p-settings">
+      <div class="box"><h3>SMTP 邮件配置</h3><div id="setSmtp"></div>
+        <p class="hint">SMTP 配置保存在后端 <code>config.json</code>。当前版本只展示状态，修改请直接编辑该文件后重启服务。</p>
+      </div>
+      <div class="box"><h3>管理员账号</h3>
+        <div class="bar"><input id="unNew" type="text" placeholder="新账号（3-24位小写字母/数字/_）" style="width:250px"><input id="unPw" type="password" placeholder="当前密码" style="width:170px"><button class="btn pri" id="unGo">修改账号</button></div>
+        <p class="hint" id="unNote"></p>
+      </div>
+      <div class="box"><h3>修改管理员密码</h3>
+        <div class="bar"><input id="pwOld" type="password" placeholder="当前密码" style="width:180px"><input id="pwNew" type="password" placeholder="新密码（至少8位）" style="width:200px"><button class="btn pri" id="pwGo">修改密码</button></div>
+        <p class="hint" id="pwNote"></p>
+      </div>
+      <div class="box"><h3>安全提示</h3><div class="hint">
+        · 管理后台使用独立 Cookie（SameSite=Strict），与普通用户登录完全隔离。<br>
+        · 建议设置环境变量 <code>ADMIN_PASSWORD</code> 覆盖默认密码，密码不会明文落盘。<br>
+        · 公网部署管理页建议加 IP 白名单或 HTTPS。
+      </div></div>
+    </section>
+  </main>
+</div>
+
+<div id="toast"></div>
+
+<script>
+(function(){
+  var API='';
+  function $(s){return document.querySelector(s)}
+  function $$(s){return Array.prototype.slice.call(document.querySelectorAll(s))}
+  function toast(msg,err){var t=$('#toast');t.textContent=msg;t.className='on'+(err?' err':'');clearTimeout(t._t);t._t=setTimeout(function(){t.className=''},2600)}
+  function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+  function api(path,opt){
+    opt=opt||{};opt.credentials='include';
+    if(opt.body){opt.headers=opt.headers||{};opt.headers['Content-Type']='application/json';opt.body=JSON.stringify(opt.body)}
+    return fetch(API+path,opt).then(function(r){return r.json().then(function(j){return {ok:r.ok,j:j}}).catch(function(){return {ok:r.ok,j:{}}})})
+      .catch(function(){return {ok:false,j:{error:'连不上服务'}}})
+  }
+  function needAuth(res){if(res&&res.status===401){location.reload();return true}return false}
+
+  /* 登录 */
+  function checkLogin(){
+    api('/api/admin/login').then(function(r){
+      $('#login').classList.remove('gone');
+      if(r.ok&&r.j.authed){
+        /* 已有有效会话：显示提示与选择，不静默跳过 */
+        $('#lgErr').style.color='var(--acc2)';
+        $('#lgErr').textContent='当前已有管理员登录会话：可直接进入，或填账号密码重新登录。';
+        $('#lgDirect').style.display='';
+        $('#lgDirect').onclick=enter;
+      }
+    });
+  }
+  function doLogin(){
+    var un=$('#user').value.trim(), pw=$('#pw').value, btn=$('#lgGo'); btn.disabled=true; btn.textContent='验证中…'; $('#lgErr').textContent='';
+    api('/api/admin/login',{method:'POST',body:{username:un,password:pw}}).then(function(r){
+      btn.disabled=false;btn.textContent='进入控制台';
+      if(r.ok&&r.j.ok){enter();if(r.j.default_password)toast('当前使用默认密码，请到系统设置修改')}
+      else $('#lgErr').textContent=r.j.error||'登录失败';
+    });
+  }
+  $('#lgGo').onclick=doLogin;
+  $('#user').onkeydown=function(e){if(e.key==='Enter')$('#pw').focus()};
+  $('#pw').onkeydown=function(e){if(e.key==='Enter')doLogin()};
+  function enter(){ $('#login').classList.add('gone'); $('#app').classList.add('on'); loadPage('overview'); }
+
+  /* 导航 */
+  var TITLES={overview:['总览','OVERVIEW'],users:['用户管理','USERS'],subs:['订阅管理','SUBSCRIPTIONS'],
+    data:['数据管理','DATA'],mail:['邮件中心','MAIL'],settings:['系统设置','SETTINGS']};
+  function loadPage(p){
+    $$('#nav button').forEach(function(b){b.classList.toggle('on',b.dataset.p===p)});
+    $$('.page').forEach(function(s){s.classList.toggle('on',s.id==='p-'+p)});
+    var t=TITLES[p]||['','']; $('#ptitle').innerHTML=t[0]+'<small>'+t[1]+'</small>';
+    if(p==='overview')loadOverview();
+    else if(p==='users')loadUsers();
+    else if(p==='subs')loadSubs();
+    else if(p==='data')loadData();
+    else if(p==='mail')loadMail();
+    else if(p==='settings')loadSettings();
+  }
+  $$('#nav button').forEach(function(b){b.onclick=function(){loadPage(b.dataset.p)}});
+  $('#logout').onclick=function(){api('/api/admin/logout',{method:'POST'}).then(function(){location.reload()})};
+
+  /* 总览 */
+  function loadOverview(){
+    api('/api/admin/overview').then(function(r){
+      if(!r.ok){toast('加载失败',true);return}
+      var d=r.j,s=d.status||{},f=d.fetch||{};
+      var cards=[['用户数',d.users,'人',''],['订阅数',d.subs,'条',''],['已发送事件',d.sent,'条',''],
+        ['发件箱邮件',d.outbox,'封',''],['数据年份',(s.years&&s.years[1])||'—','年',''],
+        ['数据状态',s.ok?'正常':'异常',s.ok?'在线':'检查',s.ok?'ok':'err']];
+      $('#ovCards').innerHTML=cards.map(function(c){return '<div class="card"><div class="k">'+c[0]+'</div><div class="v '+(c[3]||'')+'">'+esc(c[1])+'</div><div class="d">'+c[2]+'</div></div>'}).join('');
+      var rows=[['数据抓取',f.fetching?'<span class="badge warn">进行中</span>':'<span class="badge ok">空闲</span>'],
+        ['汇率抓取',f.fx_fetching?'<span class="badge warn">进行中</span>':'<span class="badge ok">空闲</span>'],
+        ['上次抓取',esc(s.last_fetch||'—')],['世行更新日期',esc(s.source_updated||'—')],
+        ['国家数',s.countries||0],['最后尝试',esc(f.last_try||'—')],
+        ['错误',f.error?'<span class="badge err">'+esc(f.error)+'</span>':'<span class="badge ok">无</span>'],
+        ['汇率',s.fx?('date '+esc(s.fx.date)+' · '+s.fx.count+' 币种'):'—']];
+      $('#ovStatus').innerHTML=rows.map(function(x){return '<div class="row"><span class="k">'+x[0]+'</span><span class="v">'+x[1]+'</span></div>'}).join('');
+      if(d.admin_default_password) $('#ovStatus').insertAdjacentHTML('beforeend','<div class="row"><span class="k">安全</span><span class="v"><span class="badge warn">正在使用默认管理员密码，请尽快修改</span></span></div>');
+    });
+    api('/api/admin/events?limit=8').then(function(r){
+      var rows=(r.j&&r.j.rows)||[];
+      $('#ovEvents').innerHTML=rows.length?('<table><thead><tr><th>国家</th><th>指标</th><th>年份</th><th>类型</th><th>旧值</th><th>新值</th></tr></thead><tbody>'+
+        rows.map(function(e){return '<tr><td><b>'+esc(e.iso)+'</b></td><td>'+esc(e.ind)+'</td><td>'+esc(e.year)+'</td><td>'+esc(e.kind)+'</td><td>'+esc(e.old)+'</td><td>'+esc(e.new)+'</td></tr>'}).join('')+'</tbody></table>')
+        :'<div class="empty"><span>◌</span>暂无数据变化事件</div>';
+    });
+  }
+
+  /* 用户 */
+  var up=1;
+  function loadUsers(){
+    var q=$('#uq').value.trim();
+    api('/api/admin/users?page='+up+'&size=20&q='+encodeURIComponent(q)).then(function(r){
+      if(!r.ok){toast('加载失败',true);return}
+      var d=r.j; $('#uTotal').textContent=d.total; $('#uPage').textContent=up;
+      $('#uPrev').disabled=up<=1; $('#uNext').disabled=up*20>=d.total;
+      $('#uRows').innerHTML=d.rows.length?d.rows.map(function(u){
+        return '<tr><td>'+u.id+'</td><td><b>'+esc(u.email)+'</b></td><td>'+u.coins+'</td><td><span class="badge '+(u.member?'ok':'info')+'">'+(u.member?'完整版':'免费版')+'</span></td><td>'+esc(u.since||'—')+'</td><td>'+esc(u.created||'—')+'</td></tr>'
+      }).join(''):'<tr><td colspan="6"><div class="empty"><span>◎</span>还没有注册用户</div></td></tr>';
+    });
+  }
+  $('#uSearch').onclick=function(){up=1;loadUsers()};
+  $('#uPrev').onclick=function(){if(up>1){up--;loadUsers()}};
+  $('#uNext').onclick=function(){up++;loadUsers()};
+
+  /* 订阅 */
+  var sp=1;
+  function loadSubs(){
+    var q=$('#sq').value.trim();
+    api('/api/admin/subscriptions?page='+sp+'&size=20&q='+encodeURIComponent(q)).then(function(r){
+      if(!r.ok){toast('加载失败',true);return}
+      var d=r.j; $('#sTotal').textContent=d.total; $('#sPage').textContent=sp;
+      $('#sPrev').disabled=sp<=1; $('#sNext').disabled=sp*20>=d.total;
+      $('#sRows').innerHTML=d.rows.length?d.rows.map(function(x){
+        return '<tr><td>'+x.id+'</td><td><b>'+esc(x.email)+'</b></td><td>'+esc(x.codes||'—')+' <span class="badge info">'+x.count+' 国</span></td><td>'+esc(x.created||'—')+'</td><td><button class="btn danger" data-del="'+esc(x.email)+'">退订</button></td></tr>'
+      }).join(''):'<tr><td colspan="5"><div class="empty"><span>✉</span>还没有订阅记录</div></td></tr>';
+      $$('#sRows [data-del]').forEach(function(b){b.onclick=function(){
+        if(!confirm('确定退订 '+b.dataset.del+' 的全部提醒？'))return;
+        api('/api/admin/subs/delete',{method:'POST',body:{email:b.dataset.del}}).then(function(r){
+          toast(r.j.ok?'已退订':(r.j.error||'失败'),!r.j.ok);loadSubs();
+        });
+      }});
+    });
+  }
+  $('#sSearch').onclick=function(){sp=1;loadSubs()};
+  $('#sPrev').onclick=function(){if(sp>1){sp--;loadSubs()}};
+  $('#sNext').onclick=function(){sp++;loadSubs()};
+
+  /* 数据 */
+  function loadData(){
+    api('/api/admin/data/status').then(function(r){
+      if(!r.ok){toast('加载失败',true);return}
+      var d=r.j,w=d.wb||{},f=d.fx||{};
+      var m1=w.meta||{},m2=f.meta||{};
+      $('#dStatus').innerHTML=[
+        ['世行抓取时间',esc(w.fetched_at||'—')],['世行更新日期',esc(w.source_updated||'—')],
+        ['年份范围',(w.years&&w.years.join(' – '))||'—'],['国家数',w.countries||0],
+        ['变化事件',w.events||0],['wb.json',esc(m1.size||0)+' 字节 · 修改于 '+esc(m1.mtime||'—')],
+        ['汇率日期',esc(f.date||'—')],['汇率更新',esc(f.updated||'—')],['币种数',f.count||0],
+        ['汇率来源',esc(f.source||'—')],['fx.json',esc(m2.size||0)+' 字节 · 修改于 '+esc(m2.mtime||'—')]
+      ].map(function(x){return '<div class="row"><span class="k">'+x[0]+'</span><span class="v">'+x[1]+'</span></div>'}).join('');
+    });
+    api('/api/admin/events?limit=50').then(function(r){
+      var rows=(r.j&&r.j.rows)||[];
+      $('#dEvents').innerHTML=rows.length?('<table><thead><tr><th>国家</th><th>指标</th><th>年份</th><th>类型</th><th>旧值</th><th>新值</th></tr></thead><tbody>'+
+        rows.map(function(e){return '<tr><td><b>'+esc(e.iso)+'</b></td><td>'+esc(e.ind)+'</td><td>'+esc(e.year)+'</td><td>'+esc(e.kind)+'</td><td>'+esc(e.old)+'</td><td>'+esc(e.new)+'</td></tr>'}).join('')+'</tbody></table>')
+        :'<div class="empty"><span>◌</span>暂无变化事件</div>';
+    });
+  }
+  $$('[data-refresh]').forEach(function(b){b.onclick=function(){
+    b.disabled=true;var old=b.textContent;b.textContent='已提交…';
+    api('/api/admin/data/refresh',{method:'POST',body:{kind:b.dataset.refresh}}).then(function(r){
+      toast(r.j.ok?'刷新已在后台开始':'失败',!r.j.ok);
+      setTimeout(function(){b.disabled=false;b.textContent=old},2500);
+    });
+  }});
+
+  /* 邮件 */
+  function loadMail(){
+    api('/api/admin/settings').then(function(r){
+      $('#mtMode').textContent=(r.j.smtp&&r.j.smtp.configured)?'当前使用 SMTP 真实发信。':'当前未配置 SMTP，测试邮件将写入 data/outbox/*.eml。';
+    });
+    api('/api/admin/mail/outbox').then(function(r){
+      var fs=(r.j&&r.j.files)||[];
+      $('#mList').innerHTML=fs.length?('<table><thead><tr><th>文件</th><th>收件人</th><th>主题</th><th>大小</th><th></th></tr></thead><tbody>'+
+        fs.map(function(x){return '<tr><td>'+esc(x.name)+'</td><td>'+esc(x.to)+'</td><td>'+esc(x.subject)+'</td><td>'+x.size+'</td><td><button class="btn" data-mail="'+esc(x.name)+'">查看</button></td></tr>'}).join('')+'</tbody></table>')
+        :'<div class="empty"><span>✉</span>发件箱为空（未配置 SMTP 时邮件会落在这里）</div>';
+      $$('#mList [data-mail]').forEach(function(b){b.onclick=function(){
+        api('/api/admin/mail/read?name='+encodeURIComponent(b.dataset.mail)).then(function(r){
+          if(!r.ok){toast(r.j.error||'读取失败',true);return}
+          $('#mDetail').style.display='';
+          $('#mDetailBody').innerHTML='<div class="row"><span class="k">收件人</span><span class="v">'+esc(r.j.headers.to)+'</span></div>'+
+            '<div class="row"><span class="k">主题</span><span class="v">'+esc(r.j.headers.subject)+'</span></div>'+
+            '<div class="row"><span class="k">时间</span><span class="v">'+esc(r.j.headers.date)+'</span></div><pre>'+esc(r.j.text)+'</pre>';
+        });
+      }});
+    });
+  }
+  $('#mtGo').onclick=function(){
+    var b=this;b.disabled=true;
+    api('/api/admin/mail/test',{method:'POST',body:{to:$('#mtTo').value.trim(),subject:$('#mtSub').value.trim(),text:$('#mtText').value.trim()}}).then(function(r){
+      b.disabled=false;toast(r.j.ok?('已发送（'+(r.j.kind||'outbox')+'）'):(r.j.error||'失败'),!r.j.ok);
+      if(r.j.ok)loadMail();
+    });
+  };
+
+  /* 设置 */
+  function loadSettings(){
+    api('/api/admin/settings').then(function(r){
+      var s=r.j.smtp||{};
+      $('#setSmtp').innerHTML=[['SMTP 主机',s.host||'未配置'],['端口',s.port||'—'],['SSL',s.ssl?'是':'否'],
+        ['发件地址',s.from||'—'],['账号',s.user||'—'],['状态',s.configured?'<span class="badge ok">已配置</span>':'<span class="badge warn">未配置 · 走 outbox</span>']]
+        .map(function(x){return '<div class="row"><span class="k">'+x[0]+'</span><span class="v">'+x[1]+'</span></div>'}).join('');
+      $('#pwNote').innerHTML=r.j.default_password?'<span class="badge warn">当前使用默认密码 orbis2026，强烈建议修改</span>':'密码已自定义。';
+      $('#unNew').placeholder='新账号（当前：'+(r.j.username||'admin')+'）';
+      $('#unNote').textContent='当前账号：'+(r.j.username||'admin')+'。修改后请用新账号登录。';
+    });
+  }
+  $('#unGo').onclick=function(){
+    var b=this;b.disabled=true;
+    api('/api/admin/username',{method:'POST',body:{username:$('#unNew').value.trim(),password:$('#unPw').value}}).then(function(r){
+      b.disabled=false;toast(r.j.ok?'账号已修改，请用新账号重新登录':(r.j.error||'失败'),!r.j.ok);
+      if(r.j.ok){$('#unNew').value='';$('#unPw').value='';loadSettings()}
+    });
+  };
+  $('#pwGo').onclick=function(){
+    var b=this;b.disabled=true;
+    api('/api/admin/password',{method:'POST',body:{old:$('#pwOld').value,new:$('#pwNew').value}}).then(function(r){
+      b.disabled=false;toast(r.j.ok?'密码已修改，请重新登录':(r.j.error||'失败'),!r.j.ok);
+      if(r.j.ok){$('#pwOld').value='';$('#pwNew').value='';loadSettings()}
+    });
+  };
+
+  checkLogin();
+})();
+</script>
+</body>
+</html>
