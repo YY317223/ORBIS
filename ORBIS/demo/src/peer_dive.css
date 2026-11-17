@@ -1,0 +1,54 @@
+/* ============================================================
+   俯冲转场（配合 build/peer_dive.js）
+   只作用于 #globe 的 transform / filter，不改变任何布局
+   ============================================================ */
+#globe.pdive-in{
+  transform-origin:var(--pdx,50%) var(--pdy,50%);
+  transform:scale(2.3);
+  filter:blur(1.6px) brightness(.86) saturate(1.1);
+  transition:transform .92s cubic-bezier(.16,.88,.22,1), filter .92s ease;
+}
+#globe.pdive-hold{
+  transform-origin:var(--pdx,50%) var(--pdy,50%);
+  transform:scale(2.3);
+  filter:blur(1.6px) brightness(.86);
+}
+#globe.pdive-out{
+  transform-origin:var(--pdx,50%) var(--pdy,50%);
+  transform:scale(1);
+  filter:none;
+  transition:transform .66s cubic-bezier(.2,.86,.24,1), filter .66s ease;
+}
+/* 国家页跟着「落地」一下：从略微放大收到 1 倍，和地球的俯冲接上
+   （只加动画，不覆盖搭档自己的 opacity 过渡） */
+/* 关键：国家页要等地球俯冲一段再淡入，否则它 0.5s 就盖满了，
+   放大根本看不见 —— 前 56% 按住，后半段快速淡进来并轻微收一下。 */
+@keyframes pdiveLand{
+  0%,54%{opacity:0; transform:scale(1.13)}
+  100%{opacity:1; transform:scale(1)}
+}
+body.pdive-land #country.on{
+  animation:pdiveLand .98s cubic-bezier(.20,.86,.24,1) both;
+}
+/* 俯冲这半秒里国家页是透明的，别让它吃掉点击 */
+body.pdive-land #country{pointer-events:none}
+
+/* 俯冲那半秒：把地球外围的界面（品牌、大洲列表、缩放条、搜索、页脚）淡掉，
+   屏幕上只剩「球在放大」，再把一圈暗角压上来，速度感更足 */
+body.pdive-land #brand,
+body.pdive-land #cregion,
+body.pdive-land #zoom,
+body.pdive-land #search-wrap,
+body.pdive-land #wstat,
+body.pdive-land #hint,
+body.pdive-land #foot,
+body.pdive-land #cx{
+  opacity:0!important;
+  transition:opacity .26s ease!important;
+}
+body.pdive-land::after{
+  content:'';position:fixed;inset:0;z-index:29;pointer-events:none;
+  background:radial-gradient(66% 66% at 50% 52%, rgba(4,8,12,0) 30%, rgba(3,6,10,.46) 100%);
+  animation:pdiveVig .98s ease both;
+}
+@keyframes pdiveVig{0%{opacity:0} 54%{opacity:1} 100%{opacity:0}}

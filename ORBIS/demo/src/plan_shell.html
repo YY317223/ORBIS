@@ -1,0 +1,281 @@
+<!-- ============================================================
+     方案外壳：登录门 + 方案画板承接 + 免费/会员门控
+     ------------------------------------------------------------
+     这一层不碰 ORBIS 的任何渲染代码，只做四件事：
+       1. 未登录 → 铺一层 iframe（同目录的 auth.html?embed=1）
+       2. 登录页的画板选出方案 → postMessage 回来 → 记下 plan
+       3. 按 plan 给「会员功能」标灰并拦截点击（不改内部逻辑）
+       4. 顶部挂一个胶囊：显示当前方案，点一下可切换 / 退出
+
+     为什么用 CSS + 捕获式事件拦截，而不改 ORBIS 的 JS：
+     它的主逻辑是 2MB 压缩代码，属于搭档的成果，不该为了门控去动；
+     门控只需要「视觉标记 + 阻止点击」，这两件事在外部都能做到。
+     ============================================================ -->
+<style id="plan-shell-css">
+#pshell-gate{position:fixed;inset:0;z-index:9000;background:#0a1118;
+  transition:opacity .5s ease}
+#pshell-gate iframe{width:100%;height:100%;border:0;display:block}
+#pshell-gate.out{opacity:0;pointer-events:none}
+#pshell-skip{position:absolute;right:18px;bottom:16px;z-index:2;display:none;
+  border:1px solid rgba(140,175,210,.3);border-radius:9px;background:rgba(255,255,255,.06);
+  color:#9DB0C6;font:12px/1 -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;
+  padding:8px 14px;cursor:pointer}
+#pshell-skip:hover{color:#EAF1FA;border-color:rgba(232,163,74,.5)}
+body.pshell-direct #pshell-skip{display:block}
+
+#pshell-chip{position:fixed;left:50%;top:12px;transform:translateX(-50%);z-index:9200;
+  display:none;align-items:center;gap:0;height:30px;padding:0 4px;
+  border-radius:999px;border:1px solid rgba(140,175,210,.28);
+  background:rgba(12,18,28,.72);backdrop-filter:blur(10px);
+  font:12px/1 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  color:#9DB0C6;box-shadow:0 6px 20px rgba(0,0,0,.4)}
+#pshell-chip.on{display:flex}
+#pshell-chip .pbtn{border:0;background:none;font:inherit;color:inherit;cursor:pointer;
+  padding:0 10px;height:22px;border-radius:999px;display:flex;align-items:center;gap:5px;
+  transition:background .18s,color .18s}
+#pshell-chip .pbtn:hover{background:rgba(255,255,255,.08);color:#EAF1FA}
+#pshell-chip .pbtn .dot{width:6px;height:6px;border-radius:50%;background:#7f8fa0}
+#pshell-chip .pbtn.pro .dot{background:#e8a34a;box-shadow:0 0 6px rgba(232,163,74,.7)}
+#pshell-chip .pbtn.pro{color:#f0c07a}
+#pshell-chip .sep{width:1px;height:14px;background:rgba(140,175,210,.22)}
+#pshell-chip .who{max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font-size:11px;color:#6f8296;padding:0 8px}
+
+body.plan-free #dchips [data-g="d"],
+body.plan-free #dchips [data-i="gdp"],
+body.plan-free #dtl,
+body.plan-free #dplay,
+body.plan-free #ddelta,
+body.plan-free #clist,
+body.plan-free #cadd{
+  opacity:.30;filter:grayscale(1);cursor:not-allowed!important;pointer-events:none}
+body.plan-free #dchips [data-g="d"] * ,
+body.plan-free #cadd *{pointer-events:none}
+#dchips:has(+ .pshell-note) {}
+.pshell-note{display:none;font-size:10.5px;letter-spacing:.02em;color:#7c8b9c;
+  margin-left:10px;white-space:nowrap}
+body.plan-free .pshell-note{display:inline}
+.pshell-lockbadge{display:inline-flex;align-items:center;gap:4px;padding:1px 6px;
+  border-radius:999px;border:1px solid rgba(232,163,74,.4);color:#e8a34a;
+  font-size:9.5px;letter-spacing:.04em;vertical-align:middle;margin-left:6px}
+
+/* 窄屏：顶部被品牌与搜索占满，胶囊挪到品牌下方、缩成小号；
+   提示文案在这种宽度下会换行挤占指标条，直接收掉 */
+@media (max-width:640px){
+  #pshell-chip{left:10px;top:64px;transform:none;height:26px;padding:0 3px}
+  #pshell-chip .pbtn{padding:0 8px;font-size:11px;height:20px}
+  #pshell-chip .who,#pshell-chip .sep{display:none}
+  .pshell-note{display:none!important}
+}
+.pshell-toast{position:fixed;left:50%;bottom:56px;transform:translate(-50%,12px);z-index:8900;
+  padding:9px 16px;border-radius:11px;border:1px solid rgba(232,163,74,.34);
+  background:rgba(16,22,30,.94);color:#f0d9b6;font-size:12px;opacity:0;
+  transition:opacity .22s,transform .26s;pointer-events:none;white-space:nowrap}
+.pshell-toast.on{opacity:1;transform:translate(-50%,0)}
+</style>
+
+<script id="plan-shell">
+(function () {
+  'use strict';
+  var SKEY = 'atlas.session', PKEY = 'orbis.plan';
+  var QA = new URLSearchParams(location.search);
+  var urlPlan = QA.get('plan');
+
+  function read(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function write(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+
+  var plan = (urlPlan === 'pro' || urlPlan === 'free') ? urlPlan : read(PKEY);
+  if (urlPlan === 'pro' || urlPlan === 'free') write(PKEY, urlPlan);
+
+  var who = '';
+  try { var s = JSON.parse(read(SKEY) || 'null'); if (s && s.who) who = s.who; } catch (e) {}
+
+  /* ---------- 轻提示 ---------- */
+  var toastEl = document.createElement('div');
+  toastEl.className = 'pshell-toast';
+  document.body.appendChild(toastEl);
+  var toastT = 0;
+  function toast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastT);
+    toastT = setTimeout(function () { toastEl.classList.remove('on'); }, 2100);
+  }
+  /* 卡片模块（peer_card.js）也用同一颗提示，避免屏幕上出现两条 */
+  window.__pshellToast = toast;
+
+  /* ---------- 门控：免费版标灰 + 拦截 ---------- */
+  var LOCK_SEL = [
+    '#dchips [data-g="d"]',       /* 变化量指标：人均涨幅 / GDP 涨幅 / 人口变化 / 寿命变化 */
+    '#dchips [data-i="gdp"]',     /* GDP 总量 */
+    '#dtl',                       /* 年份滑块 */
+    '#dplay',                     /* 播放 */
+    '#ddelta',                    /* Δ 变化 */
+    '#clist',                     /* 国家 / 城市列表 */
+    '#cadd'                       /* 加入对比 */
+  ];
+  var LOCK_MSG = {
+    '#dchips [data-g="d"]': '变化量指标属于完整版',
+    '#dchips [data-i="gdp"]': 'GDP 总量属于完整版',
+    '#dtl': '时间轴回放属于完整版',
+    '#dplay': '年份播放属于完整版',
+    '#ddelta': '基准年对比属于完整版',
+    '#clist': '完整列表属于完整版',
+    '#cadd': '多国对比属于完整版'
+  };
+
+  function lockedTarget(el) {
+    if (!el || !el.closest) return null;
+    for (var i = 0; i < LOCK_SEL.length; i++) {
+      var hit = el.closest(LOCK_SEL[i]);
+      if (hit) return LOCK_SEL[i];
+    }
+    return null;
+  }
+
+  document.addEventListener('click', function (e) {
+    if (plan === 'pro') return;
+    var hit = lockedTarget(e.target);
+    if (!hit) return;
+    e.preventDefault();
+    e.stopPropagation();
+    toast(LOCK_MSG[hit] || '这是完整版功能');
+  }, true);
+
+  document.addEventListener('mousedown', function (e) {
+    if (plan === 'pro') return;
+    if (lockedTarget(e.target)) { e.preventDefault(); e.stopPropagation(); }
+  }, true);
+
+  /* ---------- 应用方案 ---------- */
+  var noteAdded = false;
+  function applyPlan(p) {
+    plan = p;
+    document.body.classList.remove('plan-free', 'plan-pro');
+    document.body.classList.add(p === 'pro' ? 'plan-pro' : 'plan-free');
+    paintChip();
+    if (p === 'free') addNote();
+  }
+
+  /* 免费版：在指标条右侧挂一句说明，别让人以为是坏了 */
+  function addNote() {
+    if (noteAdded) return;
+    var chips = document.getElementById('dchips');
+    if (!chips || !chips.parentNode) return;
+    var n = document.createElement('span');
+    n.className = 'pshell-note';
+    n.innerHTML = '灰掉的 5 项指标 · 时间轴回放 · 多国对比属于完整版';
+    chips.parentNode.insertBefore(n, chips.nextSibling);
+    noteAdded = true;
+  }
+
+  /* ---------- 顶部胶囊：显示方案，可切换 ---------- */
+  var chip = document.createElement('div');
+  chip.id = 'pshell-chip';
+  document.body.appendChild(chip);
+
+  function paintChip() {
+    if (!plan) { chip.classList.remove('on'); return; }
+    var isPro = plan === 'pro';
+    chip.innerHTML =
+      '<button class="pbtn' + (isPro ? ' pro' : '') + '" data-act="toggle" title="点击切换方案（演示用）">' +
+        '<span class="dot"></span>' + (isPro ? '完整版' : '基础版') +
+      '</button>' +
+      (who ? '<span class="who">' + who + '</span>' : '') +
+      '<span class="sep"></span>' +
+      '<button class="pbtn" data-act="logout" title="清除登录状态并重新开始">退出</button>';
+    chip.classList.add('on');
+  }
+
+  chip.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-act]');
+    if (!b) return;
+    if (b.dataset.act === 'toggle') {
+      var next = plan === 'pro' ? 'free' : 'pro';
+      write(PKEY, next);
+      var u = new URL(location.href);
+      u.searchParams.delete('plan');   /* 清掉 URL 里的 plan，让 localStorage 生效 */
+      location.href = u.toString();
+      return;
+    }
+    write(SKEY, ''); write(PKEY, '');
+    try { localStorage.removeItem(SKEY); localStorage.removeItem(PKEY); } catch (x) {}
+    location.reload();
+  });
+
+  /* ---------- 登录门 ---------- */
+  var gateEl = null;
+
+  function openGate() {
+    if (gateEl) return;
+    gateEl = document.createElement('div');
+    gateEl.id = 'pshell-gate';
+    var f = document.createElement('iframe');
+    /* embed=1：登录页会用 ORBIS 的品牌名，并在登录后展示方案画板 */
+    f.src = 'auth.html?embed=1';
+    f.setAttribute('allow', 'clipboard-write');
+    gateEl.appendChild(f);
+    /* 本地双击（file://）时，浏览器会把每个本地文件当成独立源，
+       父页拿不到 iframe 里的登录态回传。给一个兜底：直接以基础版进入，
+       保证演示不会卡在门上。http 下不出现这个按钮。 */
+    if (location.protocol === 'file:') {
+      var skip = document.createElement('button');
+      skip.id = 'pshell-skip';
+      skip.textContent = '本地文件模式 · 直接进入演示';
+      skip.addEventListener('click', function () {
+        write(SKEY, JSON.stringify({ who: '演示用户', at: Date.now() }));
+        write(PKEY, 'free');
+        who = '演示用户';
+        closeGate(false);
+        applyPlan('free');
+        toast('基础版 · 已以演示身份进入');
+      });
+      gateEl.appendChild(skip);
+      document.body.classList.add('pshell-direct');
+    }
+    document.body.appendChild(gateEl);
+  }
+
+  function closeGate(instant) {
+    if (!gateEl) return;
+    var g = gateEl;
+    gateEl = null;
+    g.classList.add('out');
+    document.body.classList.remove('pshell-direct');
+    setTimeout(function () { if (g.parentNode) g.parentNode.removeChild(g); }, instant ? 0 : 560);
+  }
+
+  window.addEventListener('message', function (e) {
+    var d = e.data;
+    if (!d) return;
+    if (d.t === 'orbis:enter') {
+      if (d.who) write(SKEY, JSON.stringify({ who: d.who, at: Date.now() }));
+      var p = (d.plan === 'pro') ? 'pro' : 'free';
+      write(PKEY, p);
+      who = d.who || who;
+      closeGate(false);
+      applyPlan(p);
+      toast(p === 'pro' ? '完整版 · 全部功能已解锁' : '基础版 · 部分功能需升级');
+      return;
+    }
+    /* 兼容旧消息：只登录未选方案 → 把画板留在原地，不自动进 */
+    if (d.t === 'orbis:login') {
+      if (d.who) { write(SKEY, JSON.stringify({ who: d.who, at: Date.now() })); who = d.who; }
+    }
+  });
+
+  /* ---------- 启动 ----------
+     URL 上写明 ?plan=free / ?plan=pro 时视为「演示直进」：跳过登录门，
+     方便在两个方案之间快速对比效果。正常演示走默认分支（先登录）。 */
+  var demoDirect = (urlPlan === 'pro' || urlPlan === 'free');
+  if (demoDirect) {
+    applyPlan(urlPlan);
+  } else if (who && plan) {
+    applyPlan(plan);          /* 已有会话和方案：直接进，不再挡门 */
+  } else if (who && !plan) {
+    applyPlan('free');        /* 有会话但没选过方案：先给基础版，胶囊可切 */
+  } else {
+    openGate();               /* 未登录：铺登录门 */
+  }
+})();
+</script>

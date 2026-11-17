@@ -1,0 +1,44 @@
+<!-- 登录封面：进入主界面之前 -->
+<div id="authgate">
+  <div class="ag-canvas-bg"></div>
+  <div class="ag-grain"></div>
+
+  <!-- 右侧：真实贴图的地球（Three.js 渲染，柔光，无 HUD） -->
+  <div class="ag-stage">
+    <div class="ag-halo"></div>
+    <div class="ag-orbit"></div>
+    <canvas id="agGlobe"></canvas>
+  </div>
+
+  <!-- 左侧：字标 + 副标 + 登录 -->
+  <div class="ag-wrap">
+    <div class="ag-brand">
+      <h1 class="ag-word">ORBIS</h1>
+      <div class="ag-rule"></div>
+      <p class="ag-tagline">带你用数据看世界</p>
+    </div>
+
+    <div class="ag-card">
+      <div class="ag-tabs"><button data-m="login" class="on">登录</button><button data-m="reg">注册</button></div>
+      <div id="ag-err" class="ag-err"></div>
+      <label class="ag-field"><span>邮箱</span><input id="ag-email" type="email" autocomplete="email" placeholder="you@example.com"></label>
+      <label class="ag-field"><span>密码</span><input id="ag-pass" type="password" autocomplete="current-password" placeholder="至少 6 位"></label>
+      <div class="ag-row">
+        <label class="ag-rem"><input id="ag-remember" type="checkbox" checked>保持登录 30 天</label>
+        <a class="ag-fog" id="ag-fog">忘记密码？</a>
+      </div>
+      <button id="ag-go" class="ag-go">登录并进入</button>
+      <div class="ag-or"><span>或</span></div>
+      <button id="ag-guest" class="ag-guest">以访客身份浏览</button>
+      <a class="ag-admin" href="/admin"><span>管理员登录</span><b>→</b></a>
+      <p class="ag-note">管理员账号与普通用户分开，普通邮箱无法进入管理后台。</p>
+      <p class="ag-foot" id="ag-foot">登录后可使用完整账户功能 · 游客可免费浏览地球</p>
+      <div class="ag-warn" id="ag-warn" style="display:none"></div>
+      <button id="ag-switch" class="ag-switch" style="display:none">当前已登录 · 切换账号 / 退出</button>
+    </div>
+
+    <p class="ag-src">世界银行 WDI · 2000–2025 · 217 个国家与地区</p>
+  </div>
+
+  <img id="agEarthTex" alt="" style="display:none" src="{{EARTH_B64}}">
+</div>

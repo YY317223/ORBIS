@@ -1,0 +1,169 @@
+/* ============================================================
+   飞升 · 太阳系（覆盖层）
+   ============================================================ */
+#pspace{
+  position:fixed; inset:0; z-index:500; display:none;
+  background:#03060a; opacity:0; transition:opacity .72s ease;
+}
+#pspace.on{display:block; opacity:1}
+#pspacecv{position:absolute; inset:0; width:100%; height:100%; display:block; touch-action:none; cursor:grab}
+#pspacecv:active{cursor:grabbing}
+
+/* 标题：等镜头从地球拉开一点再出现，别一上来就剧透「太阳系」 */
+#pspace .ps-top,
+#pspace .ps-back,
+#pspace .ps-hint{opacity:0; transition:opacity .55s ease .85s}
+#pspace.on .ps-top,
+#pspace.on .ps-back,
+#pspace.on .ps-hint{opacity:1}
+
+#pspace .ps-top{position:absolute; left:32px; top:28px; pointer-events:none;
+  color:#e9f2f8; font:400 13px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+#pspace .ps-top .k{font-size:9px; letter-spacing:.22em; text-transform:uppercase; color:#5f7b93}
+#pspace .ps-top h2{margin:6px 0 0; font-size:26px; font-weight:600; letter-spacing:-.01em}
+#pspace .ps-top .s{margin-top:7px; font-size:11.5px; color:#7d94a9}
+
+/* 返回 */
+#pspace .ps-back{position:absolute; right:28px; top:28px; height:34px; padding:0 16px;
+  border-radius:999px; border:1px solid rgba(150,185,215,.28); background:rgba(12,20,30,.62);
+  color:#cfe2f0; font:inherit; font-size:12px; cursor:pointer; backdrop-filter:blur(8px);
+  transition:background .18s,border-color .18s}
+#pspace .ps-back:hover{background:rgba(111,180,216,.22); border-color:rgba(111,180,216,.6); color:#fff}
+
+/* 提示 */
+#pspace .ps-hint{position:absolute; left:50%; bottom:26px; transform:translateX(-50%);
+  font-size:11px; color:#6f8699; letter-spacing:.03em; pointer-events:none;
+  padding:7px 14px; border-radius:999px; background:rgba(8,14,20,.5);
+  border:1px solid rgba(150,185,215,.12)}
+
+/* 行星标签 */
+#pspacelabels{position:absolute; inset:0; pointer-events:none}
+#pspacelabels .pslab{
+  position:absolute; left:0; top:0; margin:-6px 0 0 0; padding:0; border:0; background:none;
+  display:flex; align-items:center; gap:6px; transform:translate(0,0);
+  font:400 11px/1 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif;
+  color:#bcd3e4; letter-spacing:.04em; cursor:pointer; pointer-events:auto;
+  transition:opacity .2s ease; will-change:transform;
+  text-shadow:0 1px 8px rgba(0,0,0,.9)
+}
+#pspacelabels .pslab i{width:4px; height:4px; border-radius:50%; background:#7fb2d4;
+  box-shadow:0 0 6px rgba(127,178,212,.9); margin-left:-2px}
+/* 圆点压在星球中心，文字浮到右上，避免糊在星球或太阳上 */
+#pspacelabels .pslab span{transform:translate(4px,-16px)}
+#pspacelabels .pslab.sunlab span{transform:translate(4px,-34px)}
+#pspacelabels .pslab:hover{color:#fff}
+#pspacelabels .pslab:hover i{background:#fff}
+
+/* ---------- 星球档案卡（Atlas 那一版） ---------- */
+#pspace .ps-card{
+  position:absolute; right:34px; top:50%; transform:translateY(-50%);
+  width:min(386px, calc(100vw - 44px)); max-height:82vh; overflow-y:auto; overscroll-behavior:contain;
+  padding:20px 20px 16px; border-radius:18px;
+  background:linear-gradient(168deg, rgba(24,36,50,.94) 0%, rgba(9,15,24,.96) 100%);
+  border:1px solid rgba(150,190,225,.16);
+  box-shadow:0 34px 80px -26px rgba(0,0,0,.82), inset 0 1px 0 rgba(255,255,255,.07);
+  backdrop-filter:blur(20px); color:#dfeaf4; display:none;
+  scrollbar-width:thin; scrollbar-color:rgba(180,210,235,.22) transparent;
+  font:400 12px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  text-align:left;
+}
+#pspace .ps-card.on{display:block; animation:psCardIn .34s cubic-bezier(.16,1,.3,1) both}
+@keyframes psCardIn{from{opacity:0; transform:translateY(-50%) translateX(16px)}
+  to{opacity:1; transform:translateY(-50%) translateX(0)}}
+#pspace .ps-card::-webkit-scrollbar{width:6px}
+#pspace .ps-card::-webkit-scrollbar-thumb{background:rgba(180,210,235,.2); border-radius:4px}
+
+#pspace .pc-head{display:flex; align-items:flex-start; gap:12px}
+#pspace .pc-dot{width:30px; height:30px; border-radius:50%; flex:none; margin-top:2px}
+#pspace .pc-ttl{flex:1; min-width:0}
+#pspace .pc-ttl h2{margin:0; font-size:22px; font-weight:600; letter-spacing:.01em; line-height:1.2; color:#f4f9fd}
+#pspace .pc-ttl p{margin:4px 0 0; font-size:10px; letter-spacing:.14em; color:#7f95a9; text-transform:uppercase}
+#pspace .pc-x{width:26px; height:26px; border-radius:50%; border:0; background:rgba(255,255,255,.07);
+  color:#c4d6e6; cursor:pointer; display:grid; place-items:center; flex:none;
+  font:400 12px/1 sans-serif; padding:0; transition:background .18s, transform .18s}
+#pspace .pc-x:hover{background:rgba(255,255,255,.15); color:#fff; transform:rotate(90deg)}
+
+#pspace .pc-born{margin-top:18px; padding:14px 15px; border-radius:12px;
+  background:linear-gradient(120deg, rgba(255,198,120,.09), rgba(255,198,120,.02));
+  border:1px solid rgba(255,198,120,.14)}
+#pspace .pc-born .k{font-size:9px; letter-spacing:.22em; color:#a98d63; font-weight:600; text-transform:uppercase}
+#pspace .pc-born .v{font-size:31px; font-weight:600; letter-spacing:-.02em; line-height:1.15; margin-top:4px;
+  color:#ffe2b6; font-variant-numeric:tabular-nums}
+#pspace .pc-born .v u{font-size:12px; font-weight:500; color:#c9b28c; text-decoration:none; margin-left:3px}
+#pspace .pc-born .n{font-size:10.5px; color:#93a9bb; margin-top:6px; line-height:1.6}
+#pspace .pc-born .n b{color:#e8d4b4; font-weight:600}
+
+#pspace .pc-stats{display:grid; grid-template-columns:1fr 1fr; gap:1px; margin-top:14px;
+  background:rgba(255,255,255,.06); border-radius:10px; overflow:hidden}
+#pspace .pc-stats div{background:#0d151f; padding:10px 12px}
+#pspace .pc-stats .k{font-size:9px; letter-spacing:.1em; color:#71879a; text-transform:uppercase; font-weight:600}
+#pspace .pc-stats .v{font-size:12.5px; margin-top:4px; color:#dcebf7; font-variant-numeric:tabular-nums}
+
+#pspace .pc-sec{margin-top:18px}
+#pspace .pc-sec > .h{display:flex; justify-content:space-between; align-items:baseline;
+  font-size:9px; letter-spacing:.18em; color:#71879a; font-weight:600; text-transform:uppercase;
+  margin-bottom:9px}
+#pspace .pc-sec > .h b{font-size:10px; letter-spacing:.02em; color:#a8c0d4; text-transform:none; font-weight:500}
+#pspace .pc-lv{display:flex; align-items:center; gap:9px}
+#pspace .pc-dots{display:flex; gap:4px}
+#pspace .pc-dots i{width:15px; height:5px; border-radius:3px; background:rgba(255,255,255,.11)}
+#pspace .pc-dots i.on{background:linear-gradient(90deg,#ffcd8b,#ff9f4e);
+  box-shadow:0 0 8px rgba(255,175,90,.5)}
+#pspace .pc-lv span{font-size:11px; color:#ffd39b}
+#pspace .pc-scale{display:flex; justify-content:space-between; font-size:8.5px; color:#5f7488;
+  margin-top:6px; letter-spacing:.02em}
+
+#pspace .pc-ms{list-style:none; margin:0; padding:0}
+#pspace .pc-ms li{display:grid; grid-template-columns:36px 1fr; gap:9px; padding:7px 0;
+  border-top:1px solid rgba(255,255,255,.055); font-size:11px; line-height:1.45}
+#pspace .pc-ms li:first-child{border-top:0; padding-top:2px}
+#pspace .pc-ms em{font-style:normal; color:#7f95a9; font-variant-numeric:tabular-nums; font-size:10px; padding-top:1px}
+#pspace .pc-ms b{color:#e6f1fa; font-weight:600}
+#pspace .pc-ms span{display:block; color:#8ea4b7; font-size:10.5px; margin-top:1px}
+#pspace .pc-ms li.now em{color:#ffc98c}
+#pspace .pc-ms li.now b{color:#ffe1b4}
+
+#pspace .pc-foot{margin-top:16px; padding-top:12px; border-top:1px solid rgba(255,255,255,.08);
+  font-size:10px; line-height:1.7; color:#8ba1b5}
+#pspace .pc-foot b{color:#d8e7f4; font-weight:500}
+#pspace .pc-home{margin-top:14px; width:100%; height:36px; border-radius:10px; cursor:pointer;
+  border:1px solid rgba(111,180,216,.42); background:rgba(111,180,216,.16); color:#cfe2f0;
+  font:inherit; font-size:12px; transition:background .18s}
+#pspace .pc-home:hover{background:rgba(111,180,216,.28); color:#fff}
+
+/* 标签选中态 */
+#pspacelabels .pslab.on{color:#ffe6bd}
+#pspacelabels .pslab.on i{background:#ffc074; box-shadow:0 0 8px rgba(255,192,116,.9)}
+
+/* 进入太阳系时把地球页的界面全部收起来 */
+body.pspace-on #brand,
+body.pspace-on #cregion,
+body.pspace-on #zoom,
+body.pspace-on #search-wrap,
+body.pspace-on #wstat,
+body.pspace-on #hint,
+body.pspace-on #dock,
+body.pspace-on #foot,
+body.pspace-on #start,
+body.pspace-on #sugg,
+body.pspace-on #cx,
+body.pspace-on #country,
+body.pspace-on #pcard,
+body.pspace-on #pcmp,
+body.pspace-on #pshell-chip{
+  opacity:0!important; pointer-events:none!important; transition:opacity .35s ease!important;
+}
+body.pspace-on #globe{opacity:0!important; transition:opacity .78s ease!important}
+
+/* 工具条上的「飞升」：和「对比」同一套青色，跟相机按钮区分开 */
+#psEntry{color:#9fd3ee!important;border-color:rgba(111,180,216,.38)!important}
+#psEntry:hover{color:#fff!important;background:rgba(111,180,216,.22)!important;
+  border-color:rgba(111,180,216,.62)!important}
+
+@media (max-width:700px){
+  #pspace .ps-top{left:16px; top:18px}
+  #pspace .ps-top h2{font-size:20px}
+  #pspace .ps-top .s{display:none}
+  #pspace .ps-back{right:14px; top:18px}
+  #pspace .ps-card{left:14px; right:14px; width:auto; bottom:64px}
+}

@@ -1,0 +1,192 @@
+/* ============================================================
+   国家档案卡（右侧） —— 从 Atlas 的国家卡片搬过来的那一版
+   ------------------------------------------------------------
+   为什么单独一份 CSS：
+     搭档那版地球的样式是压缩过的，全局选择器（table / .stat / .cap）
+     直接用会互相污染。这里所有规则都收在 #pcard 下面，命名加 pc- 前缀，
+     不碰他任何一条规则。
+   ============================================================ */
+#pcard{
+  --ink:#e9f2f8; --ink2:#9db2c6; --ink3:#71869b;
+  --line:rgba(150,185,215,.13); --line2:rgba(150,185,215,.22);
+  --accent:#6fb4d8;
+  position:fixed; z-index:65; right:86px; top:74px; bottom:122px; width:392px;
+  display:none; flex-direction:column; overflow:hidden;
+  border-radius:18px; border:1px solid rgba(160,200,230,.16);
+  background:linear-gradient(168deg,rgba(17,26,36,.96) 0%,rgba(11,18,26,.94) 100%);
+  backdrop-filter:blur(18px) saturate(1.35);
+  box-shadow:0 34px 80px -26px rgba(0,0,0,.78), inset 0 1px 0 rgba(255,255,255,.06);
+  color:var(--ink); text-align:left;
+  font:400 12px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  box-sizing:border-box;
+  transform:translateX(14px); opacity:0; pointer-events:none;
+  transition:opacity .26s ease, transform .34s cubic-bezier(.16,1,.3,1);
+}
+#pcard.on{display:flex; opacity:1; transform:none; pointer-events:auto;
+  animation:pcIn .46s cubic-bezier(.16,1,.3,1) both}
+@keyframes pcIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
+/* 俯冲时空出来的那半秒：卡也跟着晚一点滑进来，不要抢在地球放大之前出现 */
+body.pdive-land #pcard.on{animation-delay:.56s}
+#pcard *{box-sizing:border-box}
+
+/* ---------- 卡头 ---------- */
+#pcard .pc-head{display:flex;gap:9px;align-items:flex-start;padding:16px 18px 0;flex:none}
+#pcard .pc-head img.flag{width:34px;height:25px;object-fit:cover;border-radius:3.5px;flex:none;margin-top:2px;
+  box-shadow:0 0 0 1px rgba(160,200,230,.18), 0 2px 6px rgba(0,0,0,.5)}
+#pcard .pc-ttl{flex:1;min-width:0}
+#pcard .pc-nm{font-size:22px;font-weight:600;letter-spacing:-.01em;line-height:1.15;color:var(--ink)}
+#pcard .pc-meta{font-size:10.5px;color:var(--ink3);margin-top:5px;letter-spacing:.03em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#pcard .pc-x{width:26px;height:26px;border-radius:50%;border:0;background:rgba(255,255,255,.06);
+  color:var(--ink2);cursor:pointer;display:grid;place-items:center;flex:none;
+  transition:background .18s,transform .18s;font:400 13px/1 sans-serif;padding:0}
+#pcard .pc-x:hover{background:rgba(255,255,255,.13);color:#fff;transform:rotate(90deg)}
+/* 「＋ 对比」：对比入口原来只在线下那块面板里，读到数字的人未必会回左边找 */
+#pcard .pc-cmp{height:26px;padding:0 9px;margin-left:1px;border-radius:999px;flex:none;cursor:pointer;
+  border:1px solid rgba(160,200,230,.28);background:rgba(255,255,255,.06);color:#cfe2f0;
+  font:inherit;font-size:11px;letter-spacing:.02em;white-space:nowrap;
+  transition:background .18s,border-color .18s,color .18s}
+#pcard .pc-cmp:hover{background:rgba(111,180,216,.18);border-color:rgba(111,180,216,.5);color:#fff}
+body.plan-free #pcard .pc-cmp{color:rgba(232,163,74,.8);border-color:rgba(232,163,74,.32)}
+
+/* ---------- 滚动区 ---------- */
+#pcard .pc-body{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;
+  padding:0 18px 10px;scrollbar-width:thin;scrollbar-color:rgba(150,185,215,.24) transparent}
+#pcard .pc-body::-webkit-scrollbar{width:7px}
+#pcard .pc-body::-webkit-scrollbar-thumb{background:rgba(150,185,215,.22);border-radius:4px;
+  border:2px solid transparent;background-clip:content-box}
+/* 下缘渐隐：提示「下面还有」，否则最后一节被切断像渲染坏了 */
+#pcard .pc-body::after{content:'';position:sticky;display:block;bottom:-1px;height:24px;
+  margin:0 -18px -10px;pointer-events:none;
+  background:linear-gradient(to top,rgba(11,17,24,.94),rgba(11,17,24,0))}
+
+/* ---------- 三个大数字 ---------- */
+#pcard .pc-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:12px 0 12px;
+  border-bottom:1px solid var(--line)}
+#pcard .pc-stat .k{font-size:9px;letter-spacing:.1em;color:var(--ink3);font-weight:600;text-transform:uppercase}
+#pcard .pc-stat .v{font-size:21px;font-weight:600;letter-spacing:-.025em;margin-top:5px;
+  font-variant-numeric:tabular-nums;line-height:1.15;white-space:nowrap;display:flex;align-items:baseline;gap:1px}
+#pcard .pc-stat .v u{font-size:10.5px;font-weight:500;color:var(--ink2);text-decoration:none}
+#pcard .pc-stat .r{font-size:9.5px;color:var(--ink3);margin-top:5px;white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis}
+
+/* ---------- 一句话洞察 ---------- */
+#pcard .pc-insight{font-size:12.5px;line-height:1.76;color:var(--ink2);padding:11px 0 12px;
+  border-bottom:1px solid var(--line)}
+#pcard .pc-insight b{color:var(--ink);font-weight:600}
+#pcard .pc-insight .q{display:block;margin-top:3px}
+
+/* ---------- 分节 ---------- */
+#pcard .pc-sec{padding-top:13px;min-width:0}
+#pcard .pc-sec-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:8px}
+#pcard .pc-sec-t{font-size:9.5px;letter-spacing:.14em;color:var(--ink3);font-weight:600;text-transform:uppercase;
+  display:flex;align-items:center;gap:6px}
+#pcard .pc-sec-n{font-size:10px;color:var(--ink3);font-variant-numeric:tabular-nums;text-align:right;flex:none}
+#pcard svg{display:block;width:100%;height:auto;max-width:100%;overflow:visible}
+#pcard .pc-cap{font-size:9.5px;color:var(--ink3);margin-top:6px;line-height:1.6;display:flex;gap:10px;flex-wrap:wrap}
+#pcard .pc-cap i{display:inline-flex;align-items:center;gap:4px;font-style:normal}
+#pcard .pc-cap i em{width:12px;height:0;border-top:1.5px solid var(--accent);display:block}
+#pcard .pc-cap i.dash em{border-top:1.4px dashed #93a0a9}
+
+/* 人口结构 */
+#pcard .pc-age{display:flex;height:30px;border-radius:5px;overflow:hidden;gap:2px}
+#pcard .pc-age div{position:relative;display:grid;place-items:center;font-size:9.5px;color:#fff;
+  font-weight:600;font-variant-numeric:tabular-nums;transition:flex-grow .4s;
+  min-width:0;overflow:hidden;white-space:nowrap}
+#pcard .pc-age-legend{display:flex;gap:12px;margin-top:8px;font-size:10px;color:var(--ink2);
+  font-variant-numeric:tabular-nums;flex-wrap:wrap}
+#pcard .pc-age-legend i{display:inline-block;width:7px;height:7px;border-radius:2px;margin-right:5px}
+
+/* 排名条 */
+#pcard .pc-rank{position:relative;height:44px;margin-top:2px}
+#pcard .pc-rank .you-l{position:absolute;top:0;font-size:10px;color:var(--ink2);white-space:nowrap;
+  font-variant-numeric:tabular-nums}
+#pcard .pc-rank .track{position:absolute;left:0;right:0;top:21px;height:2px;border-radius:2px;
+  background:linear-gradient(90deg,rgba(180,210,235,.10),rgba(180,210,235,.34))}
+#pcard .pc-rank .med{position:absolute;top:15px;width:1px;height:14px;background:rgba(180,210,235,.42)}
+#pcard .pc-rank .you{position:absolute;top:17px;width:10px;height:10px;border-radius:50%;
+  background:#eaf3fa;border:2px solid #0b1118;transform:translateX(-50%);
+  box-shadow:0 0 0 1px rgba(180,210,235,.45),0 2px 8px rgba(0,0,0,.55);
+  transition:left .45s cubic-bezier(.2,.7,.3,1)}
+#pcard .pc-rank .ends{position:absolute;top:31px;left:0;right:0;display:flex;justify-content:space-between;
+  font-size:9px;color:var(--ink3);font-variant-numeric:tabular-nums}
+
+/* 邻国对照 */
+#pcard .pc-nb{display:flex;flex-direction:column;gap:7px}
+#pcard .pc-nb .r{display:grid;grid-template-columns:66px 1fr 56px;gap:9px;align-items:center;
+  font-size:11px;cursor:pointer;padding:2px 0;border-radius:5px;transition:background .16s;color:var(--ink)}
+#pcard .pc-nb .r:hover{background:rgba(255,255,255,.05)}
+#pcard .pc-nb .r.self{font-weight:600}
+#pcard .pc-nb .r .bar{height:6px;border-radius:3px;background:rgba(255,255,255,.07);overflow:hidden}
+#pcard .pc-nb .r .bar span{display:block;height:100%;border-radius:3px;background:#b7cbd6;
+  transition:width .45s cubic-bezier(.2,.7,.3,1)}
+#pcard .pc-nb .r.self .bar span{background:var(--accent)}
+#pcard .pc-nb .r .num{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink2);font-size:10.5px}
+
+/* 完整指标表 */
+#pcard .pc-more{margin-top:14px;border-top:1px solid var(--line)}
+#pcard .pc-more>button{width:100%;border:0;background:transparent;color:var(--ink2);font:inherit;font-size:11px;
+  padding:11px 0 2px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;
+  transition:color .18s}
+#pcard .pc-more>button:hover{color:var(--ink)}
+#pcard .pc-more>button svg{width:9px;height:9px;stroke:currentColor;fill:none;stroke-width:2;transition:transform .28s}
+#pcard .pc-more.open>button svg{transform:rotate(180deg)}
+#pcard .pc-more .tbl{display:none;padding-top:8px;overflow-x:auto}
+#pcard .pc-more.open .tbl{display:block}
+#pcard table{width:100%;border-collapse:collapse;font-size:10.5px;font-variant-numeric:tabular-nums}
+#pcard th{font-size:9px;letter-spacing:.06em;color:var(--ink3);font-weight:600;text-align:right;padding:0 0 6px}
+#pcard th:first-child,#pcard td:first-child{text-align:left;color:var(--ink2);font-weight:400}
+#pcard td{text-align:right;padding:5px 0;border-top:1px solid rgba(150,185,215,.08);color:var(--ink)}
+
+/* ---------- 底部主按钮 ---------- */
+#pcard .pc-actions{flex:none;padding:10px 18px 0}
+#pcard .pc-snap{width:100%;height:40px;display:flex;align-items:center;justify-content:center;gap:8px;
+  border-radius:11px;border:1px solid rgba(180,215,240,.34);
+  background:linear-gradient(180deg,#f2f8fc 0%,#dceaf5 100%);color:#0b1620;
+  font:inherit;font-size:12.5px;font-weight:600;letter-spacing:.01em;cursor:pointer;
+  box-shadow:0 6px 18px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,255,255,.9);
+  transition:transform .16s ease, box-shadow .22s ease, background .2s ease}
+#pcard .pc-snap svg{width:15px;height:15px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;
+  stroke-linecap:round;stroke-linejoin:round;opacity:.82}
+#pcard .pc-snap i{font-style:normal;font-weight:400;font-size:10px;letter-spacing:.02em;color:#5a7082;padding-left:2px}
+#pcard .pc-snap:hover{background:linear-gradient(180deg,#fff 0%,#e9f2f9 100%);
+  transform:translateY(-1px);box-shadow:0 10px 24px rgba(0,0,0,.46), inset 0 1px 0 #fff}
+#pcard .pc-snap:active{transform:none}
+
+/* ---------- 卡脚 ---------- */
+#pcard .pc-foot{flex:none;padding:9px 18px;display:flex;justify-content:space-between;
+  font-size:9.5px;color:var(--ink3);letter-spacing:.03em}
+
+/* ---------- 完整版标记（基础版里给这几节上锁） ---------- */
+#pcard .lk{display:none;align-items:center;padding:1px 6px;border-radius:999px;
+  border:1px solid rgba(232,163,74,.42);color:#e8a34a;font-size:9px;letter-spacing:.04em;
+  font-weight:500;text-transform:none}
+body.plan-free #pcard .pc-sec[data-pro] .lk{display:inline-flex}
+body.plan-free #pcard .pc-sec[data-pro] .pc-sec-b{opacity:.24;filter:grayscale(1);
+  pointer-events:none;user-select:none}
+body.plan-free #pcard .pc-more[data-pro] > button{color:rgba(232,163,74,.72)}
+
+/* ---------- 分享名片预览 ---------- */
+#psnap{position:fixed;inset:0;z-index:9300;display:none;place-items:center;
+  background:rgba(3,6,10,.78);backdrop-filter:blur(8px)}
+#psnap.on{display:grid}
+#psnap .box{display:flex;flex-direction:column;align-items:center;gap:14px;max-height:92vh}
+#psnap img{max-height:78vh;width:auto;border-radius:12px;box-shadow:0 40px 90px -30px rgba(0,0,0,.9)}
+#psnap .row{display:flex;gap:10px;align-items:center}
+#psnap button{border-radius:9px;border:1px solid rgba(160,200,230,.28);background:rgba(255,255,255,.08);
+  color:#e9f2f8;font:inherit;font-size:12px;padding:9px 18px;cursor:pointer}
+#psnap button.pri{background:#eef6fb;color:#0b1620;border-color:#eef6fb;font-weight:600}
+#psnap button:hover{background:rgba(255,255,255,.16)}
+#psnap button.pri:hover{background:#fff}
+#psnap .note{font-size:10.5px;color:#7f93a6;letter-spacing:.03em}
+
+@media (max-width:1180px){
+  #pcard{width:340px;right:12px;bottom:12px}
+}
+@media (max-width:900px){
+  #pcard{left:10px;right:10px;width:auto;top:auto;bottom:10px;max-height:64vh;transform:translateY(16px)}
+}
+/* 手机上搭档自己就有一块国家面板，再叠一张卡只会互相盖住，索性不显示 */
+@media (max-width:700px){
+  #pcard{display:none!important}
+}
