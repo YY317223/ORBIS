@@ -1,0 +1,93 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{width:1280px;height:800px;overflow:hidden;font-family:Inter,"PingFang SC","Microsoft YaHei",sans-serif;background:#03070f;color:#fff}
+.wrap{position:relative;z-index:3;width:100%;height:100%;display:flex;align-items:center;justify-content:space-between;padding:0 9% 0 10%}
+.brand{width:46%}
+.logo{display:flex;align-items:center;gap:13px;margin-bottom:26px}
+.orb{width:34px;height:34px;border-radius:50%;display:block}
+.lname{font-size:22px;font-weight:700;letter-spacing:.32em}
+.brand h2{font-size:44px;font-weight:700;letter-spacing:.03em;line-height:1.2;margin-bottom:12px}
+.lead{font-size:15px;letter-spacing:.05em;margin-bottom:38px}
+.feat{list-style:none;display:flex;flex-direction:column;gap:19px}
+.feat li{display:flex;gap:15px;align-items:flex-start}
+.feat i{font-style:normal;font-size:11px;font-weight:600;letter-spacing:.1em;padding-top:3px;min-width:22px}
+.feat span{display:flex;flex-direction:column;gap:4px}
+.feat b{font-size:14px;font-weight:600}
+.feat em{font-style:normal;font-size:12px;opacity:.55}
+.src{margin-top:34px;font-size:11px;letter-spacing:.04em;opacity:.4}
+.card{width:392px;padding:34px 34px 26px;position:relative}
+.ctitle{font-size:23px;font-weight:700;letter-spacing:.02em}
+.csub{font-size:12.5px;opacity:.55;margin-top:6px}
+.tabs{display:flex;gap:5px;padding:4px;border-radius:9px;margin:24px 0 20px;position:relative}
+.tabs button{flex:1;padding:10px;border:0;border-radius:6px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;background:transparent}
+.tabs button.on{color:#06121e}
+.card label{display:block;font-size:12px;font-weight:500;margin-bottom:15px;letter-spacing:.02em}
+.card label input{display:block;width:100%;margin-top:9px;padding:13px 14px;font:inherit;font-size:13px;outline:none;border-radius:8px}
+.card label input::placeholder{opacity:.38}
+.row{display:flex;justify-content:space-between;align-items:center;margin:-3px 0 20px;font-size:12px}
+.rem{display:flex!important;align-items:center;gap:7px;cursor:pointer;font-size:12px!important}
+.rem input{width:auto!important;margin:0!important;padding:0!important;accent-color:#5fc8f0}
+.fog{cursor:pointer;text-decoration:none}
+.go,.guest{width:100%;padding:14px;font:inherit;font-size:14px;font-weight:700;border-radius:9px;cursor:pointer;letter-spacing:.02em}
+.go span{margin-left:8px}
+.or{text-align:center;font-size:11px;opacity:.35;margin:15px 0;position:relative}
+.or:before,.or:after{content:"";position:absolute;top:50%;width:43%;height:1px;background:rgba(255,255,255,.13)}
+.or:before{left:0}.or:after{right:0}
+.foot{text-align:center;font-size:10.5px;opacity:.35;margin-top:16px}
+
+ .orb{background:radial-gradient(circle at 32% 28%,#8ff8ec 0%,#4d9ae8 38%,#7a4de0 72%,#06121f 100%);box-shadow:0 0 22px rgba(90,240,220,.7),inset -4px -5px 9px rgba(0,0,0,.6)}
+ .lname{color:#eafcff;text-shadow:0 0 20px rgba(90,240,220,.5)}
+ .brand h2{color:#f0faff}.lead{color:#a9b8e0}.feat i{color:#4de8d0}.feat b{color:#e2eaff}.feat em{color:#8a94c0}.src{color:#5f6a9a}
+ .card{background:linear-gradient(160deg,rgba(20,16,44,.9),rgba(10,8,26,.92));border:1px solid rgba(120,100,230,.4);border-radius:14px;
+   box-shadow:0 0 0 1px rgba(80,230,210,.12),0 20px 60px rgba(80,60,180,.35)}
+ .ctitle{color:#eafcff}.csub{color:#9aa6d6}
+ .tabs{background:rgba(120,100,230,.12)}
+ .tabs button{color:#9aa6d6}.tabs button.on{background:linear-gradient(135deg,#4de8d0,#4d9ae8);color:#06121e;box-shadow:0 0 18px rgba(80,230,210,.4)}
+ .card label{color:#bcc6ee}
+ .card label input{background:rgba(120,100,230,.09);border:1px solid rgba(120,110,220,.32);color:#eef2ff}
+ .card label input:focus{border-color:#4de8d0;box-shadow:0 0 0 2px rgba(80,230,210,.14)}
+ .fog{color:#4de8d0}.rem{color:#a0aad4}
+ .go{background:linear-gradient(135deg,#4de8d0,#4d9ae8);color:#06121e;box-shadow:0 8px 26px rgba(80,200,220,.4)}
+ .guest{background:transparent;color:#b9c4ee;border:1px solid rgba(120,110,220,.38)}
+ .or,.foot{color:#8894c4}
+ 
+</style></head><body>
+<div style="position:absolute;inset:0;background:radial-gradient(ellipse at 70% 40%,#241547 0%,#0d0a24 50%,#05030f 85%)"></div>
+<div style="position:absolute;inset:0;background-image:linear-gradient(rgba(120,90,220,.07) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(120,90,220,.07) 1px,transparent 1px);background-size:44px 44px;
+  mask-image:radial-gradient(ellipse at 50% 50%,#000,transparent 78%)"></div>
+<div style="position:absolute;left:8%;top:52%;transform:translateY(-50%);width:600px;height:600px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,rgba(90,230,220,.22),rgba(120,80,230,.12) 45%,transparent 70%);filter:blur(20px)"></div>
+<div style="position:absolute;left:0;top:180px;width:100%;height:2px;background:linear-gradient(90deg,transparent,#4de8d0,transparent);opacity:.35"></div>
+<div style="position:absolute;left:0;top:560px;width:100%;height:1px;background:linear-gradient(90deg,transparent,#a86cf0,transparent);opacity:.25"></div>
+
+
+<div class="wrap">
+  <div class="brand">
+    <div class="logo"><span class="orb"></span><span class="lname">ORBIS</span></div>
+    <h2>从太空看地球</h2>
+    <p class="lead">用数据重新认识我们生活的星球</p>
+    <ul class="feat">
+      <li><i>01</i><span><b>全球 200+ 国家</b><em>GDP · 人口 · 寿命 · 汇率实时数据</em></span></li>
+      <li><i>02</i><span><b>对比与分享</b><em>链接记住状态，一键生成精美分享图</em></span></li>
+      <li><i>03</i><span><b>变化追踪</b><em>关注国家数据大变，邮件自动提醒</em></span></li>
+    </ul>
+    <p class="src">世界银行 WDI · Frankfurter 111 家央行</p>
+  </div>
+  <div class="card">
+    <div class="ctitle">欢迎回来</div>
+    <p class="csub">登录以使用完整账户功能</p>
+    <div class="tabs"><button class="on">登录</button><button>注册</button></div>
+    <label>邮箱<input type="email" placeholder="you@example.com"></label>
+    <label>密码<input type="password" placeholder="请输入密码"></label>
+    <div class="row"><label class="rem"><input type="checkbox" checked> 记住我 30 天</label><a class="fog">忘记密码?</a></div>
+    <button class="go">登录并进入 <span>→</span></button>
+    <div class="or"><span>或</span></div>
+    <button class="guest">以访客身份浏览</button>
+    <p class="foot">登录即表示同意服务条款与隐私政策</p>
+  </div>
+</div>
+
+</body></html>

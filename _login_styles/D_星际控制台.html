@@ -1,0 +1,99 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{width:1280px;height:800px;overflow:hidden;font-family:Inter,"PingFang SC","Microsoft YaHei",sans-serif;background:#03070f;color:#fff}
+.wrap{position:relative;z-index:3;width:100%;height:100%;display:flex;align-items:center;justify-content:space-between;padding:0 9% 0 10%}
+.brand{width:46%}
+.logo{display:flex;align-items:center;gap:13px;margin-bottom:26px}
+.orb{width:34px;height:34px;border-radius:50%;display:block}
+.lname{font-size:22px;font-weight:700;letter-spacing:.32em}
+.brand h2{font-size:44px;font-weight:700;letter-spacing:.03em;line-height:1.2;margin-bottom:12px}
+.lead{font-size:15px;letter-spacing:.05em;margin-bottom:38px}
+.feat{list-style:none;display:flex;flex-direction:column;gap:19px}
+.feat li{display:flex;gap:15px;align-items:flex-start}
+.feat i{font-style:normal;font-size:11px;font-weight:600;letter-spacing:.1em;padding-top:3px;min-width:22px}
+.feat span{display:flex;flex-direction:column;gap:4px}
+.feat b{font-size:14px;font-weight:600}
+.feat em{font-style:normal;font-size:12px;opacity:.55}
+.src{margin-top:34px;font-size:11px;letter-spacing:.04em;opacity:.4}
+.card{width:392px;padding:34px 34px 26px;position:relative}
+.ctitle{font-size:23px;font-weight:700;letter-spacing:.02em}
+.csub{font-size:12.5px;opacity:.55;margin-top:6px}
+.tabs{display:flex;gap:5px;padding:4px;border-radius:9px;margin:24px 0 20px;position:relative}
+.tabs button{flex:1;padding:10px;border:0;border-radius:6px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;background:transparent}
+.tabs button.on{color:#06121e}
+.card label{display:block;font-size:12px;font-weight:500;margin-bottom:15px;letter-spacing:.02em}
+.card label input{display:block;width:100%;margin-top:9px;padding:13px 14px;font:inherit;font-size:13px;outline:none;border-radius:8px}
+.card label input::placeholder{opacity:.38}
+.row{display:flex;justify-content:space-between;align-items:center;margin:-3px 0 20px;font-size:12px}
+.rem{display:flex!important;align-items:center;gap:7px;cursor:pointer;font-size:12px!important}
+.rem input{width:auto!important;margin:0!important;padding:0!important;accent-color:#5fc8f0}
+.fog{cursor:pointer;text-decoration:none}
+.go,.guest{width:100%;padding:14px;font:inherit;font-size:14px;font-weight:700;border-radius:9px;cursor:pointer;letter-spacing:.02em}
+.go span{margin-left:8px}
+.or{text-align:center;font-size:11px;opacity:.35;margin:15px 0;position:relative}
+.or:before,.or:after{content:"";position:absolute;top:50%;width:43%;height:1px;background:rgba(255,255,255,.13)}
+.or:before{left:0}.or:after{right:0}
+.foot{text-align:center;font-size:10.5px;opacity:.35;margin-top:16px}
+
+ body{font-family:Inter,"PingFang SC",sans-serif}
+ .orb{background:radial-gradient(circle at 32% 28%,#a8ffe8 0%,#3fae8c 38%,#1a5a52 72%,#06121f 100%);box-shadow:0 0 18px rgba(77,232,192,.6);border-radius:50%}
+ .lname{color:#d8fff4;font-family:monospace;letter-spacing:.28em}
+ .brand h2{color:#e2fff6;font-size:40px}.lead{color:#8fbdb0;font-family:monospace;font-size:13px}
+ .feat i{color:#4de8c0;font-family:monospace}.feat b{color:#d2f5ea}.feat em{color:#7fa89c}.src{color:#5c867b;font-family:monospace}
+ .card{background:rgba(4,20,22,.82);border:1px solid rgba(77,232,192,.35);border-radius:0;position:relative;
+   box-shadow:0 0 0 1px rgba(77,232,192,.08)}
+ .card:before{content:"";position:absolute;left:-1px;top:-1px;width:16px;height:16px;border-left:2px solid #4de8c0;border-top:2px solid #4de8c0}
+ .card:after{content:"";position:absolute;right:-1px;bottom:-1px;width:16px;height:16px;border-right:2px solid #4de8c0;border-bottom:2px solid #4de8c0}
+ .ctitle{color:#d8fff4;font-family:monospace;letter-spacing:.06em}.csub{color:#8fbdb0;font-family:monospace;font-size:12px}
+ .tabs{background:rgba(77,232,192,.08);border-radius:0}
+ .tabs button{color:#8fbdb0;border-radius:0;font-family:monospace}.tabs button.on{background:rgba(77,232,192,.16);color:#4de8c0}
+ .card label{color:#a8d4c6;font-family:monospace}
+ .card label input{background:rgba(77,232,192,.05);border:1px solid rgba(77,232,192,.25);border-radius:0;color:#e2fff6;font-family:monospace}
+ .card label input:focus{border-color:#4de8c0;box-shadow:0 0 0 1px rgba(77,232,192,.2)}
+ .fog{color:#4de8c0;font-family:monospace}.rem{color:#8fbdb0;font-family:monospace}
+ .go{background:#4de8c0;color:#041814;border-radius:0;font-family:monospace;box-shadow:0 0 22px rgba(77,232,192,.3)}
+ .guest{background:transparent;color:#8fbdb0;border:1px solid rgba(77,232,192,.3);border-radius:0;font-family:monospace}
+ .or,.foot{color:#6f9b8f;font-family:monospace}
+ 
+</style></head><body>
+<div style="position:absolute;inset:0;background:#030b10;
+   background-image:linear-gradient(rgba(80,200,180,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(80,200,180,.05) 1px,transparent 1px);
+   background-size:60px 60px"></div>
+<div style="position:absolute;left:60px;top:60px;width:40px;height:40px;border-left:2px solid #4de8c0;border-top:2px solid #4de8c0;opacity:.6"></div>
+<div style="position:absolute;right:60px;bottom:60px;width:40px;height:40px;border-right:2px solid #4de8c0;border-bottom:2px solid #4de8c0;opacity:.6"></div>
+<div style="position:absolute;left:10%;top:50%;transform:translateY(-50%);width:520px;height:520px;border-radius:50%;
+   background:radial-gradient(circle at 35% 30%,rgba(77,232,192,.18),rgba(20,80,90,.1) 55%,transparent 72%);
+   border:1px solid rgba(77,232,192,.18)"></div>
+<div style="position:absolute;left:calc(10% + 260px);top:50%;width:700px;height:1px;background:linear-gradient(90deg,rgba(77,232,192,.4),transparent)"></div>
+<div style="position:absolute;left:8%;top:14%;font-family:monospace;font-size:10px;color:rgba(77,232,192,.5);letter-spacing:.2em">SYS.ORB // AUTH GATEWAY v2.4</div>
+
+
+<div class="wrap">
+  <div class="brand">
+    <div class="logo"><span class="orb"></span><span class="lname">ORBIS</span></div>
+    <h2>从太空看地球</h2>
+    <p class="lead">用数据重新认识我们生活的星球</p>
+    <ul class="feat">
+      <li><i>01</i><span><b>全球 200+ 国家</b><em>GDP · 人口 · 寿命 · 汇率实时数据</em></span></li>
+      <li><i>02</i><span><b>对比与分享</b><em>链接记住状态，一键生成精美分享图</em></span></li>
+      <li><i>03</i><span><b>变化追踪</b><em>关注国家数据大变，邮件自动提醒</em></span></li>
+    </ul>
+    <p class="src">世界银行 WDI · Frankfurter 111 家央行</p>
+  </div>
+  <div class="card">
+    <div class="ctitle">欢迎回来</div>
+    <p class="csub">登录以使用完整账户功能</p>
+    <div class="tabs"><button class="on">登录</button><button>注册</button></div>
+    <label>邮箱<input type="email" placeholder="you@example.com"></label>
+    <label>密码<input type="password" placeholder="请输入密码"></label>
+    <div class="row"><label class="rem"><input type="checkbox" checked> 记住我 30 天</label><a class="fog">忘记密码?</a></div>
+    <button class="go">登录并进入 <span>→</span></button>
+    <div class="or"><span>或</span></div>
+    <button class="guest">以访客身份浏览</button>
+    <p class="foot">登录即表示同意服务条款与隐私政策</p>
+  </div>
+</div>
+
+</body></html>

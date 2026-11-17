@@ -1,0 +1,91 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{width:1280px;height:800px;overflow:hidden;font-family:Inter,"PingFang SC","Microsoft YaHei",sans-serif;background:#03070f;color:#fff}
+.wrap{position:relative;z-index:3;width:100%;height:100%;display:flex;align-items:center;justify-content:space-between;padding:0 9% 0 10%}
+.brand{width:46%}
+.logo{display:flex;align-items:center;gap:13px;margin-bottom:26px}
+.orb{width:34px;height:34px;border-radius:50%;display:block}
+.lname{font-size:22px;font-weight:700;letter-spacing:.32em}
+.brand h2{font-size:44px;font-weight:700;letter-spacing:.03em;line-height:1.2;margin-bottom:12px}
+.lead{font-size:15px;letter-spacing:.05em;margin-bottom:38px}
+.feat{list-style:none;display:flex;flex-direction:column;gap:19px}
+.feat li{display:flex;gap:15px;align-items:flex-start}
+.feat i{font-style:normal;font-size:11px;font-weight:600;letter-spacing:.1em;padding-top:3px;min-width:22px}
+.feat span{display:flex;flex-direction:column;gap:4px}
+.feat b{font-size:14px;font-weight:600}
+.feat em{font-style:normal;font-size:12px;opacity:.55}
+.src{margin-top:34px;font-size:11px;letter-spacing:.04em;opacity:.4}
+.card{width:392px;padding:34px 34px 26px;position:relative}
+.ctitle{font-size:23px;font-weight:700;letter-spacing:.02em}
+.csub{font-size:12.5px;opacity:.55;margin-top:6px}
+.tabs{display:flex;gap:5px;padding:4px;border-radius:9px;margin:24px 0 20px;position:relative}
+.tabs button{flex:1;padding:10px;border:0;border-radius:6px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;background:transparent}
+.tabs button.on{color:#06121e}
+.card label{display:block;font-size:12px;font-weight:500;margin-bottom:15px;letter-spacing:.02em}
+.card label input{display:block;width:100%;margin-top:9px;padding:13px 14px;font:inherit;font-size:13px;outline:none;border-radius:8px}
+.card label input::placeholder{opacity:.38}
+.row{display:flex;justify-content:space-between;align-items:center;margin:-3px 0 20px;font-size:12px}
+.rem{display:flex!important;align-items:center;gap:7px;cursor:pointer;font-size:12px!important}
+.rem input{width:auto!important;margin:0!important;padding:0!important;accent-color:#5fc8f0}
+.fog{cursor:pointer;text-decoration:none}
+.go,.guest{width:100%;padding:14px;font:inherit;font-size:14px;font-weight:700;border-radius:9px;cursor:pointer;letter-spacing:.02em}
+.go span{margin-left:8px}
+.or{text-align:center;font-size:11px;opacity:.35;margin:15px 0;position:relative}
+.or:before,.or:after{content:"";position:absolute;top:50%;width:43%;height:1px;background:rgba(255,255,255,.13)}
+.or:before{left:0}.or:after{right:0}
+.foot{text-align:center;font-size:10.5px;opacity:.35;margin-top:16px}
+
+ .orb{background:radial-gradient(circle at 32% 28%,#b8f0e0 0%,#5aa9d8 38%,#8a6ad0 72%,#06121f 100%);box-shadow:0 0 26px rgba(100,220,200,.5),inset -4px -5px 9px rgba(0,0,0,.5)}
+ .lname{color:#f0faf8}
+ .brand h2{color:#eaf7f4}.lead{color:#a8c9c4}.feat i{color:#7fdcc0}.feat b{color:#dcefe9}.feat em{color:#8fb0aa}.src{color:#6a8d88}
+ .card{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16);border-radius:22px;
+   backdrop-filter:blur(28px);box-shadow:0 24px 70px rgba(0,0,0,.3)}
+ .ctitle{color:#f2fbf9}.csub{color:#a9c4bf}
+ .tabs{background:rgba(255,255,255,.08)}
+ .tabs button{color:#b0c8c3}.tabs button.on{background:rgba(255,255,255,.9);color:#12322c}
+ .card label{color:#cfe4df}
+ .card label input{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);color:#f0faf8}
+ .card label input:focus{border-color:#7fdcc0;background:rgba(127,220,192,.1)}
+ .fog{color:#7fdcc0}.rem{color:#b0c8c3}
+ .go{background:linear-gradient(135deg,#7fdcc0,#5aa9d8);color:#0a2420;box-shadow:0 10px 30px rgba(100,200,190,.3)}
+ .guest{background:rgba(255,255,255,.05);color:#d0e4df;border:1px solid rgba(255,255,255,.18)}
+ .or,.foot{color:#8fb0aa}
+ 
+</style></head><body>
+<div style="position:absolute;inset:0;background:linear-gradient(135deg,#071a24 0%,#0a1424 45%,#120e26 100%)"></div>
+<div style="position:absolute;left:-10%;top:-20%;width:900px;height:700px;border-radius:50%;
+  background:radial-gradient(ellipse,rgba(80,210,180,.24),transparent 62%);filter:blur(30px)"></div>
+<div style="position:absolute;right:-8%;bottom:-15%;width:820px;height:680px;border-radius:50%;
+  background:radial-gradient(ellipse,rgba(140,110,230,.26),transparent 62%);filter:blur(30px)"></div>
+<div style="position:absolute;left:22%;top:8%;width:520px;height:2px;background:linear-gradient(90deg,transparent,rgba(120,230,200,.5),transparent);transform:rotate(-12deg)"></div>
+
+
+<div class="wrap">
+  <div class="brand">
+    <div class="logo"><span class="orb"></span><span class="lname">ORBIS</span></div>
+    <h2>从太空看地球</h2>
+    <p class="lead">用数据重新认识我们生活的星球</p>
+    <ul class="feat">
+      <li><i>01</i><span><b>全球 200+ 国家</b><em>GDP · 人口 · 寿命 · 汇率实时数据</em></span></li>
+      <li><i>02</i><span><b>对比与分享</b><em>链接记住状态，一键生成精美分享图</em></span></li>
+      <li><i>03</i><span><b>变化追踪</b><em>关注国家数据大变，邮件自动提醒</em></span></li>
+    </ul>
+    <p class="src">世界银行 WDI · Frankfurter 111 家央行</p>
+  </div>
+  <div class="card">
+    <div class="ctitle">欢迎回来</div>
+    <p class="csub">登录以使用完整账户功能</p>
+    <div class="tabs"><button class="on">登录</button><button>注册</button></div>
+    <label>邮箱<input type="email" placeholder="you@example.com"></label>
+    <label>密码<input type="password" placeholder="请输入密码"></label>
+    <div class="row"><label class="rem"><input type="checkbox" checked> 记住我 30 天</label><a class="fog">忘记密码?</a></div>
+    <button class="go">登录并进入 <span>→</span></button>
+    <div class="or"><span>或</span></div>
+    <button class="guest">以访客身份浏览</button>
+    <p class="foot">登录即表示同意服务条款与隐私政策</p>
+  </div>
+</div>
+
+</body></html>

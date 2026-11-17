@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>世界即卡片 · 点地图，读国家</title>
+<style>
+:root{
+  --bg:#F5F7F3; --ocean:#EBF0E9; --land:#E8EDE6; --nodata:#DFE6DE;
+  --ink:#1D2B27; --ink2:#5B6B65; --ink3:#8C9B94; --line:#D9E2D8;
+  --paper:rgba(255,255,255,.87); --paper2:rgba(255,255,255,.72);
+  --accent:#C9702F; --accent2:#E09A5B; --accent-soft:#FAF0E5;
+  --teal:#1B6B6B; --shadow:0 26px 70px rgba(24,48,42,.17),0 3px 10px rgba(24,48,42,.07);
+  --ease:cubic-bezier(.2,.9,.25,1);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased; font-variant-numeric:tabular-nums;
+}
+#stage{position:fixed;inset:0;background:
+  radial-gradient(120% 90% at 50% 42%, #FBFDF9 0%, var(--bg) 72%, #EDF1EA 100%);}
+#map{position:absolute;inset:0;width:100%;height:100%;display:block}
+#ocean{fill:var(--ocean)}
+.grat{fill:none;stroke:#CBD8C9;stroke-width:.5;opacity:.55;pointer-events:none}
+.country{
+  fill:var(--nodata); stroke:#FFFFFF; stroke-width:.62; stroke-linejoin:round;
+  cursor:pointer; vector-effect:non-scaling-stroke;
+  transition:fill .45s ease,opacity .35s ease,stroke .18s ease,stroke-width .18s ease;
+}
+.country.is-off{fill:#E1E7DF;pointer-events:none;opacity:.8}
+.country:hover{stroke:#587C74;stroke-width:1.3}
+#map.has-focus .country{opacity:.32}
+#map.has-focus .country.is-peer{opacity:.8}
+#map.has-focus .country.is-selected{opacity:1;stroke:var(--accent);stroke-width:2.1;filter:drop-shadow(0 0 5px rgba(201,112,47,.45))}
+#map.has-focus .country.is-selected:hover{stroke:var(--accent);stroke-width:2.4}
+#leader{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:5;opacity:0;transition:opacity .3s}
+#leader.on{opacity:1}
+.leader-line{fill:none;stroke:var(--accent);stroke-width:1.7;stroke-dasharray:4 4;opacity:.9;filter:drop-shadow(0 1px 2px rgba(201,112,47,.45))}
+.leader-dot{fill:var(--accent)}
+.leader-ring{fill:none;stroke:var(--accent);stroke-width:1.5;opacity:.75}
+.chrome{position:fixed;z-index:10}
+.glass{background:var(--paper2);backdrop-filter:blur(16px) saturate(1.15);-webkit-backdrop-filter:blur(16px) saturate(1.15);
+  border:1px solid rgba(255,255,255,.85);box-shadow:0 6px 24px rgba(24,48,42,.07)}
+
+/* ---- 左上：极简标识（不是导航） ---- */
+#brand{top:26px;left:34px;pointer-events:none}
+#brand .mark{display:flex;align-items:center;gap:9px}
+#brand .glyph{width:20px;height:20px;border-radius:6px 6px 6px 2px;background:var(--teal);position:relative;transform:rotate(-8deg)}
+#brand .glyph:after{content:"";position:absolute;inset:5px;border:1.5px solid rgba(255,255,255,.85);border-radius:3px}
+#brand h1{font-size:14px;letter-spacing:.24em;margin:0;font-weight:700}
+#brand .sub{margin-top:7px;font-size:11px;color:var(--ink3);letter-spacing:.08em}
+
+/* ---- 右上：搜索（地图的辅助，不是并列入口） ---- */
+#search-wrap{top:22px;right:30px;width:272px}
+#search{display:flex;align-items:center;gap:9px;height:42px;padding:0 12px;border-radius:12px}
+#search svg{flex:0 0 auto;opacity:.55}
+#q{border:0;background:transparent;outline:0;font:inherit;font-size:13px;color:var(--ink);width:100%;min-width:0}
+#q::placeholder{color:var(--ink3)}
+kbd{font:inherit;font-size:10px;color:var(--ink3);border:1px solid var(--line);border-radius:4px;padding:2px 5px;background:rgba(255,255,255,.6)}
+#sugg{margin-top:7px;border-radius:12px;overflow:hidden;display:none}
+#sugg.on{display:block}
+.sug{display:flex;align-items:center;gap:9px;padding:9px 12px;cursor:pointer;font-size:12.5px;border-bottom:1px solid rgba(217,226,216,.6)}
+.sug:last-child{border-bottom:0}
+.sug:hover,.sug.act{background:rgba(27,107,107,.07)}
+.sug .f,.sug .fi{font-size:16px;line-height:1;flex:0 0 auto}
+.fi{width:19px;height:14px;object-fit:cover;border-radius:2px;box-shadow:0 1px 3px rgba(24,48,42,.16)}
+.iso-badge{background:#E5EDE6;color:#5B6B65;font-size:9px;font-weight:700;display:grid;place-items:center;letter-spacing:.03em}
+.sug .en{margin-left:auto;color:var(--ink3);font-size:10.5px}
+.sug .empty{padding:12px;color:var(--ink3);font-size:12px}
+
+/* ---- 左下：指标 + 图例 ---- */
+#metrics{bottom:26px;left:34px;width:280px}
+.chips{display:flex;gap:3px;padding:4px;border-radius:12px}
+.chip{flex:1;border:0;background:transparent;border-radius:9px;padding:8px 3px;font:inherit;font-size:11.5px;
+  color:var(--ink2);cursor:pointer;white-space:nowrap;transition:.2s}
+.chip:hover{color:var(--ink)}
+.chip.on{background:#fff;color:var(--ink);font-weight:650;box-shadow:0 2px 8px rgba(24,48,42,.10)}
+.legend{margin-top:12px;padding:11px 13px;border-radius:12px}
+.legend .top{display:flex;justify-content:space-between;align-items:baseline;font-size:10.5px;color:var(--ink3);letter-spacing:.04em}
+.legend .top b{color:var(--ink2);font-weight:600;font-size:11px}
+.bar{height:8px;border-radius:5px;margin:8px 0 6px;border:1px solid rgba(255,255,255,.9)}
+.legend .ends{display:flex;justify-content:space-between;font-size:10px;color:var(--ink3)}
+.legend .nd{display:flex;align-items:center;gap:6px;margin-top:8px;font-size:10px;color:var(--ink3)}
+.legend .nd i{width:10px;height:10px;border-radius:3px;background:var(--nodata);display:inline-block}
+
+/* ---- 底部中间：时间轴 ---- */
+#timeline{bottom:26px;left:50%;transform:translateX(-50%);width:340px;padding:12px 16px 11px;border-radius:14px}
+.tl-top{display:flex;align-items:baseline;gap:9px;margin-bottom:9px}
+.tl-year{font-size:23px;font-weight:700;letter-spacing:-.03em;line-height:1}
+.tl-cap{font-size:10.5px;color:var(--ink3);letter-spacing:.06em}
+#play{margin-left:auto;width:24px;height:24px;border:1px solid var(--line);border-radius:50%;background:rgba(255,255,255,.8);
+  cursor:pointer;color:var(--ink2);font-size:10px;line-height:1;display:grid;place-items:center;padding:0}
+#play:hover{border-color:var(--teal);color:var(--teal)}
+#year-range{width:100%;height:4px;-webkit-appearance:none;appearance:none;border-radius:3px;outline:0;
+  background:linear-gradient(90deg,var(--teal) var(--p,100%),#DCE5DA var(--p,100%))}
+#year-range::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#fff;
+  border:2.5px solid var(--teal);box-shadow:0 2px 6px rgba(24,48,42,.2);cursor:grab}
+#year-range::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:#fff;border:2.5px solid var(--teal);cursor:grab}
+.tl-ends{display:flex;justify-content:space-between;margin-top:6px;font-size:9.5px;color:var(--ink3)}
+
+/* ---- 右下：来源 + 说明 ---- */
+#foot{bottom:26px;right:30px;text-align:right;pointer-events:none}
+#foot .src{font-size:10px;color:var(--ink3);line-height:1.7}
+#foot .btn{pointer-events:auto;margin-top:8px;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);
+  background:rgba(255,255,255,.75);border-radius:20px;padding:5px 11px;font:inherit;font-size:10.5px;color:var(--ink2);cursor:pointer}
+#foot .btn:hover{border-color:var(--teal);color:var(--teal)}
+#note{position:fixed;z-index:20;right:30px;bottom:78px;width:334px;padding:18px 20px;border-radius:16px;
+  display:none;box-shadow:var(--shadow)}
+#note.on{display:block;animation:pop .3s var(--ease)}
+#note h3{margin:0 0 10px;font-size:13px}
+#note ol{margin:0;padding-left:16px;font-size:11px;line-height:1.85;color:var(--ink2)}
+#note .srcbox{margin-top:12px;padding-top:11px;border-top:1px solid var(--line);font-size:10px;line-height:1.7;color:var(--ink3)}
+
+/* ---- 首屏唯一引导 ---- */
+#hint{position:fixed;z-index:8;left:50%;bottom:134px;transform:translateX(-50%);display:flex;align-items:center;gap:8px;
+  padding:9px 15px;border-radius:22px;font-size:11.5px;color:var(--ink2);pointer-events:none;
+  animation:breathe 2.6s ease-in-out infinite;transition:opacity .5s,transform .5s}
+#hint.gone{opacity:0;transform:translate(-50%,12px);animation:none}
+#hint .cur{width:15px;height:15px}
+
+/* ---- 品牌操作提示 ---- */
+#brand .ops{margin-top:5px;font-size:10px;color:var(--ink3);letter-spacing:.04em;opacity:.85}
+
+/* ---- 缩放控件 ---- */
+#zoom{position:fixed;z-index:11;right:30px;top:50%;transform:translateY(-50%);
+  display:flex;flex-direction:column;gap:6px}
+#zoom button{width:42px;height:42px;border:1px solid rgba(255,255,255,.85);border-radius:12px;
+  background:var(--paper2);backdrop-filter:blur(14px) saturate(1.15);-webkit-backdrop-filter:blur(14px) saturate(1.15);
+  color:var(--ink2);font-size:20px;line-height:1;cursor:pointer;display:grid;place-items:center;padding:0;
+  box-shadow:0 4px 16px rgba(24,48,42,.10);transition:.15s}
+#zoom button:hover:not(:disabled){border-color:var(--teal);color:var(--teal);background:#fff}
+#zoom button:disabled{opacity:.35;cursor:default}
+#zoom .sep{height:1px;background:rgba(217,226,216,.8);margin:1px 7px}
+
+/* ---- 地图中文标注 ---- */
+#labels{pointer-events:none}
+.lbl{font-family:inherit;font-weight:600;fill:#2C3B35;paint-order:stroke;stroke:#F4F7F0;
+  stroke-width:1.7;stroke-linejoin:round;text-anchor:middle;dominant-baseline:middle;
+  letter-spacing:.01em;transition:opacity .22s ease}
+.lbl.sel{fill:var(--accent);stroke:#FFFFFF;font-weight:700}
+.lbl.is-off{display:none}
+
+/* ---- 浮层：纸 ---- */
+#card{position:fixed;z-index:15;width:474px;max-height:min(628px,calc(100vh - 150px));border-radius:18px;
+  background:var(--paper);backdrop-filter:blur(24px) saturate(1.25);-webkit-backdrop-filter:blur(24px) saturate(1.25);
+  border:1px solid rgba(255,255,255,.92);box-shadow:var(--shadow);overflow:hidden;display:none;
+  transform-origin:0 0}
+#card.on{display:block;animation:grow .52s var(--ease) both}
+#card.closing{animation:shrink .28s ease-in both}
+@keyframes grow{from{opacity:0;transform:scale(.055)}to{opacity:1;transform:scale(1)}}
+@keyframes shrink{from{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(.06)}}
+@keyframes pop{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes breathe{0%,100%{opacity:.65;transform:translate(-50%,0)}50%{opacity:1;transform:translate(-50%,-3px)}}
+
+.card-scroll{height:100%;max-height:min(628px,calc(100vh - 150px));overflow-y:auto;overflow-x:hidden;scroll-behavior:smooth}
+.card-scroll::-webkit-scrollbar{width:5px}
+.card-scroll::-webkit-scrollbar-thumb{background:#D4DED4;border-radius:3px}
+.card-head{position:sticky;top:0;z-index:3;display:flex;align-items:center;gap:11px;padding:15px 18px 13px;
+  background:rgba(255,255,255,.83);backdrop-filter:blur(18px);border-bottom:1px solid rgba(217,226,216,.75)}
+.card-head .flag{font-size:25px;line-height:1}
+.flag-img{width:29px;height:21px;object-fit:cover;border-radius:3px;display:block;box-shadow:0 1px 4px rgba(24,48,42,.18)}
+.flag-img.big{width:54px;height:38px;margin:0 auto 4px;box-shadow:0 3px 10px rgba(24,48,42,.16)}
+.fi.iso-badge{width:19px;height:14px;border-radius:2px;font-size:7px}
+.card-head .nm{font-size:16px;font-weight:700;letter-spacing:.01em}
+.card-head .en{font-size:10.5px;color:var(--ink3);margin-top:2px;letter-spacing:.02em}
+.card-head .x{margin-left:auto;width:27px;height:27px;border:0;border-radius:50%;background:rgba(27,43,39,.05);
+  color:var(--ink2);font-size:16px;line-height:1;cursor:pointer;display:grid;place-items:center}
+.card-head .x:hover{background:var(--accent-soft);color:var(--accent)}
+.card-body{padding:20px 20px 26px}
+
+/* 第一屏：击中 */
+.hero-kicker{font-size:10.5px;color:var(--ink3);letter-spacing:.06em}
+.hero-kicker b{color:var(--teal);font-weight:600}
+.big3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:15px 0 16px}
+.big{padding:12px 11px 11px;border-radius:12px;background:rgba(255,255,255,.68);border:1px solid rgba(217,226,216,.65)}
+.big label{display:block;font-size:10px;color:var(--ink3);margin-bottom:7px}
+.big strong{display:block;font-size:22px;font-weight:700;letter-spacing:-.035em;line-height:1.1;white-space:nowrap}
+.big strong small{font-size:9.5px;font-weight:500;color:var(--ink2);margin-left:3px;letter-spacing:0}
+.big em{display:block;margin-top:6px;font-size:9.5px;font-style:normal;color:var(--teal)}
+.insight{display:flex;gap:9px;padding:12px 13px;border-radius:12px;background:linear-gradient(100deg,var(--accent-soft),rgba(250,240,229,.35));
+  font-size:11.5px;line-height:1.75;color:#4A3A2C}
+.insight .sp{color:var(--accent);font-size:13px;line-height:1.4}
+.maploop{display:flex;align-items:center;gap:8px;margin-top:11px;font-size:10.5px;color:var(--ink2)}
+.maploop .sw{width:26px;height:9px;border-radius:3px;border:1px solid rgba(255,255,255,.8)}
+.maploop .track{flex:1;height:5px;border-radius:3px;background:#E6EDE5;overflow:hidden}
+.maploop .track i{display:block;height:100%;background:var(--teal);border-radius:3px}
+.scrollhint{margin-top:24px;text-align:center;font-size:10px;color:var(--ink3);letter-spacing:.1em}
+.scrollhint span{display:block;font-size:15px;margin-top:4px;animation:bob 1.7s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0);opacity:.5}50%{transform:translateY(4px);opacity:1}}
+
+/* 第二屏：展开 */
+.sec-title{display:flex;align-items:baseline;gap:8px;margin:26px 0 4px}
+.sec-title .no{font-size:10px;color:var(--accent);font-weight:700;letter-spacing:.1em}
+.sec-title h3{margin:0;font-size:13px;font-weight:700}
+.sec-title .tip{margin-left:auto;font-size:9.5px;color:var(--ink3)}
+.chart{margin-top:12px;padding:13px 14px 10px;border-radius:13px;background:rgba(255,255,255,.62);border:1px solid rgba(217,226,216,.6)}
+.chart-head{display:flex;align-items:flex-start;gap:8px;margin-bottom:8px}
+.chart-head h4{margin:0;font-size:11.5px;font-weight:650}
+.chart-head p{margin:3px 0 0;font-size:9.5px;color:var(--ink3);line-height:1.5}
+.badge{margin-left:auto;flex:0 0 auto;font-size:9.5px;padding:3px 7px;border-radius:6px;background:var(--accent-soft);color:#A4551D;font-weight:650}
+.chart svg{width:100%;height:auto;display:block;overflow:visible}
+.more{width:100%;margin-top:14px;padding:11px;border:1px dashed #C9D6C8;border-radius:11px;background:rgba(255,255,255,.5);
+  font:inherit;font-size:11.5px;color:var(--ink2);cursor:pointer;transition:.2s}
+.more:hover{border-color:var(--teal);color:var(--teal);background:#fff}
+
+/* 第三屏：深挖 */
+#deep{display:none;margin-top:14px}
+#deep.on{display:block;animation:pop .35s var(--ease)}
+.tbl{width:100%;border-collapse:collapse;font-size:10.5px}
+.tbl th,.tbl td{padding:8px 5px;text-align:right;border-bottom:1px solid rgba(217,226,216,.7);white-space:nowrap}
+.tbl th{color:var(--ink3);font-weight:500;font-size:9.5px}
+.tbl th:first-child,.tbl td:first-child{text-align:left;color:var(--ink2)}
+.tbl .u{color:var(--ink3);font-size:8.5px;margin-left:4px}
+.tbl td.cur{font-weight:700;color:var(--teal)}
+.srcbox{margin-top:13px;padding:11px 12px;border-radius:11px;background:rgba(27,107,107,.045);font-size:9.5px;line-height:1.85;color:var(--ink2)}
+.srcbox b{color:var(--ink);font-weight:650}
+.card-foot{margin-top:16px;text-align:center;font-size:9.5px;color:var(--ink3);letter-spacing:.05em}
+
+/* 无数据态 */
+.nodata-card{padding:26px 6px;text-align:center}
+.nodata-card .f{font-size:40px}
+.nodata-card h3{margin:12px 0 6px;font-size:16px}
+.nodata-card p{margin:0;font-size:11.5px;color:var(--ink3);line-height:1.8}
+
+@media (max-width:1120px){
+  #metrics{left:18px;width:250px} #brand{left:18px} #search-wrap{right:18px}
+  #timeline{width:270px} #foot{right:18px}
+}
+@media (max-width:820px){
+  #card{width:min(420px,calc(100vw - 24px))}
+  #timeline{bottom:150px} #metrics{bottom:150px} #foot{bottom:150px}
+  #foot .src{display:none} #hint{bottom:230px}
+}
+</style>
+</head>
+<body>
+<div id="stage">
+  <svg id="map" viewBox="0 -55 1000 590" preserveAspectRatio="xMidYMid meet" aria-label="世界地图，点击任意国家查看数据，可拖拽平移、滚轮缩放">
+    <rect id="ocean" x="-4000" y="-4000" width="9000" height="9000"></rect>
+    <g id="graticule"></g>
+    <g id="world"></g>
+    <g id="labels"></g>
+  </svg>
+  <svg id="leader" aria-hidden="true"></svg>
+</div>
+
+<div id="brand" class="chrome">
+  <div class="mark"><span class="glyph"></span><h1>ATLAS</h1></div>
+  <div class="sub">世界数据图谱 · 点地图，读国家</div>
+  <div class="ops">拖拽平移 · 滚轮 / 双指缩放</div>
+</div>
+
+<div id="search-wrap" class="chrome">
+  <div id="search" class="glass">
+    <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="4.7" stroke="#5B6B65" stroke-width="1.4"/><path d="M10.5 10.5 14 14" stroke="#5B6B65" stroke-width="1.4" stroke-linecap="round"/></svg>
+    <input id="q" type="text" autocomplete="off" spellcheck="false" placeholder="搜索国家，或直接在地图上点一下">
+    <kbd>⌘K</kbd>
+  </div>
+  <div id="sugg" class="glass"></div>
+</div>
+
+<div id="metrics" class="chrome">
+  <div id="chips" class="chips glass"></div>
+  <div class="legend glass">
+    <div class="top"><span>地图着色 · 当前指标</span><b id="legend-name">GDP 总量</b></div>
+    <div class="bar" id="legend-bar"></div>
+    <div class="ends"><span id="legend-lo"></span><span id="legend-hi"></span></div>
+    <div class="nd"><i></i>无公开数据</div>
+  </div>
+</div>
+
+<div id="timeline" class="chrome glass">
+  <div class="tl-top"><span class="tl-year" id="tl-year">2023</span><span class="tl-cap">拖动时间轴 · 地图与卡片同步流动</span><button id="play" title="播放年份">▶</button></div>
+  <input id="year-range" type="range" min="2000" max="2023" step="1" value="2023">
+  <div class="tl-ends"><span>2000</span><span>2010</span><span>2023</span></div>
+</div>
+
+<div id="foot" class="chrome">
+  <div class="src">World Bank · WDI ｜ 更新 2026-10-08<br>矢量边界仅作数据可视化示意</div>
+  <button class="btn" id="info-btn">ⓘ 设计理念与数据来源</button>
+</div>
+<div id="note" class="glass">
+  <h3>设计理念 · 地图即入口，国家即卡片，数据即叙事</h3>
+  <ol>
+    <li>地图即界面，点击即对话 —— 没有菜单，唯一的动作是「点」。</li>
+    <li>数据浮出而非跳转 —— 卡片从点击点生长，地图始终可见、可逆。</li>
+    <li>卡片有节奏 —— 3 秒击中、30 秒读结构、3 分钟深挖。</li>
+    <li>每张图自带参照系 —— 全球均值虚线、排名位次、预置中美与同区域参照国。</li>
+    <li>地图会说话 —— 指标决定着色，选中高亮同区域，时间轴让颜色流动。</li>
+  </ol>
+  <div class="srcbox" id="note-src"></div>
+</div>
+
+<div id="hint" class="glass">
+  <svg class="cur" viewBox="0 0 16 16" fill="none"><path d="M3 2.5 12.5 8 8.2 9 6.6 13.4 3 2.5Z" fill="#1D2B27"/></svg>
+  点一下国家看数据 · 拖拽平移 · 滚轮缩放
+</div>
+
+<div id="zoom" class="chrome">
+  <button id="zin" title="放大">＋</button>
+  <button id="zout" title="缩小">－</button>
+  <div class="sep"></div>
+  <button id="zreset" title="复位到世界视图">⤢</button>
+</div>
+
+<div id="card" role="dialog" aria-modal="false"><div class="card-scroll" id="card-scroll"></div></div>
+
+<script>/*__DATA__*/</script>
+<script>
+(function(){
+"use strict";
+const D = window.ATLAS_DATA;
+const CS = D.countries, YEARS = D.meta.years, Y0 = YEARS[0], LASTY = YEARS[YEARS.length-1];
+const WORLD = D.world, FIT = D.meta.fit;
+const CN = CS.find(c=>c.iso3==='CHN'), US = CS.find(c=>c.iso3==='USA');
+const METRICS = {
+  gdp:{n:'GDP 总量',  range:[9,13.5], log:true,  lo:'10 亿美元', hi:'30 万亿美元'},
+  pc: {n:'人均 GDP', range:[2.4,5.12],log:true,  lo:'250 美元',  hi:'13 万美元'},
+  pop:{n:'人口',     range:[5,9.2],   log:true,  lo:'10 万人',   hi:'16 亿人'},
+  le: {n:'预期寿命', range:[50,86],   log:false, lo:'50 岁',     hi:'86 岁'}
+};
+const RAMP = [[232,239,233],[210,226,220],[168,204,196],[116,172,165],[60,133,129],[23,95,102],[12,65,73]];
+const state = {metric:'gdp', year:LASTY, country:null, playing:false, timer:null, fly:null, anchor:null, k:1};
+let suppressClick=false;
+const $ = s=>document.querySelector(s);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const map=$('#map'), worldG=$('#world'), labelsG=$('#labels'), leader=$('#leader'), card=$('#card'), scroller=$('#card-scroll');
+
+function ramp(t){
+  t=clamp(t,0,1)*(RAMP.length-1); const i=Math.floor(t), f=t-i, a=RAMP[i], b=RAMP[Math.min(i+1,RAMP.length-1)];
+  return 'rgb('+[0,1,2].map(k=>Math.round(a[k]+(b[k]-a[k])*f)).join(',')+')';
+}
+function norm(v,k){
+  if(v==null||!isFinite(v)) return null;
+  const m=METRICS[k], x=m.log?Math.log10(Math.max(v,1)):v;
+  return (x-m.range[0])/(m.range[1]-m.range[0]);
+}
+function val(c,k,y){
+  if(!c) return null;
+  if(k==='a0') return c.age?c.age[0]:null;
+  if(k==='a15') return c.age?c.age[1]:null;
+  if(k==='a65') return c.age?c.age[2]:null;
+  if(k==='urb') return c.urb;
+  const a=c[k]; if(!a) return null;
+  const v=a[y-Y0]; return (v==null||!isFinite(v))?null:v;
+}
+const meanCache={};
+function globalMean(k,y){
+  if(k==='a0'||k==='a65'||k==='urb'){const w=WORLD[k];return w?w.v:null;}
+  const key=k+'|'+y; if(meanCache[key]!==undefined) return meanCache[key];
+  let s=0,n=0; for(const c of CS){if(c.off)continue;const v=val(c,k,y);if(v!=null){s+=v;n++;}}
+  return meanCache[key]= n?s/n:null;
+}
+function rankOf(c,k,y){
+  const arr=[]; for(const x of CS){if(x.off)continue;const v=val(x,k,y);if(v!=null)arr.push(v);}
+  arr.sort((a,b)=>b-a);
+  const v=val(c,k,y); if(v==null) return {r:null,total:arr.length};
+  let i=arr.findIndex(a=>a<=v); if(i<0)i=arr.length-1;
+  return {r:i+1,total:arr.length};
+}
+function fmt(v,k){
+  if(v==null) return {n:'—',u:''};
+  if(k==='gdp'){
+    if(v>=1e12) return {n:(v/1e12).toFixed(2),u:'万亿美元'};
+    if(v>=1e8)  return {n:(v/1e8).toFixed(1),u:'亿美元'};
+    if(v>=1e4)  return {n:(v/1e4).toFixed(1),u:'万美元'};
+    return {n:Math.round(v).toLocaleString('zh-CN'),u:'美元'};
+  }
+  if(k==='pop'){
+    if(v>=1e8) return {n:(v/1e8).toFixed(2),u:'亿人'};
+    if(v>=1e4) return {n:(v/1e4).toFixed(1),u:'万人'};
+    return {n:Math.round(v).toLocaleString('zh-CN'),u:'人'};
+  }
+  if(k==='pc') return {n:Math.round(v).toLocaleString('zh-CN'),u:'美元'};
+  if(k==='le') return {n:v.toFixed(1),u:'岁'};
+  return {n:v.toFixed(1),u:'%'};
+}
+function short(v,k){
+  if(v==null) return '—';
+  if(k==='gdp'){if(v>=1e12)return (v/1e12).toFixed(1)+'万亿';if(v>=1e8)return (v/1e8).toFixed(0)+'亿';return Math.round(v/1e6)+'百万';}
+  if(k==='pop'){if(v>=1e8)return (v/1e8).toFixed(1)+'亿';if(v>=1e4)return (v/1e4).toFixed(0)+'万';return Math.round(v)+'';}
+  if(k==='pc') return v>=1000?(v/1000).toFixed(0)+'k':Math.round(v)+'';
+  return v.toFixed(0);
+}
+// 同一图 / 同一行内按最大量级锁定单位，避免「万亿」与「亿」并列造成误读
+function unitFor(k,max){
+  if(k==='gdp') return max>=1e12?{d:1e12,u:'万亿美元',p:2}:max>=1e8?{d:1e8,u:'亿美元',p:1}:{d:1e6,u:'百万美元',p:1};
+  if(k==='pop') return max>=1e8?{d:1e8,u:'亿人',p:2}:{d:1e4,u:'万人',p:1};
+  if(k==='pc')  return {d:1,u:'美元',p:0};
+  if(k==='le')  return {d:1,u:'岁',p:1};
+  return {d:1,u:'%',p:1};
+}
+function uNum(v,U){return v==null?'—':(v/U.d).toLocaleString('zh-CN',{minimumFractionDigits:U.p,maximumFractionDigits:U.p});}
+function ratioText(r){
+  if(!isFinite(r)||r<=0) return '—';
+  if(r>=1) return r.toFixed(r<10?1:0)+' 倍';
+  const inv=1/r; return inv>=2?'1/'+Math.round(inv):r.toFixed(2)+' 倍';
+}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));}
+function flagHTML(c,cls){
+  if(c.fi) return '<img class="'+cls+'" src="'+c.fi+'" alt="">';
+  return '<span class="'+cls+' iso-badge">'+esc(c.iso3?c.iso3.slice(0,2):'--')+'</span>';
+}
+
+/* ---------------------------------------------------------- 地图构建 */
+function robinson(lon,lat){
+  const RX=[1,.9986,.9954,.99,.9822,.973,.96,.9427,.9216,.8962,.8679,.835,.7986,.7597,.7186,.6732,.6213,.5722,.5322];
+  const RY=[0,.062,.124,.186,.248,.31,.372,.434,.4958,.5571,.6176,.6769,.7346,.7903,.8435,.8936,.9394,.9761,1];
+  const a=Math.min(Math.abs(lat),90), i=Math.min(Math.floor(a/5),17), f=(a-i*5)/5;
+  const X=RX[i]+(RX[i+1]-RX[i])*f, Y=RY[i]+(RY[i+1]-RY[i])*f;
+  return [.8487*X*lon*Math.PI/180*FIT.S+FIT.OX, FIT.OY-1.3523*Y*(lat>=0?1:-1)*FIT.S];
+}
+(function graticule(){
+  let s='';
+  for(let lon=-150;lon<=150;lon+=30){
+    let d=''; for(let lat=-80;lat<=80;lat+=4){const p=robinson(lon,lat);d+=(d?'L':'M')+p[0].toFixed(1)+','+p[1].toFixed(1);}
+    s+='<path class="grat" d="'+d+'"/>';
+  }
+  for(let lat=-60;lat<=60;lat+=30){
+    let d=''; for(let lon=-180;lon<=180;lon+=6){const p=robinson(lon,lat);d+=(d?'L':'M')+p[0].toFixed(1)+','+p[1].toFixed(1);}
+    s+='<path class="grat" d="'+d+'"/>';
+  }
+  $('#graticule').innerHTML=s;
+})();
+worldG.innerHTML = CS.map((c,i)=>'<path class="country'+(c.off?' is-off':'')+'" data-i="'+i+'" d="'+c.p+'" fill-rule="evenodd"/>').join('');
+
+/* 中文国名标注：按面积分级，缩放越大渐显越多，避免世界视图拥挤 */
+const labelMin=new Array(CS.length);
+CS.map((c,i)=>i).sort((a,b)=>(CS[b].ar||0)-(CS[a].ar||0)).forEach((idx,r)=>{
+  labelMin[idx]= r<25?0.82 : r<55?1.5 : r<100?2.4 : r<150?3.4 : r<195?4.6 : 6.5;
+});
+labelsG.innerHTML = CS.map((c,i)=> c.off?''
+  :'<text class="lbl" data-i="'+i+'" data-min="'+labelMin[i]+'" x="'+c.cx+'" y="'+c.cy+'">'+esc(c.n)+'</text>').join('');
+
+function paint(){
+  const k=state.metric, y=state.year;
+  for(const el of worldG.children){
+    const c=CS[+el.dataset.i]; if(!c||c.off) continue;
+    const t=norm(val(c,k,y),k);
+    el.style.fill = t==null?'var(--nodata)':ramp(t);
+  }
+  $('#legend-name').textContent=METRICS[k].n;
+  $('#legend-lo').textContent=METRICS[k].lo; $('#legend-hi').textContent=METRICS[k].hi;
+  $('#legend-bar').style.background='linear-gradient(90deg,'+[0,.2,.4,.6,.8,1].map(t=>ramp(t)+' '+(t*100)+'%').join(',')+')';
+  // 只在首次创建按钮；后续仅切 class，避免点击时把事件目标从 DOM 里摘掉
+  const chips=$('#chips');
+  if(!chips.children.length)
+    chips.innerHTML=Object.keys(METRICS).map(key=>'<button class="chip" data-k="'+key+'">'+METRICS[key].n+'</button>').join('');
+  [...chips.children].forEach(b=>b.classList.toggle('on',b.dataset.k===k));
+  $('#tl-year').textContent=y;
+  const rg=$('#year-range'); rg.value=y; rg.style.setProperty('--p',((y-Y0)/(LASTY-Y0)*100)+'%');
+}
+function focusClasses(){
+  const c=state.country;
+  map.classList.toggle('has-focus',!!c);
+  for(const el of worldG.children){
+    const x=CS[+el.dataset.i]; if(!x) continue;
+    el.classList.toggle('is-selected',!!c&&x===c);
+    el.classList.toggle('is-peer',!!c&&c.reg!=='其他'&&x.reg===c.reg&&x!==c&&!x.off);
+  }
+  for(const el of labelsG.children){
+    const x=CS[+el.dataset.i]; if(!x) continue;
+    el.classList.toggle('sel',!!c&&x===c);
+  }
+}
+
+/* ---------------------------------------------------------- 视口：平移 / 缩放 / 飞行 */
+const BASE={x:0,y:-55,w:1000,h:590}, KMIN=0.8, KMAX=9;
+let vb={...BASE}, pointers=new Map(), pinch=null, pan=null, moved=false;
+function setVB(o){vb=o;map.setAttribute('viewBox',[o.x,o.y,o.w,o.h].join(' '));onViewChanged();}
+function screenToContent(sx,sy){
+  const ctm=map.getScreenCTM(), inv=ctm.inverse(), p=map.createSVGPoint();
+  p.x=sx; p.y=sy; const r=p.matrixTransform(inv); return {x:r.x,y:r.y};
+}
+function zoomAt(sx,sy,f){           // 以屏幕点 (sx,sy) 为中心缩放
+  const P=screenToContent(sx,sy);
+  const nk=clamp(state.k*f,KMIN,KMAX), realF=nk/state.k;
+  const nw=vb.w/realF, nh=vb.h/realF;
+  const nx=P.x-(P.x-vb.x)*(nw/vb.w), ny=P.y-(P.y-vb.y)*(nh/vb.h);
+  setVB({x:nx,y:ny,w:nw,h:nh});
+}
+function flyTo(c,cb){
+  const tw=520, th=tw*BASE.h/BASE.w;
+  tweenVB({x:c.cx-tw/2,y:c.cy-th/2,w:tw,h:th},700,cb);
+}
+function tweenVB(to,dur,cb){
+  if(state.fly) cancelAnimationFrame(state.fly);
+  const from={...vb}, t0=performance.now();
+  function step(now){
+    const p=clamp((now-t0)/dur,0,1), e=1-Math.pow(1-p,3);
+    setVB({x:from.x+(to.x-from.x)*e,y:from.y+(to.y-from.y)*e,w:from.w+(to.w-from.w)*e,h:from.h+(to.h-from.h)*e});
+    if(p<1) state.fly=requestAnimationFrame(step);
+    else {state.fly=null;if(cb)cb();}
+  }
+  state.fly=requestAnimationFrame(step);
+}
+function svgToScreen(x,y){
+  const p=map.createSVGPoint();p.x=x;p.y=y;
+  const s=p.matrixTransform(map.getScreenCTM());
+  return {x:s.x,y:s.y};
+}
+function onViewChanged(){
+  state.k=BASE.w/vb.w;
+  updateLabels();
+  $('#zin').disabled = state.k>=KMAX-1e-3;
+  $('#zout').disabled = state.k<=KMIN+1e-3;
+  if(state.country){ const a=svgToScreen(state.country.cx,state.country.cy); drawLeader(a); state.anchor=a; }
+}
+function updateLabels(){
+  const k=state.k;
+  labelsG.setAttribute('font-size',(7.6/k).toFixed(3));
+  labelsG.setAttribute('stroke-width',(1.7/k).toFixed(3));
+  const ctm=map.getScreenCTM(); if(!ctm) return;
+  const S=ctm.a, E=ctm.e, F=ctm.f;            // 根 SVG 的 viewBox→屏幕 仿射
+  const fs=(7.6/k)*S;                          // 标注在屏幕上的实际字号（恒定）
+  const items=[];
+  for(const el of labelsG.children){
+    const i=+el.dataset.i, c=CS[i]; if(!c) continue;
+    const sx=c.cx*S+E, sy=c.cy*S+F;
+    items.push({el,c,sel:el.classList.contains('sel'),sx,sy,w:c.n.length*fs*0.96+6,h:fs*1.3});
+  }
+  // 贪心碰撞避免：按 选中 > 面积 排序，尽量多放不重叠的标注
+  items.sort((a,b)=> (b.sel-a.sel) || ((b.c.ar||0)-(a.c.ar||0)) );
+  const placed=[];
+  for(const it of items){
+    const r={x:it.sx-it.w/2, y:it.sy-it.h/2, w:it.w, h:it.h};
+    let ok=it.sel;
+    if(!ok){
+      ok=true;
+      for(const p of placed){
+        if(!(r.x> p.x+p.w+1 || r.x+r.w+1< p.x || r.y> p.y+p.h+1 || r.y+r.h+1< p.y)){ ok=false; break; }
+      }
+    }
+    if(ok){ it.el.style.display=''; it.el.style.opacity=it.sel?'1':'0.95'; placed.push(r); }
+    else { it.el.style.display='none'; it.el.style.opacity='0'; }
+  }
+}
+// 指针拖拽平移 / 双指缩放
+const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+const mid=(a,b)=>({x:(a.x+b.x)/2,y:(a.y+b.y)/2});
+map.style.touchAction='none';
+map.addEventListener('pointerdown',e=>{
+  if(e.pointerType==='mouse' && e.button!==0) return;
+  pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  try{map.setPointerCapture(e.pointerId);}catch(_){}
+  if(pointers.size===2){
+    const a=[...pointers.values()];
+    pinch={d0:dist(a[0],a[1]), mid0:mid(a[0],a[1]), P0:screenToContent(mid(a[0],a[1]).x,mid(a[0],a[1]).y), vb0:{...vb}, k0:state.k};
+    pan=null; moved=true;
+  } else if(pointers.size===1){
+    pan={P:screenToContent(e.clientX,e.clientY), vb0:{...vb}, sx:e.clientX, sy:e.clientY};
+    moved=false;
+  }
+});
+map.addEventListener('pointermove',e=>{
+  if(!pointers.has(e.pointerId)) return;
+  pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(pointers.size>=2 && pinch){
+    const a=[...pointers.values()], d=dist(a[0],a[1]), m=mid(a[0],a[1]);
+    const nk=clamp(pinch.k0*(d/pinch.d0),KMIN,KMAX), realF=nk/pinch.k0;
+    const nw=pinch.vb0.w/realF, nh=pinch.vb0.h/realF;
+    let nx=pinch.P0.x-(pinch.P0.x-pinch.vb0.x)*(nw/pinch.vb0.w);
+    let ny=pinch.P0.y-(pinch.P0.y-pinch.vb0.y)*(nh/pinch.vb0.h);
+    const S=map.getScreenCTM().a||1;          // 当前 viewBox 单位 / 屏幕像素
+    nx-=(m.x-pinch.mid0.x)/S; ny-=(m.y-pinch.mid0.y)/S;
+    setVB({x:nx,y:ny,w:nw,h:nh});
+  } else if(pan){
+    const dx=e.clientX-pan.sx, dy=e.clientY-pan.sy;
+    if(Math.abs(dx)+Math.abs(dy)>3) moved=true;
+    const Pnow=screenToContent(e.clientX,e.clientY);
+    setVB({x:pan.vb0.x+(pan.P.x-Pnow.x), y:pan.vb0.y+(pan.P.y-Pnow.y), w:pan.vb0.w, h:pan.vb0.h});
+  }
+});
+function endPointer(e){
+  if(!pointers.has(e.pointerId)) return;
+  pointers.delete(e.pointerId);
+  try{map.releasePointerCapture(e.pointerId);}catch(_){}
+  if(pointers.size<2) pinch=null;
+  if(pointers.size===0){ pan=null; if(moved){ suppressClick=true; setTimeout(()=>suppressClick=false,40);} }
+}
+map.addEventListener('pointerup',endPointer);
+map.addEventListener('pointercancel',endPointer);
+map.addEventListener('wheel',e=>{
+  e.preventDefault();
+  zoomAt(e.clientX,e.clientY, Math.pow(1.0016,-e.deltaY));
+},{passive:false});
+$('#zin').onclick=()=>zoomAt(innerWidth/2,innerHeight/2,1.45);
+$('#zout').onclick=()=>zoomAt(innerWidth/2,innerHeight/2,1/1.45);
+$('#zreset').onclick=()=>tweenVB({...BASE},540);
+
+/* ---------------------------------------------------------- 卡片定位 + 引线 */
+function layoutCard(anchor){
+  const cw=card.offsetWidth||474, ch=card.offsetHeight||620, pad=14;
+  let left=anchor.x+50;
+  if(left+cw>innerWidth-pad) left=anchor.x-cw-50;
+  if(left<pad) left=clamp(anchor.x-cw/2,pad,Math.max(pad,innerWidth-cw-pad));
+  const maxTop=Math.max(86,innerHeight-ch-138);
+  const top=clamp(anchor.y-ch*0.30,86,maxTop);
+  card.style.left=left+'px'; card.style.top=top+'px';
+  card.style.transformOrigin=(anchor.x-left)+'px '+(anchor.y-top)+'px';
+  state.pos={left,top,cw,ch};
+}
+function drawLeader(anchor){
+  const p=state.pos; if(!p) return;
+  const {left,top,cw,ch}=p;
+  leader.setAttribute('viewBox','0 0 '+innerWidth+' '+innerHeight);
+  let ax,ay;
+  if(anchor.x<left){ax=left;ay=clamp(anchor.y,top+52,top+ch-52);}
+  else if(anchor.x>left+cw){ax=left+cw;ay=clamp(anchor.y,top+52,top+ch-52);}
+  else if(anchor.y<top){ay=top;ax=clamp(anchor.x,left+52,left+cw-52);}
+  else {ay=top+ch;ax=clamp(anchor.x,left+52,left+cw-52);}
+  const mx=(anchor.x+ax)/2, my=(anchor.y+ay)/2-16;
+  leader.innerHTML=
+    '<path class="leader-line" d="M'+anchor.x.toFixed(1)+','+anchor.y.toFixed(1)+' Q'+mx.toFixed(1)+','+my.toFixed(1)+' '+ax.toFixed(1)+','+ay.toFixed(1)+'"/>'+
+    '<circle class="leader-ring" cx="'+anchor.x.toFixed(1)+'" cy="'+anchor.y.toFixed(1)+'" r="11"/>'+
+    '<circle class="leader-dot" cx="'+anchor.x.toFixed(1)+'" cy="'+anchor.y.toFixed(1)+'" r="3.6"/>';
+  leader.classList.add('on');
+}
+function placeCard(anchor){layoutCard(anchor);drawLeader(anchor);}
+
+/* ---------------------------------------------------------- 图表 */
+function linePath(vals,X,Y){
+  let d='',open=false;
+  vals.forEach((v,i)=>{ if(v==null){open=false;return;} d+=(open?'L':'M')+X(i).toFixed(1)+','+Y(v).toFixed(1)+' '; open=true;});
+  return d.trim();
+}
+function areaPath(vals,X,Y,base){
+  let out='',seg=[];
+  const flush=()=>{ if(seg.length<2){seg=[];return;}
+    let d='M'+X(seg[0][0]).toFixed(1)+','+base.toFixed(1);
+    seg.forEach(([i,v])=>d+='L'+X(i).toFixed(1)+','+Y(v).toFixed(1));
+    d+='L'+X(seg[seg.length-1][0]).toFixed(1)+','+base.toFixed(1)+'Z'; out+=d; seg=[]; };
+  vals.forEach((v,i)=>{ if(v==null)flush(); else seg.push([i,v]); }); flush();
+  return out;
+}
+function trendSVG(k,c,y,compact){
+  const w=410,h=compact?92:126,pl=10,pr=12,pt=12,pb=20;
+  const a=YEARS.map(yy=>val(c,k,yy)), g=YEARS.map(yy=>globalMean(k,yy));
+  const all=a.concat(g).filter(v=>v!=null);
+  const max=Math.max.apply(null,all.length?all:[1])*1.12||1;
+  // 预期寿命是「窄区间」指标，用 0 起点会把真实变化压平；其余指标保持 0 起点
+  const lo=(k==='le')?Math.min.apply(null,all)*0.92:0;
+  const X=i=>pl+i/(YEARS.length-1)*(w-pl-pr), Y=v=>pt+(1-(v-lo)/(max-lo))*(h-pt-pb);
+  const base=h-pb, ci=y-Y0;
+  const ticks=[0,10,YEARS.length-1].map(i=>'<text x="'+X(i)+'" y="'+(h-5)+'" font-size="8" fill="#8C9B94" text-anchor="'+(i===0?'start':i===YEARS.length-1?'end':'middle')+'">'+YEARS[i]+'</text>').join('');
+  const cyv=a[ci];
+  const cur=cyv!=null?'<line x1="'+X(ci)+'" y1="'+pt+'" x2="'+X(ci)+'" y2="'+base+'" stroke="#C9702F" stroke-width="1" stroke-dasharray="2 3" opacity=".8"/>'+
+      '<circle cx="'+X(ci)+'" cy="'+Y(cyv)+'" r="3.6" fill="#C9702F" stroke="#fff" stroke-width="1.4"/>':'';
+  const gl=g[ci];
+  const gdot=gl!=null?'<circle cx="'+X(ci)+'" cy="'+Y(gl)+'" r="2.6" fill="#fff" stroke="#5B6B65" stroke-width="1.3"/>':'';
+  return '<svg viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="none" style="height:'+h+'px">'+
+    '<line x1="'+pl+'" y1="'+base+'" x2="'+(w-pr)+'" y2="'+base+'" stroke="#DCE4DC" stroke-width="1"/>'+
+    '<path d="'+areaPath(a,X,Y,base)+'" fill="rgba(27,107,107,.10)"/>'+
+    '<path d="'+linePath(g,X,Y)+'" fill="none" stroke="#8C9B94" stroke-width="1.3" stroke-dasharray="4 3.5"/>'+
+    '<path d="'+linePath(a,X,Y)+'" fill="none" stroke="#1B6B6B" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>'+
+    cur+gdot+ticks+
+    '<text x="'+(w-pr)+'" y="'+(pt+2)+'" font-size="8.5" fill="#8C9B94" text-anchor="end">虚线＝全球国家均值</text>'+
+    '</svg>';
+}
+function ageSVG(c){
+  const w=410,h=88;
+  const rows=[
+    {n:c.n, v:[val(c,'a0'),val(c,'a15'),val(c,'a65')]},
+    {n:'全球均值', v:[WORLD.a0.v, 100-WORLD.a0.v-WORLD.a65.v, WORLD.a65.v]}
+  ];
+  const cols=['#A9CEC5','#4E948C','#D98A4B'];
+  let s='';
+  rows.forEach((r,i)=>{
+    const y=16+i*37, x0=62, bw=w-x0-12; let acc=0;
+    s+='<text x="0" y="'+(y+16)+'" font-size="9.5" fill="#5B6B65">'+esc(r.n)+'</text>';
+    r.v.forEach((v,j)=>{
+      if(v==null)return; const wd=v/100*bw;
+      s+='<rect x="'+(x0+acc)+'" y="'+y+'" width="'+Math.max(wd,0).toFixed(1)+'" height="21" fill="'+cols[j]+'"'+(j===0?' rx="4"':'')+'/>';
+      if(wd>32) s+='<text x="'+(x0+acc+wd/2)+'" y="'+(y+14)+'" font-size="8.5" fill="'+(j===1?'#fff':'#1D2B27')+'" text-anchor="middle">'+v.toFixed(1)+'%</text>';
+      acc+=wd;
+    });
+  });
+  s+='<g font-size="8.5" fill="#8C9B94">'+
+     '<circle cx="63" cy="82" r="3.5" fill="#A9CEC5"/><text x="71" y="85">0–14 岁</text>'+
+     '<circle cx="145" cy="82" r="3.5" fill="#4E948C"/><text x="153" y="85">15–64 岁</text>'+
+     '<circle cx="235" cy="82" r="3.5" fill="#D98A4B"/><text x="243" y="85">65 岁以上</text></g>';
+  return '<svg viewBox="0 0 '+w+' '+h+'" style="height:'+h+'px">'+s+'</svg>';
+}
+function peersOf(c,k,y){
+  const v=val(c,k,y);
+  if(c.reg==='其他'||v==null) return [];
+  return CS.filter(x=>!x.off&&x!==c&&x.iso3!=='CHN'&&x.iso3!=='USA'&&x.reg===c.reg&&val(x,k,y)!=null)
+    .sort((a,b)=>Math.abs(val(a,k,y)-v)-Math.abs(val(b,k,y)-v)).slice(0,2);
+}
+function compareSVG(c,k,y){
+  const w=410, rk=rankOf(c,k,y);
+  const rows=[{n:c.n,f:c.flag,v:val(c,k,y),me:true}];
+  [CN,US].forEach(x=>{if(x&&x!==c)rows.push({n:x.n,f:x.flag,v:val(x,k,y)});});
+  peersOf(c,k,y).forEach(x=>rows.push({n:x.n,f:x.flag,v:val(x,k,y),peer:true}));
+  const gm=globalMean(k,y); rows.push({n:'全球均值',f:'◌',v:gm,avg:true});
+  rows.sort((a,b)=>(b.v==null?-1:b.v)-(a.v==null?-1:a.v));
+  const max=Math.max.apply(null,rows.map(r=>r.v||0).concat([1]))*1.02;
+  // 同一张图内统一单位，避免「27.81 万亿」和「6455.9 亿」并列造成误读
+  const U=unitFor(k,max), num=v=>uNum(v,U);
+  const x0=96, bw=w-x0-62, rh=23, h=rows.length*rh+6;
+  let s='';
+  rows.forEach((r,i)=>{
+    const yy=i*rh+3, wd=r.v==null?0:Math.max(2,r.v/max*bw);
+    if(r.me) s+='<rect x="0" y="'+yy+'" width="'+w+'" height="'+(rh-2)+'" rx="4" fill="rgba(201,112,47,.09)"/>';
+    s+='<text x="4" y="'+(yy+14)+'" font-size="9.5" fill="'+(r.me?'#A4551D':r.avg?'#8C9B94':'#5B6B65')+'"'+(r.me?' font-weight="700"':'')+'>'+esc(r.n)+(r.peer?' ·同区域':'')+'</text>';
+    s+='<rect x="'+x0+'" y="'+(yy+5)+'" width="'+bw+'" height="9" rx="4.5" fill="#EDF1EB"/>';
+    s+='<rect x="'+x0+'" y="'+(yy+5)+'" width="'+wd.toFixed(1)+'" height="9" rx="4.5" fill="'+(r.me?'#C9702F':r.avg?'#B7C4BC':'#4E948C')+'"/>';
+    s+='<text x="'+(w-2)+'" y="'+(yy+14)+'" font-size="9.5" fill="'+(r.me?'#A4551D':'#1D2B27')+'" text-anchor="end"'+(r.me?' font-weight="700"':'')+'>'+num(r.v)+'</text>';
+    if(r.me) s+='<text x="'+(x0+2)+'" y="'+(yy-1)+'" font-size="7.5" fill="#C9702F">← 你在这里 · 全球第 '+rk.r+'</text>';
+  });
+  return {svg:'<svg viewBox="0 0 '+w+' '+h+'" style="height:'+h+'px">'+s+'</svg>',rank:rk,unit:U.u};
+}
+
+/* ---------------------------------------------------------- 卡片内容 */
+function insightHTML(c,y){
+  const rk=rankOf(c,'gdp',y), ref=(c===CN?US:CN), rv=val(ref,'gdp',y), v=val(c,'gdp',y);
+  const g0=val(c,'gdp',2000), growth=(g0&&v)?v/g0:null;
+  let t='GDP 全球第 <b>'+rk.r+'</b> / '+rk.total+' 个有数据经济体';
+  if(rv&&v) t+='，约为'+ref.n+'的 <b>'+ratioText(v/rv)+'</b>';
+  if(growth) t+='；较 2000 年增长 <b>'+growth.toFixed(1)+' 倍</b>';
+  const prk=rankOf(c,'pc',y);
+  t+='。人均 GDP 排在第 '+prk.r+' 位。';
+  return t;
+}
+function renderCard(){
+  const c=state.country; if(!c) return;
+  const y=state.year, k=state.metric, keep=scroller.scrollTop, deepOpen=!!state.deepOpen;
+  const has=val(c,'gdp',y)!=null;
+  if(!has){
+    scroller.innerHTML='<div class="card-head">'+flagHTML(c,'flag-img')+'<div><div class="nm">'+esc(c.n)+'</div><div class="en">'+esc(c.en)+'</div></div><button class="x" id="close">×</button></div>'+
+      '<div class="card-body nodata-card">'+flagHTML(c,'flag-img big')+'<h3>暂无公开指标数据</h3><p>该条目在所选年份没有可引用的公开统计。<br>试试旁边的国家，或拖动时间轴换一年。</p><div class="card-foot">点击地图其他位置继续探索 · ESC 返回世界</div></div>';
+    bindClose(); return;
+  }
+  const rkg=rankOf(c,'gdp',y), rkp=rankOf(c,'pop',y), rkc=rankOf(c,'pc',y);
+  const b1=fmt(val(c,'gdp',y),'gdp'), b2=fmt(val(c,'pop',y),'pop'), b3=fmt(val(c,'pc',y),'pc');
+  const b4=fmt(val(c,'le',y),'le');
+  const t=norm(val(c,k,y),k), pct=Math.round(clamp(t||0,0,1)*100);
+  const cmp=compareSVG(c,k,y);
+  const gm=globalMean('le',y), le=val(c,'le',y);
+  const leDelta=(le!=null&&gm!=null)?(le-gm):null;
+
+  const hero='<div class="hero-kicker">'+esc(c.reg)+' · '+esc(c.inc)+' · <b>'+y+' 年</b></div>'+
+    '<div class="big3">'+
+      '<div class="big"><label>GDP 总量</label><strong>'+b1.n+'<small>'+b1.u+'</small></strong><em>全球第 '+rkg.r+'</em></div>'+
+      '<div class="big"><label>人口</label><strong>'+b2.n+'<small>'+b2.u+'</small></strong><em>全球第 '+rkp.r+'</em></div>'+
+      '<div class="big"><label>人均 GDP</label><strong>'+b3.n+'<small>'+b3.u+'</small></strong><em>全球第 '+rkc.r+'</em></div>'+
+    '</div>'+
+    '<div class="insight"><span class="sp">✦</span><div>'+insightHTML(c,y)+'</div></div>'+
+    '<div class="maploop"><span>地图颜色印证</span><span class="sw" style="background:'+(t==null?'#DFE6DE':ramp(t))+'"></span>'+
+      '<span class="track"><i style="width:'+pct+'%"></i></span><span>'+METRICS[k].n+' · '+pct+'% 分位</span></div>'+
+    '<div class="scrollhint">向下滚动，读完整结构<span>↓</span></div>';
+
+  const charts='<div class="sec-title"><span class="no">02 / 展开</span><h3>四张图，每张都有参照系</h3><span class="tip">一屏最多 4 图</span></div>'+
+    '<div class="chart"><div class="chart-head"><div><h4>经济 · GDP 趋势</h4><p>实线＝'+esc(c.n)+'，虚线＝全球国家均值，竖线＝当前年份</p></div><span class="badge">'+short(val(c,'gdp',y),'gdp')+'</span></div>'+trendSVG('gdp',c,y,false)+'</div>'+
+    '<div class="chart"><div class="chart-head"><div><h4>社会 · 人口年龄结构</h4><p>上＝'+esc(c.n)+'，下＝全球均值，三段占比合计 100%</p></div><span class="badge">65+ '+(val(c,'a65')||0).toFixed(1)+'%</span></div>'+ageSVG(c)+'</div>'+
+    '<div class="chart"><div class="chart-head"><div><h4>对比 · '+METRICS[k].n+'，你在第几</h4><p>单位 '+cmp.unit+' · 预置中国 / 美国 / 同区域参照国 / 全球均值</p></div><span class="badge">第 '+cmp.rank.r+' / '+cmp.rank.total+'</span></div>'+cmp.svg+'</div>'+
+    '<div class="chart"><div class="chart-head"><div><h4>趋势 · 预期寿命与全球均值的距离</h4><p>实线＝'+esc(c.n)+'，虚线＝全球国家均值</p></div><span class="badge">'+b4.n+' 岁</span></div>'+trendSVG('le',c,y,true)+
+      '<div style="font-size:9.5px;color:#5B6B65;margin-top:4px">'+(leDelta==null?'暂无全球参照':(leDelta>=0?'高于':'低于')+'全球均值 <b style="color:#1B6B6B">'+Math.abs(leDelta).toFixed(1)+' 岁</b>')+'</div></div>'+
+    '<button class="more" id="more">展开更多 · 完整指标表与数据来源 ↓</button>'+
+    '<div id="deep">'+tableHTML(c,y)+'</div>'+
+    '<div class="card-foot">点卡片外或按 ESC 收回 · 地图状态完好，继续点下一个国家</div>';
+
+  const head='<div class="card-head">'+flagHTML(c,'flag-img')+'<div><div class="nm">'+esc(c.n)+'</div><div class="en">'+esc(c.en)+'</div></div><button class="x" id="close" title="收回卡片">×</button></div>';
+  scroller.innerHTML=head+'<div class="card-body">'+hero+charts+'</div>';
+  bindClose();
+  const more=$('#more'), deep=$('#deep');
+  if(deepOpen&&deep&&more){deep.classList.add('on');more.textContent='收起完整指标表 ↑';}
+  if(more) more.onclick=()=>{
+    const on=deep.classList.toggle('on'); state.deepOpen=on;
+    more.textContent=on?'收起完整指标表 ↑':'展开更多 · 完整指标表与数据来源 ↓';
+  };
+  scroller.scrollTop=keep;
+}
+function tableHTML(c,y){
+  const rows=[
+    ['GDP 总量','gdp'],['人均 GDP','pc'],['人口','pop'],['预期寿命','le'],
+    ['0–14 岁占比','a0'],['65 岁以上占比','a65'],['城镇化率','urb']
+  ];
+  const years=[2000,2010,2020,y];
+  let h='<div class="sec-title" style="margin-top:4px"><span class="no">03 / 深挖</span><h3>完整指标表</h3><span class="tip">数值随年份联动</span></div>'+
+    '<table class="tbl"><thead><tr><th>指标</th>'+years.map(yy=>'<th>'+yy+'</th>').join('')+'<th>全球均值</th><th>排名</th></tr></thead><tbody>';
+  rows.forEach(([n,k])=>{
+    const isStatic=['a0','a15','a65','urb'].includes(k);
+    const vs=years.map(yy=>isStatic&&yy!==y?null:val(c,k,yy));
+    const gm=globalMean(k,y);
+    const U=unitFor(k,Math.max.apply(null,vs.concat([gm]).filter(v=>v!=null).concat([1])));
+    const cells=vs.map((v,i)=>'<td'+(years[i]===y?' class="cur"':'')+'>'+uNum(v,U)+'</td>').join('');
+    const rk=isStatic?{r:'—'}:rankOf(c,k,y);
+    h+='<tr><td>'+n+'<span class="u">'+U.u+'</span></td>'+cells+'<td>'+uNum(gm,U)+'</td><td>'+(rk.r||'—')+'</td></tr>';
+  });
+  h+='</tbody></table>';
+  h+='<div class="srcbox"><b>数据来源与年份</b><br>'+D.meta.sources.map(esc).join('<br>')+
+     '<br>年龄结构 / 城镇化率为最新可得年份（'+(WORLD.a0?WORLD.a0.y:y)+'），其余指标为 '+y+' 年。'+
+     '<br>指标代码：'+D.meta.indicators.map(i=>i.n+' '+i.code).join(' · ')+'。'+
+     '<br><b>边界说明：</b>本地图为数据可视化示意矢量图，非导航地图、不含地图服务与密钥；台湾、香港、澳门属中国，台湾几何已并入中国要素；国界不作为边界依据。</div>';
+  return h;
+}
+function bindClose(){const b=$('#close');if(b)b.onclick=e=>{e.stopPropagation();closeCard();};}
+
+/* ---------------------------------------------------------- 开关卡片 */
+function restartGrow(){
+  card.classList.remove('on','closing'); void card.offsetWidth; card.classList.add('on');
+}
+function openCard(c){
+  // 搜索场景：地图已在 pick() 中飞到该国，这里只负责让卡片从该国位置长出
+  state.deepOpen=false; scroller.scrollTop=0;
+  const anchor = svgToScreen(c.cx,c.cy);
+  state.country=c;
+  renderCard(); focusClasses();
+  restartGrow();
+  requestAnimationFrame(()=>{placeCard(anchor);});
+  $('#hint').classList.add('gone');
+}
+function closeCard(){
+  if(!state.country) return;
+  state.country=null; focusClasses(); leader.classList.remove('on');
+  card.classList.remove('on'); card.classList.add('closing');
+  setTimeout(()=>{card.classList.remove('closing');scroller.innerHTML='';},280);
+  tweenVB({...BASE},620);
+}
+
+/* ---------------------------------------------------------- 交互绑定 */
+worldG.addEventListener('click',e=>{
+  if(suppressClick) return;
+  const el=e.target.closest('.country'); if(!el) return;
+  const c=CS[+el.dataset.i]; if(!c||c.off) return;
+  e.stopPropagation();
+  openCard(c);
+});
+document.addEventListener('click',e=>{
+  if(suppressClick) return;
+  if(e.target.closest('#card')||e.target.closest('.chrome')||e.target.closest('#note')||e.target.closest('.country')) return;
+  closeCard();
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){
+    if($('#sugg').classList.contains('on')){$('#sugg').classList.remove('on');$('#q').blur();}
+    else if($('#note').classList.contains('on')){$('#note').classList.remove('on');}
+    else closeCard();
+  }
+  if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();$('#q').focus();$('#q').select();}
+});
+$('#chips').addEventListener('click',e=>{
+  const b=e.target.closest('.chip'); if(!b)return;
+  e.stopPropagation();
+  state.metric=b.dataset.k; paint(); if(state.country)renderCard();
+});
+$('#year-range').addEventListener('input',e=>{
+  state.year=+e.target.value; paint(); if(state.country)renderCard();
+});
+$('#play').addEventListener('click',()=>{
+  if(state.playing){clearInterval(state.timer);state.playing=false;$('#play').textContent='▶';return;}
+  state.playing=true;$('#play').textContent='Ⅱ';
+  state.timer=setInterval(()=>{
+    state.year=state.year>=LASTY?Y0:state.year+1;
+    paint(); if(state.country)renderCard();
+  },430);
+});
+
+/* 搜索 = 地图动作 */
+const q=$('#q'),sugg=$('#sugg');let sugList=[],sugAct=-1;
+function buildSug(){
+  const t=q.value.trim().toLowerCase();
+  if(!t){sugg.classList.remove('on');sugList=[];return;}
+  sugList=CS.filter(c=>!c.off&&(c.n.includes(t)||c.en.toLowerCase().includes(t)||c.iso3.toLowerCase().includes(t))).slice(0,6);
+  sugAct=sugList.length?0:-1;
+  sugg.innerHTML=sugList.length?sugList.map((c,i)=>'<div class="sug'+(i===0?' act':'')+'" data-i="'+CS.indexOf(c)+'">'+flagHTML(c,'fi')+esc(c.n)+'<span class="en">'+esc(c.en)+'</span></div>').join(''):'<div class="empty">没有匹配的国家</div>';
+  sugg.classList.add('on');
+}
+q.addEventListener('input',buildSug);
+q.addEventListener('focus',()=>{if(q.value.trim())buildSug();});
+q.addEventListener('keydown',e=>{
+  if(e.key==='ArrowDown'||e.key==='ArrowUp'){
+    e.preventDefault(); if(!sugList.length)return;
+    sugAct=(sugAct+(e.key==='ArrowDown'?1:-1)+sugList.length)%sugList.length;
+    [...sugg.querySelectorAll('.sug')].forEach((el,i)=>el.classList.toggle('act',i===sugAct));
+  }
+  if(e.key==='Enter'&&sugList.length){e.preventDefault();pick(sugList[sugAct<0?0:sugAct]);}
+});
+sugg.addEventListener('click',e=>{const el=e.target.closest('.sug');if(el)pick(CS[+el.dataset.i]);});
+function pick(c){
+  if(!c)return; q.value='';sugg.classList.remove('on');q.blur();
+  $('#hint').classList.add('gone');
+  flyTo(c,()=>openCard(c));
+}
+$('#info-btn').addEventListener('click',e=>{
+  e.stopPropagation();
+  $('#note-src').innerHTML='<b>数据来源</b><br>'+D.meta.sources.map(esc).join('<br>')+
+    '<br><b>合规说明</b><br>本图为自包含矢量数据可视化示意，未使用任何在线地图服务、瓦片或 API 密钥。台湾、香港、澳门属中国；台湾几何已并入中国要素，南极洲不参与统计，争议/非正式条目不参与交互。国界仅作示意，不作为边界依据。';
+  $('#note').classList.toggle('on');
+});
+window.addEventListener('resize',()=>{
+  if(state.country) placeCard(svgToScreen(state.country.cx,state.country.cy));
+});
+
+onViewChanged();
+paint();
+// 首屏：地图是主语，不给任何列表或导航
+})();
+</script>
+</body>
+</html>

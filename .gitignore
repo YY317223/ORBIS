@@ -1,0 +1,7 @@
+# IDE 与工具配置（非项目文件）
+.idea/
+.workbuddy/
+
+# Python 编译缓存
+__pycache__/
+*.pyc
