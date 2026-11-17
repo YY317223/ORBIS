@@ -8,4 +8,4 @@ __pycache__/
 
 # 运行数据与凭据（不入仓库）
 *.db
-backend/data/admin.json
+**/backend/data/admin.json
