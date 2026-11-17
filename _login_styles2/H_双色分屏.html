@@ -1,0 +1,91 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><title>H_双色分屏</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1440px;height:900px;overflow:hidden}
+body{font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+button,input{font:inherit;color:inherit}
+
+body{display:grid;grid-template-columns:600px 1fr;background:#f6f7f9}
+.side{background:#0a1420;padding:44px 48px 36px;display:flex;flex-direction:column;position:relative;overflow:hidden}
+.side .gl{position:absolute;left:-200px;bottom:-432px;opacity:.3}
+.hd{display:flex;align-items:center;gap:11px;position:relative;z-index:3}
+.hd b{font-size:13px;letter-spacing:.36em;color:#e6f1fa;font-weight:600}
+.hd i{font-style:normal;font-size:9px;letter-spacing:.2em;color:#6b869c;margin-left:auto;font-family:Consolas,"SF Mono","Courier New",monospace}
+.ttl{margin-top:66px;position:relative;z-index:3}
+.live{display:inline-flex;align-items:center;gap:7px;font-size:9.5px;letter-spacing:.24em;color:#5ee6a8;
+  font-family:Consolas,"SF Mono","Courier New",monospace;margin-bottom:18px}
+.live em{width:6px;height:6px;border-radius:50%;background:#5ee6a8;box-shadow:0 0 10px #5ee6a8;display:block}
+.ttl h1{font-size:34px;line-height:1.32;font-weight:600;color:#f2f8fd;letter-spacing:.02em}
+.ttl p{margin-top:14px;font-size:12px;line-height:1.85;color:#7b96ab;max-width:400px}
+.stats{margin-top:40px;position:relative;z-index:3;display:flex;flex-direction:column;gap:20px}
+.st{display:grid;grid-template-columns:76px 1fr 68px;align-items:center;gap:14px;font-family:Consolas,"SF Mono","Courier New",monospace}
+.st .k{font-size:10px;letter-spacing:.1em;color:#6b869c}
+.st .bar{height:3px;background:rgba(120,170,205,.14);position:relative;border-radius:2px}
+.st .bar i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,#4fa8d8,#5ee6a8);border-radius:2px}
+.st .v{font-size:11.5px;color:#c3d8e6;text-align:right}
+.sfoot{margin-top:auto;position:relative;z-index:3;display:flex;justify-content:space-between;
+  font-size:9.5px;letter-spacing:.1em;color:#55708a;font-family:Consolas,"SF Mono","Courier New",monospace;padding-top:16px;
+  border-top:1px solid rgba(120,170,205,.12)}
+.sfoot b{color:#5ee6a8;font-weight:400}
+.main{display:grid;place-items:center;position:relative}
+.main:before{content:"";position:absolute;left:0;top:0;bottom:0;width:1px;background:#e2e6ec}
+.serial{position:absolute;top:40px;right:56px;font-size:10px;letter-spacing:.22em;color:#adb6c2;font-family:Consolas,"SF Mono","Courier New",monospace}
+.card{width:404px;background:#fff;border-radius:16px;padding:36px 36px 28px;
+  box-shadow:0 22px 60px rgba(20,40,70,.09),0 2px 6px rgba(20,40,70,.05);border:1px solid #eceff3}
+h2{font-size:22px;font-weight:600;color:#101a26;letter-spacing:.01em}
+.cs{font-size:12px;color:#8a94a2;margin:8px 0 26px}
+.tabs{display:flex;gap:4px;padding:4px;background:#f1f3f6;border-radius:10px;margin-bottom:24px}
+.tabs button{flex:1;padding:9px;border:0;border-radius:8px;background:none;color:#8a94a2;font-size:12.5px;cursor:pointer}
+.tabs button.on{background:#fff;color:#101a26;font-weight:600;box-shadow:0 1px 3px rgba(20,40,70,.12)}
+.fld{display:block;margin-bottom:16px}
+.fld span{display:block;font-size:11px;color:#7a8593;margin-bottom:7px}
+.fld input{width:100%;padding:12px 13px;border-radius:9px;border:1px solid #dfe4ea;font-size:13px;color:#101a26;outline:none;background:#fbfcfd}
+.fld input:focus{border-color:#0a1420;background:#fff;box-shadow:0 0 0 3px rgba(10,20,32,.06)}
+.row{display:flex;justify-content:space-between;align-items:center;font-size:11.5px;color:#8a94a2;margin:4px 0 20px}
+.chk{display:flex;align-items:center;gap:7px;cursor:pointer}
+.chk input{accent-color:#0a1420;width:13px;height:13px}
+.lnk{color:#8a94a2;cursor:pointer;text-decoration:none}
+.go{width:100%;padding:13px;border:0;border-radius:9px;background:#0a1420;color:#fff;font-size:13.5px;
+  font-weight:600;cursor:pointer;letter-spacing:.04em}
+.go:hover{background:#16273c}
+.or{position:relative;text-align:center;font-size:10.5px;color:#b3bcc7;margin:16px 0}
+.or:before,.or:after{content:"";position:absolute;top:50%;width:44%;height:1px;background:#e6eaef}
+.or:before{left:0}.or:after{right:0}
+.guest{width:100%;padding:12px;border-radius:9px;background:#fff;border:1px solid #dfe4ea;color:#4a5462;font-size:12.5px;cursor:pointer}
+.guest:hover{background:#f7f9fb}
+.foot{font-size:10px;color:#adb6c2;text-align:center;margin-top:20px;line-height:1.8}
+.foot b{color:#0a1420;font-weight:500}
+
+</style></head><body>
+<div class="side">
+  <div class="gl"><svg width="840" height="840" viewBox="0 0 840 840" style="display:block"><defs><radialGradient id="gl5" cx="32%" cy="24%" r="80%"><stop offset="0" stop-color="#5ba6da"/><stop offset="45%" stop-color="#1c5586"/><stop offset="100%" stop-color="#061826"/></radialGradient><radialGradient id="gl5_s" cx="34%" cy="26%" r="72%"><stop offset="55%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity="0.62"/></radialGradient><clipPath id="gl5_c"><circle cx="420.0" cy="420.0" r="420.0"/></clipPath></defs><circle cx="420.0" cy="420.0" r="420.0" fill="url(#gl5)"/><g clip-path="url(#gl5_c)" fill="none" stroke="#a8d6f0" stroke-width="0.9" opacity="0.15"><ellipse cx="420.0" cy="64.4" rx="182.2" ry="62.3"/><ellipse cx="420.0" cy="173.9" rx="328.4" ry="112.3"/><ellipse cx="420.0" cy="332.2" rx="409.5" ry="140.0"/><ellipse cx="420.0" cy="507.8" rx="409.5" ry="140.0"/><ellipse cx="420.0" cy="666.1" rx="328.4" ry="112.3"/><ellipse cx="420.0" cy="775.6" rx="182.2" ry="62.3"/><ellipse cx="420.0" cy="420.0" rx="143.6" ry="394.7"/><ellipse cx="420.0" cy="420.0" rx="270.0" ry="394.7"/><ellipse cx="420.0" cy="420.0" rx="363.7" ry="394.7"/><ellipse cx="420.0" cy="420.0" rx="413.6" ry="394.7"/><ellipse cx="420.0" cy="420.0" rx="413.6" ry="394.7"/><ellipse cx="420.0" cy="420.0" rx="363.7" ry="394.7"/><ellipse cx="420.0" cy="420.0" rx="270.0" ry="394.7"/><ellipse cx="420.0" cy="420.0" rx="143.6" ry="394.7"/></g><circle cx="420.0" cy="420.0" r="420.0" fill="url(#gl5_s)"/></svg></div>
+  <div class="hd"><b>ORBIS</b><i>AUTH / v2.4</i></div>
+  <div class="ttl">
+    <div class="live"><em></em>LIVE DATASET</div>
+    <h1>一颗可以旋转的<br>世界经济年鉴</h1>
+    <p>200+ 国家的 GDP、人口、寿命与汇率，全部落在同一颗球面上。数据每 6 小时与世界银行同步一次。</p>
+  </div>
+  <div class="stats">
+    <div class="st"><span class="k">GDP 总量</span><span class="bar"><i style="width:92%"></i></span><span class="v">$105.4T</span></div>
+    <div class="st"><span class="k">总人口</span><span class="bar"><i style="width:78%"></i></span><span class="v">8.09B</span></div>
+    <div class="st"><span class="k">平均寿命</span><span class="bar"><i style="width:64%"></i></span><span class="v">73.4 y</span></div>
+    <div class="st"><span class="k">国家覆盖</span><span class="bar"><i style="width:100%"></i></span><span class="v">217</span></div>
+  </div>
+  <div class="sfoot"><span>WORLD BANK WDI</span><span>UPDATED <b>2026-11-17</b></span></div>
+</div>
+<div class="main">
+  <div class="serial">01 — SIGN IN</div>
+  <div class="card">
+    <h2>欢迎回来</h2>
+    <p class="cs">登录以使用完整账户功能 · 游客可免费浏览</p>
+    <div class="tabs"><button class="on">登录</button><button>注册</button></div>
+    <label class="fld"><span>邮箱</span><input type="email" value="2106812162@qq.com"></label>
+      <label class="fld"><span>密码</span><input type="password" value="········"></label>
+      <div class="row"><label class="chk"><input type="checkbox" checked><span>保持登录 30 天</span></label><a class="lnk">忘记密码</a></div>
+      <button class="go">登录并进入</button>
+      <div class="or">或</div>
+      <button class="guest">以访客身份浏览</button>
+    <p class="foot">继续即表示同意服务条款与隐私政策<br>管理员请从 <b>/admin</b> 入口登录</p>
+  </div>
+</div>
+</body></html>

@@ -1,0 +1,93 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><title>S_Bento卡片墙</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1440px;height:900px;overflow:hidden}
+body{font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+button,input{font:inherit;color:inherit}
+
+body{background:#060910;position:relative;overflow:hidden}
+.wrap{position:absolute;inset:26px;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(3,1fr);gap:13px}
+.cell{background:#0d1420;border:1px solid rgba(120,165,205,.13);border-radius:15px;overflow:hidden;position:relative}
+.hero{grid-column:1/4;grid-row:1/3;background:radial-gradient(ellipse 62% 88% at 88% 72%,#173355 0%,#0e1c30 55%,#0b1422 100%)}
+.login{grid-column:4/5;grid-row:1/4;padding:30px 26px;background:linear-gradient(180deg,#101a2a,#0b1220);display:flex;flex-direction:column;justify-content:center}
+.m1{grid-column:1/2;grid-row:3/4;padding:22px 24px}
+.m2{grid-column:2/3;grid-row:3/4;padding:22px 24px}
+.m3{grid-column:3/4;grid-row:3/4;padding:22px 24px}
+.hero .txt{position:relative;z-index:4;padding:44px 46px}
+.logo{display:flex;align-items:center;gap:11px;margin-bottom:32px}
+.logo b{font-size:13px;letter-spacing:.34em;color:#eaf4ff;font-weight:600}
+.logo i{font-style:normal;font-size:9px;letter-spacing:.16em;color:#7091b0;padding-left:11px;border-left:1px solid rgba(140,190,230,.22)}
+h1{font-size:44px;line-height:1.28;font-weight:300;color:#f1f8ff;letter-spacing:.01em;max-width:600px}
+h1 b{font-weight:600;color:#8ad7ff}
+.lead{margin-top:16px;font-size:12.5px;color:#8faac4;line-height:1.9;max-width:470px}
+.chips{display:flex;gap:10px;margin-top:26px}
+.chip{padding:10px 16px;border:1px solid rgba(130,190,230,.2);border-radius:9px;background:rgba(10,22,38,.5)}
+.chip b{display:block;font-size:19px;font-weight:300;color:#eaf6ff;line-height:1}
+.chip span{display:block;font-size:9px;color:#6f91b0;margin-top:6px;letter-spacing:.1em}
+.hero .planet{position:absolute;right:-90px;bottom:-230px;z-index:2;opacity:.82;filter:drop-shadow(0 0 60px rgba(60,140,205,.3))}
+.hero .cap{position:absolute;left:46px;bottom:26px;font-family:Consolas,monospace;font-size:9px;letter-spacing:.2em;color:#5d7e9c;z-index:5}
+.login .lglogo{position:absolute;top:28px;left:26px;display:flex;align-items:center;gap:8px;font-size:11px;letter-spacing:.28em;color:#cfe6f7;font-weight:600}
+.login .lgstat{position:absolute;bottom:20px;left:26px;right:26px;display:flex;justify-content:space-between;font-family:Consolas,monospace;font-size:8.5px;color:#5d7e9c;letter-spacing:.1em}
+.login h2{font-size:21px;color:#eef7ff;font-weight:600;margin:16px 0 5px}
+.login .cs{font-size:10.5px;color:#7e9bb6;margin-bottom:20px;line-height:1.6}
+.tabs{display:flex;gap:18px;border-bottom:1px solid rgba(130,180,220,.16);margin-bottom:20px}
+.tabs button{background:none;border:0;cursor:pointer;padding:0 0 9px;font-size:11.5px;color:#7091b0;position:relative}
+.tabs button.on{color:#eaf6ff;font-weight:600}
+.tabs button.on:after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:1.5px;background:#7dd3fc}
+.fld{display:block;margin-bottom:15px}
+.fld span{display:block;font-size:10px;color:#7e9bb6;margin-bottom:7px}
+.fld input{width:100%;padding:10px 11px;border-radius:7px;background:rgba(255,255,255,.045);border:1px solid rgba(130,180,220,.18);font-size:12.5px;color:#eaf6ff;outline:none}
+.fld input:focus{border-color:#7dd3fc}
+.row{display:flex;justify-content:space-between;align-items:center;font-size:10.5px;color:#7e9bb6;margin:2px 0 18px}
+.chk{display:flex;align-items:center;gap:6px;cursor:pointer}.chk input{accent-color:#7dd3fc;width:11px;height:11px}
+.lnk{color:#7e9bb6;text-decoration:none;cursor:pointer}
+.go{width:100%;padding:12px;border:0;border-radius:7px;background:linear-gradient(135deg,#8cdcff,#6aa9ff);color:#06192c;font-size:12.5px;font-weight:700;cursor:pointer}
+.or{position:relative;text-align:center;font-size:9px;color:#5d7e9c;margin:13px 0}
+.or:before,.or:after{content:"";position:absolute;top:50%;width:43%;height:1px;background:rgba(130,180,220,.14)}
+.or:before{left:0}.or:after{right:0}
+.guest{width:100%;padding:10px;border-radius:7px;background:none;border:1px solid rgba(130,180,220,.2);color:#9ab8cf;font-size:11px;cursor:pointer}
+.foot{font-size:9px;color:#5d7e9c;margin-top:16px;line-height:1.65}
+.mtitle{font-family:Consolas,monospace;font-size:9px;letter-spacing:.18em;color:#6f91b0;margin-bottom:14px}
+.big{font-size:30px;font-weight:300;color:#eaf6ff;line-height:1}
+.m1 .up{color:#ff7a6b;font-size:11px;margin-top:10px}
+.spark{margin-top:12px;height:44px;width:100%}
+.donut{position:absolute;right:16px;bottom:14px;width:76px;height:76px;border-radius:50%;background:conic-gradient(#7dd3fc 0 34%,#8a7dff 34% 62%,#f0a868 62% 82%,#2c405c 82% 100%);
+  -webkit-mask:radial-gradient(circle,transparent 56%,#000 57%);mask:radial-gradient(circle,transparent 56%,#000 57%)}
+.m2 .lg{font-size:11px;color:#91aac0;line-height:1.9;margin-top:6px}
+.yr{display:flex;justify-content:space-between;margin-top:22px;font-family:Consolas,monospace;font-size:9px;color:#6f91b0}
+.yr b{color:#8ad7ff;font-weight:400}
+.track{height:3px;background:#1d2c42;border-radius:2px;margin-top:9px;position:relative}
+.track i{position:absolute;left:72%;top:-3px;width:9px;height:9px;border-radius:50%;background:#7dd3fc;box-shadow:0 0 12px rgba(125,211,252,.8)}
+
+</style></head><body>
+<div class="wrap">
+  <div class="cell hero">
+    <div class="txt">
+      <div class="logo"><b>ORBIS</b><i>WORLD DATA ATLAS</i></div>
+      <h1>用数据重新认识<br><b>这颗星球</b></h1>
+      <p class="lead">217 个国家 · 25 年 · 4 项指标。拖动球体，看数字如何重塑国界。</p>
+      <div class="chips"><div class="chip"><b>217</b><span>覆盖国家</span></div><div class="chip"><b>25</b><span>年份跨度</span></div><div class="chip"><b>6h</b><span>同步周期</span></div></div>
+    </div>
+    <div class="planet"><svg width="700" height="700" viewBox="0 0 700 700" style="display:block"><defs><radialGradient id="gl10" cx="32%" cy="24%" r="80%"><stop offset="0" stop-color="#3d80b8"/><stop offset="45%" stop-color="#123f63"/><stop offset="100%" stop-color="#030d16"/></radialGradient><radialGradient id="gl10_s" cx="34%" cy="26%" r="72%"><stop offset="55%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity="0.62"/></radialGradient><clipPath id="gl10_c"><circle cx="350.0" cy="350.0" r="350.0"/></clipPath></defs><circle cx="350.0" cy="350.0" r="350.0" fill="url(#gl10)"/><g clip-path="url(#gl10_c)" fill="none" stroke="#9fd4f2" stroke-width="0.9" opacity="0.42"><ellipse cx="350.0" cy="53.7" rx="151.9" ry="51.9"/><ellipse cx="350.0" cy="144.9" rx="273.6" ry="93.6"/><ellipse cx="350.0" cy="276.8" rx="341.2" ry="116.7"/><ellipse cx="350.0" cy="423.2" rx="341.2" ry="116.7"/><ellipse cx="350.0" cy="555.1" rx="273.6" ry="93.6"/><ellipse cx="350.0" cy="646.3" rx="151.9" ry="51.9"/><ellipse cx="350.0" cy="350.0" rx="119.7" ry="328.9"/><ellipse cx="350.0" cy="350.0" rx="225.0" ry="328.9"/><ellipse cx="350.0" cy="350.0" rx="303.1" ry="328.9"/><ellipse cx="350.0" cy="350.0" rx="344.7" ry="328.9"/><ellipse cx="350.0" cy="350.0" rx="344.7" ry="328.9"/><ellipse cx="350.0" cy="350.0" rx="303.1" ry="328.9"/><ellipse cx="350.0" cy="350.0" rx="225.0" ry="328.9"/><ellipse cx="350.0" cy="350.0" rx="119.7" ry="328.9"/></g><circle cx="350.0" cy="350.0" r="350.0" fill="url(#gl10_s)"/></svg></div>
+    <div class="cap">WORLD BANK WDI · FRANKFURTER · 111 CENTRAL BANKS</div>
+  </div>
+  <div class="cell login">
+    <div class="lglogo">ORBIS</div>
+    <h2>欢迎回来</h2><p class="cs">登录以使用完整账户功能 · 游客可免费浏览地球</p>
+    <div class="tabs"><button class="on">登录</button><button>注册</button></div> <label class="fld"><span>邮箱</span><input type="email" value="2106812162@qq.com"></label>
+    <label class="fld"><span>密码</span><input type="password" value="········"></label>
+    <div class="row"><label class="chk"><input type="checkbox" checked><span>保持登录 30 天</span></label><a class="lnk">忘记密码</a></div>
+    <button class="go">登录并进入</button>
+    <div class="or">或</div>
+    <button class="guest">以访客身份浏览</button>
+    <p class="foot">管理员入口 → 此处请用邮箱登录，不是管理员账号</p>
+    <div class="lgstat"><span>WDI / 2026-11</span><span>217 · 25Y · 4</span></div>
+  </div>
+  <div class="cell m1"><div class="mtitle">GDP / CHN 2025</div><div class="big">19.5<span style="font-size:13px"> T</span></div>
+    <div class="up">↑ +5.2% 同比</div><div class="spark"><svg width="270" height="44" viewBox="0 0 270 44"><polyline fill="none" stroke="#7dd3fc" stroke-width="1.6" points="0,36 10,38 20,39 30,32 40,34 50,36 60,29 70,31 80,33 90,26 100,28 110,30 120,23 130,25 140,27 150,20 160,22 170,25 180,18 190,20 200,22 210,15 220,17 230,20 240,13 250,15 260,17 270,10"/></svg></div></div>
+  <div class="cell m2"><div class="mtitle">DATA SOURCES</div>
+    <div class="lg">世界银行 WDI<br>Frankfurter · 111 家央行<br>本地缓存 · 6 小时同步</div><div class="donut"></div></div>
+  <div class="cell m3"><div class="mtitle">TIME RANGE</div>
+    <div class="big">1990—2025</div><div class="yr"><span>1990</span><b>2025</b></div><div class="track"><i></i></div></div>
+</div>
+</body></html>

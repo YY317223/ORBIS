@@ -1,0 +1,72 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><title>Q_冷白数据台</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1440px;height:900px;overflow:hidden}
+body{font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+button,input{font:inherit;color:inherit}
+
+body{background:#e9eef4;color:#16233b;position:relative;overflow:hidden}
+.grid{position:absolute;inset:0;background-image:linear-gradient(rgba(30,60,110,.055) 1px,transparent 1px),linear-gradient(90deg,rgba(30,60,110,.055) 1px,transparent 1px);background-size:48px 48px}
+.hd{position:absolute;left:72px;right:88px;top:34px;display:flex;justify-content:space-between;align-items:center;font-size:10px;letter-spacing:.18em;color:#6b7c98}
+.hd b{font-size:13px;letter-spacing:.26em;color:#142744}
+.hd em{font-style:normal;color:#5070a8}
+.left{position:relative;z-index:4;width:800px;padding:0 0 0 72px;margin-top:126px}
+h1{font-size:43px;line-height:1.3;font-weight:600;color:#12244a;letter-spacing:-.01em;max-width:660px}
+h1 em{font-style:normal;color:#2f6bff}
+.lead{margin-top:18px;font-size:12.5px;line-height:1.95;color:#5a6d8d;max-width:560px}
+.table{margin-top:34px;width:614px;background:#fff;border:1px solid #d6dfec;border-radius:10px;box-shadow:0 18px 42px rgba(30,55,100,.08);overflow:hidden}
+.tr{display:grid;grid-template-columns:1.1fr .9fr .7fr 1.3fr;align-items:center;padding:11px 18px;border-bottom:1px solid #e9eef6;font-size:11px;color:#283c5e}
+.tr:last-child{border-bottom:0}
+.th{font-size:9px;letter-spacing:.16em;color:#8b9ab1;background:#f6f8fc;padding-top:9px;padding-bottom:9px}
+.tr b{font-weight:600}
+.up{color:#d13b2f}.down{color:#1a9b68}
+.bar{display:block;width:100%;height:5px;background:#e8eef7;border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;background:#2f6bff;border-radius:3px}
+.src{font-size:9.5px;color:#8b9ab1;margin-top:14px;letter-spacing:.04em}
+.trend{margin-top:24px;width:614px;background:#fff;border:1px solid #d6dfec;border-radius:10px;padding:17px 20px 12px;box-shadow:0 18px 42px rgba(30,55,100,.07)}
+.trend .tt{font-size:9px;letter-spacing:.16em;color:#8b9ab1;margin-bottom:10px}
+.card{position:absolute;right:88px;top:142px;z-index:6;width:430px;background:#fff;border:1px solid #d6dfec;border-radius:12px;padding:32px 34px 26px;box-shadow:0 32px 72px rgba(25,50,95,.15)}
+.card h2{font-size:21px;font-weight:600;color:#142744}
+.cs{font-size:11px;color:#7e8da5;margin:8px 0 22px}
+.tabs{display:flex;gap:28px;border-bottom:1px solid #e3eaf3;margin-bottom:22px}
+.tabs button{background:none;border:0;padding:0 0 10px;font-size:12px;color:#8b9ab1;cursor:pointer;position:relative}
+.tabs button.on{color:#17306a;font-weight:600}
+.tabs button.on:after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:#2f6bff}
+.fld{display:block;margin-bottom:17px}
+.fld span{display:block;font-size:10px;letter-spacing:.1em;color:#7e8da5;margin-bottom:7px}
+.fld input{width:100%;padding:11px 12px;border:1px solid #dbe3ee;border-radius:7px;background:#fbfcfe;font-size:13px;color:#142744;outline:none}
+.fld input:focus{border-color:#2f6bff;background:#fff}
+.row{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#7e8da5;margin:2px 0 18px}
+.chk{display:flex;align-items:center;gap:7px;cursor:pointer}.chk input{accent-color:#2f6bff;width:12px;height:12px}
+.lnk{color:#5b7cc2;text-decoration:none;cursor:pointer}
+.go{width:100%;padding:13px;border:0;border-radius:7px;background:#2f6bff;color:#fff;font-size:13px;font-weight:600;cursor:pointer}
+.or{position:relative;text-align:center;font-size:10px;color:#9aa8bd;margin:14px 0}
+.or:before,.or:after{content:"";position:absolute;top:50%;width:43%;height:1px;background:#e3eaf3}
+.or:before{left:0}.or:after{right:0}
+.guest{width:100%;padding:11px;border:1px solid #dbe3ee;border-radius:7px;background:#fff;color:#5b6e8e;font-size:11.5px;cursor:pointer}
+.foot{font-size:9.5px;color:#9aa8bd;margin-top:18px;line-height:1.7}
+
+</style></head><body>
+<div class="grid"></div>
+<div class="hd"><b>ORBIS</b><span>DATA ATLAS <em>/</em> 1990—2025 <em>/</em> 217 COUNTRIES</span></div>
+<div class="left">
+  <h1>用数据重新认识<br><em>这颗星球</em></h1>
+  <p class="lead">不是一张静态地图。把 25 年的 GDP、人口、寿命与汇率叠在同一颗球面上，拖动就能比较。</p>
+  <div class="table">
+    <div class="tr th"><span>国家</span><span>GDP</span><span>同比</span><span>相对强度</span></div>
+    <div class="tr"><b>美国</b><span>28.7 T</span><span class="up">+2.8%</span><span><i class="bar"><i style="width:100%"></i></i></span></div>
+    <div class="tr"><b>中国</b><span>19.5 T</span><span class="up">+5.2%</span><span><i class="bar"><i style="width:68%"></i></i></span></div>
+    <div class="tr"><b>德国</b><span>4.7 T</span><span class="down">−0.3%</span><span><i class="bar"><i style="width:16%"></i></i></span></div>
+    <div class="tr"><b>印度</b><span>3.9 T</span><span class="up">+7.1%</span><span><i class="bar"><i style="width:14%"></i></i></span></div>
+  </div>
+  <p class="src">数据源：世界银行 WDI · Frankfurter（111 家央行）· 更新于 2026-11</p>
+  <div class="trend"><div class="tt">25 年趋势 · 四国 GDP（归一化）</div><svg width="574" height="112" viewBox="0 0 574 112"><line x1="0" y1="18" x2="574" y2="18" stroke="#edf2f8"/><line x1="0" y1="46" x2="574" y2="46" stroke="#edf2f8"/><line x1="0" y1="74" x2="574" y2="74" stroke="#edf2f8"/><polyline fill="none" stroke="#2f6bff" stroke-width="1.7" points="6,92 28,87 50,85 72,83 94,74 116,73 138,72 160,71 182,63 204,62 226,62 248,61 270,53 292,53 314,53 336,53 358,45 380,45 402,45 424,45 446,37 468,37 490,37 512,37 534,29 556,30"/><polyline fill="none" stroke="#d13b2f" stroke-width="1.7" points="6,89 28,86 50,85 72,84 94,75 116,74 138,73 160,73 182,64 204,63 226,63 248,62 270,54 292,54 314,53 336,53 358,45 380,44 402,44 424,44 446,35 468,35 490,35 512,35 534,27 556,27"/><polyline fill="none" stroke="#8a7dff" stroke-width="1.7" points="6,86 28,85 50,84 72,83 94,75 116,74 138,74 160,73 182,65 204,64 226,63 248,63 270,54 292,54 314,53 336,53 358,44 380,44 402,43 424,43 446,34 468,34 490,33 512,33 534,24 556,24"/><polyline fill="none" stroke="#1a9b68" stroke-width="1.7" points="6,83 28,83 50,83 72,83 94,74 116,74 138,74 160,73 182,65 204,64 226,64 248,63 270,54 292,54 314,53 336,52 358,44 380,43 402,42 424,41 446,33 468,32 490,31 512,30 534,21 556,21"/><text x="0" y="108" font-size="8" fill="#9aa8bd" font-family="Consolas,monospace">1990</text><text x="190" y="108" font-size="8" fill="#9aa8bd" font-family="Consolas,monospace">2000</text><text x="380" y="108" font-size="8" fill="#9aa8bd" font-family="Consolas,monospace">2010</text><text x="558" y="108" font-size="8" fill="#9aa8bd" font-family="Consolas,monospace" text-anchor="end">2025</text></svg></div>
+</div>
+<div class="card"><div class="tabs"><button class="on">登录</button><button>注册</button></div><h2>欢迎回来</h2><p class="cs">登录以使用完整账户功能 · 游客可免费浏览地球</p><label class="fld"><span>邮箱</span><input type="email" value="2106812162@qq.com"></label>
+    <label class="fld"><span>密码</span><input type="password" value="········"></label>
+    <div class="row"><label class="chk"><input type="checkbox" checked><span>保持登录 30 天</span></label><a class="lnk">忘记密码</a></div>
+    <button class="go">登录并进入</button>
+    <div class="or">或</div>
+    <button class="guest">以访客身份浏览</button>
+<p class="foot">管理员入口 → 此处请用邮箱登录，不是管理员账号<br>你的对比与订阅会保存在账户中</p></div>
+</body></html>

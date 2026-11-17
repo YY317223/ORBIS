@@ -1,0 +1,66 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><title>O_玻璃穹顶</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1440px;height:900px;overflow:hidden}
+body{font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+button,input{font:inherit;color:inherit}
+
+body{background:radial-gradient(ellipse 90% 85% at 74% 40%,#1d2d68 0%,#101945 42%,#060a1c 100%);position:relative;overflow:hidden}
+.grid{position:absolute;inset:0;background-image:linear-gradient(rgba(160,190,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(160,190,255,.035) 1px,transparent 1px);background-size:62px 62px}
+.orb{position:absolute;right:-90px;top:56px;width:880px;height:880px;border-radius:50%;overflow:hidden;
+  background:linear-gradient(150deg,rgba(160,195,255,.18),rgba(60,95,200,.06) 45%,rgba(8,16,48,.52));
+  border:1px solid rgba(180,212,255,.24);
+  box-shadow:inset -60px -50px 140px rgba(3,6,24,.62),inset 28px 26px 90px rgba(190,220,255,.12),0 0 150px rgba(70,120,255,.16)}
+.orb .wire{position:absolute;left:46px;top:46px;opacity:.52}
+.pill{position:absolute;z-index:4;padding:9px 15px;border-radius:999px;background:rgba(12,22,58,.66);
+  border:1px solid rgba(170,205,255,.26);backdrop-filter:blur(12px);font-size:11px;color:#d6e5ff;
+  box-shadow:0 14px 32px rgba(0,0,0,.35);letter-spacing:.02em}
+.pill b{color:#9fd8ff;font-weight:600;margin-left:10px}
+.p1{right:248px;top:142px}.p2{right:66px;top:428px}.p3{right:352px;bottom:146px}
+.left{position:relative;z-index:6;padding-left:112px;height:100%;display:flex;flex-direction:column;justify-content:center;width:660px}
+.logo{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.logo b{font-size:14px;letter-spacing:.36em;color:#eef5ff;font-weight:600}
+.logo i{font-style:normal;font-size:9px;letter-spacing:.18em;color:#8fa8d4;padding-left:12px;border-left:1px solid rgba(160,200,255,.24)}
+h1{font-size:37px;line-height:1.34;font-weight:300;color:#f4f8ff;letter-spacing:.02em;margin-bottom:12px}
+h1 b{font-weight:600}
+.lead{font-size:12.5px;line-height:1.95;color:#a3b7dc;max-width:430px;margin-bottom:28px}
+.card{width:416px;padding:28px 30px 24px;border-radius:16px;background:rgba(9,16,42,.74);
+  border:1px solid rgba(160,200,255,.2);backdrop-filter:blur(24px);box-shadow:0 36px 90px rgba(0,0,0,.45)}
+h2{font-size:20px;font-weight:600;color:#f0f6ff}
+.cs{font-size:11px;color:#8ea6ce;margin:7px 0 20px}
+.tabs{display:flex;gap:4px;padding:4px;border-radius:9px;background:rgba(255,255,255,.05);margin-bottom:20px;border:1px solid rgba(150,190,255,.12)}
+.tabs button{flex:1;padding:8px;border:0;border-radius:6px;background:none;color:#8ea6ce;font-size:12px;cursor:pointer}
+.tabs button.on{background:linear-gradient(135deg,rgba(120,165,255,.28),rgba(110,220,255,.16));color:#dceeff;font-weight:600}
+.fld{display:block;margin-bottom:14px}
+.fld span{display:block;font-size:10.5px;color:#8ea6ce;margin-bottom:7px}
+.fld input{width:100%;padding:11px 13px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid rgba(150,190,255,.18);font-size:13px;color:#eef5ff;outline:none}
+.fld input:focus{border-color:rgba(140,200,255,.65)}
+.row{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#8ea6ce;margin:2px 0 17px}
+.chk{display:flex;align-items:center;gap:7px;cursor:pointer}.chk input{accent-color:#7fb4ff;width:12px;height:12px}
+.lnk{color:#8ea6ce;text-decoration:none;cursor:pointer}
+.go{width:100%;padding:12px;border:0;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;background:linear-gradient(135deg,#9ec4ff,#6ea8ff);color:#081634}
+.or{position:relative;text-align:center;font-size:10px;color:#6d85ad;margin:14px 0}
+.or:before,.or:after{content:"";position:absolute;top:50%;width:44%;height:1px;background:rgba(150,190,255,.14)}
+.or:before{left:0}.or:after{right:0}
+.guest{width:100%;padding:10px;border-radius:8px;background:none;border:1px solid rgba(150,190,255,.24);color:#b9ccef;font-size:11.5px;cursor:pointer}
+.foot{font-size:9.5px;color:#7388af;margin-top:16px;line-height:1.7}
+
+</style></head><body>
+<div class="grid"></div>
+<div class="orb"><div class="wire"><svg width="788" height="788" viewBox="0 0 788 788" style="display:block"><defs><radialGradient id="gl8" cx="32%" cy="24%" r="80%"><stop offset="0" stop-color="rgba(150,200,255,.2)"/><stop offset="45%" stop-color="rgba(90,150,240,.12)"/><stop offset="100%" stop-color="rgba(20,40,100,.2)"/></radialGradient><radialGradient id="gl8_s" cx="34%" cy="26%" r="72%"><stop offset="55%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity="0.62"/></radialGradient><clipPath id="gl8_c"><circle cx="394.0" cy="394.0" r="394.0"/></clipPath></defs><circle cx="394.0" cy="394.0" r="394.0" fill="url(#gl8)"/><g clip-path="url(#gl8_c)" fill="none" stroke="rgba(175,215,255,.62)" stroke-width="0.9" opacity="0.48"><ellipse cx="394.0" cy="55.8" rx="134.8" ry="54.8"/><ellipse cx="394.0" cy="118.3" rx="253.3" ry="103.0"/><ellipse cx="394.0" cy="214.0" rx="341.2" ry="138.8"/><ellipse cx="394.0" cy="331.5" rx="388.0" ry="157.8"/><ellipse cx="394.0" cy="456.5" rx="388.0" ry="157.8"/><ellipse cx="394.0" cy="574.0" rx="341.2" ry="138.8"/><ellipse cx="394.0" cy="669.7" rx="253.3" ry="103.0"/><ellipse cx="394.0" cy="732.2" rx="134.8" ry="54.8"/><ellipse cx="394.0" cy="394.0" rx="111.0" ry="359.9"/><ellipse cx="394.0" cy="394.0" rx="213.0" ry="359.9"/><ellipse cx="394.0" cy="394.0" rx="297.8" ry="359.9"/><ellipse cx="394.0" cy="394.0" rx="358.4" ry="359.9"/><ellipse cx="394.0" cy="394.0" rx="390.0" ry="359.9"/><ellipse cx="394.0" cy="394.0" rx="390.0" ry="359.9"/><ellipse cx="394.0" cy="394.0" rx="358.4" ry="359.9"/><ellipse cx="394.0" cy="394.0" rx="297.8" ry="359.9"/><ellipse cx="394.0" cy="394.0" rx="213.0" ry="359.9"/><ellipse cx="394.0" cy="394.0" rx="111.0" ry="359.9"/></g></svg></div></div>
+<div class="pill p1">CHN · GDP <b>19.5T</b></div>
+<div class="pill p2">IND · 人口 <b>1.43B</b></div>
+<div class="pill p3">DEU · 寿命 <b>81.3y</b></div>
+<div class="left">
+  <div class="logo"><b>ORBIS</b><i>EARTH DATA ATLAS</i></div>
+  <h1>用数据重新认识<br><b>这颗星球</b></h1>
+  <p class="lead">217 个国家的 GDP、人口与寿命，落在同一颗球面上。拖动、对比、分享，看见二十五年里的变化。</p>
+  <div class="card"><div class="tabs"><button class="on">登录</button><button>注册</button></div><h2>欢迎回来</h2><p class="cs">登录以使用完整账户功能 · 游客可免费浏览地球</p><label class="fld"><span>邮箱</span><input type="email" value="2106812162@qq.com"></label>
+    <label class="fld"><span>密码</span><input type="password" value="········"></label>
+    <div class="row"><label class="chk"><input type="checkbox" checked><span>保持登录 30 天</span></label><a class="lnk">忘记密码</a></div>
+    <button class="go">登录并进入</button>
+    <div class="or">或</div>
+    <button class="guest">以访客身份浏览</button>
+  <p class="foot">管理员入口 → 此处请用邮箱登录，不是管理员账号<br>数据源：世界银行 WDI · Frankfurter（111 家央行）</p></div>
+</div>
+</body></html>

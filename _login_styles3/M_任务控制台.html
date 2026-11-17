@@ -1,0 +1,111 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><title>M_任务控制台</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1440px;height:900px;overflow:hidden}
+body{font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+button,input{font:inherit;color:inherit}
+
+body{background:#04080c;position:relative;overflow:hidden;display:flex;flex-direction:column;
+  font-family:Consolas,"SF Mono",monospace}
+.grid{position:absolute;inset:0;background-image:linear-gradient(rgba(70,190,210,.045) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(70,190,210,.045) 1px,transparent 1px);background-size:38px 38px}
+.rail{position:relative;z-index:6;display:flex;align-items:center;gap:26px;padding:0 34px;height:44px;
+  border-bottom:1px solid rgba(90,200,220,.14);background:rgba(6,14,20,.7);font-size:9.5px;letter-spacing:.16em;color:#5f8b9c}
+.rail b{color:#cdeef6;font-weight:600;letter-spacing:.3em}
+.rail .sep{width:1px;height:12px;background:rgba(90,200,220,.18)}
+.rail .ok{color:#5ee6a8;display:flex;align-items:center;gap:6px}
+.rail .ok i{width:5px;height:5px;border-radius:50%;background:#5ee6a8;box-shadow:0 0 8px #5ee6a8}
+.rail .right{margin-left:auto;display:flex;gap:22px}
+.body{flex:1;position:relative;z-index:6;display:grid;grid-template-columns:1fr 560px;align-items:center}
+.tel{padding:0 34px 0 56px}
+.tel .cap{font-size:9.5px;letter-spacing:.2em;color:#f0a868;margin-bottom:20px;font-family:Consolas,"SF Mono",monospace}
+.tel h1{font-size:30px;line-height:1.45;color:#e8f6fb;font-weight:600;letter-spacing:.02em;font-family:"Segoe UI","Microsoft YaHei",sans-serif}
+.tel p{margin-top:14px;font-size:11.5px;line-height:1.9;color:#7a9aab;max-width:330px;font-family:"Segoe UI","Microsoft YaHei",sans-serif}
+.rows{margin-top:34px;width:360px}
+.rows .r{display:grid;grid-template-columns:56px 1fr 54px;gap:12px;align-items:center;padding:9px 0;
+  border-top:1px solid rgba(90,200,220,.12);font-size:9.5px;color:#5f8b9c;letter-spacing:.1em}
+.rows .r:last-child{border-bottom:1px solid rgba(90,200,220,.12)}
+.rows .b{height:2px;background:rgba(90,200,220,.12);position:relative}
+.rows .b i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,#3aa8c8,#5ee6a8)}
+.rows .v{color:#a9d4e0;text-align:right}
+.panelwrap{padding-right:56px;position:relative}
+.bgholo{position:absolute;left:430px;top:40px;z-index:3;opacity:.55;pointer-events:none;
+  -webkit-mask-image:radial-gradient(circle at 50% 45%,#000 40%,transparent 74%);
+  mask-image:radial-gradient(circle at 50% 45%,#000 40%,transparent 74%)}
+.card{position:relative;background:rgba(5,13,19,.94);border:1px solid rgba(90,200,220,.24);padding:30px 28px 22px;
+  font-family:"Segoe UI","Microsoft YaHei",sans-serif}
+.card .hdr{font-family:Consolas,"SF Mono",monospace}
+.card:before,.card:after{content:"";position:absolute;width:14px;height:14px;border:1.5px solid #5ee6a8}
+.card:before{left:-1px;top:-1px;border-right:0;border-bottom:0}
+.card:after{right:-1px;bottom:-1px;border-left:0;border-top:0}
+.card .hdr{display:flex;justify-content:space-between;align-items:baseline;font-size:9px;letter-spacing:.2em;color:#4f7688;margin-bottom:20px}
+h2{font-size:17px;color:#dff4fa;letter-spacing:.06em;font-weight:600}
+.cs{font-size:11px;letter-spacing:.02em;color:#6d92a4;margin:9px 0 22px}
+.tabs{display:flex;gap:2px;margin-bottom:20px;border:1px solid rgba(90,200,220,.2)}
+.tabs button{flex:1;padding:8px;background:none;border:0;color:#557b8d;font-size:10px;letter-spacing:.14em;cursor:pointer;font-family:inherit}
+.tabs button.on{background:rgba(94,230,168,.12);color:#5ee6a8}
+.fld{display:block;margin-bottom:16px}
+.fld span{display:block;font-size:10px;letter-spacing:.08em;color:#6d92a4;margin-bottom:7px}
+.fld input{width:100%;padding:10px 11px;background:rgba(90,200,220,.05);border:1px solid rgba(90,200,220,.22);
+  font-size:12px;color:#dff4fa;outline:none;font-family:inherit;letter-spacing:.04em}
+.fld input:focus{border-color:#5ee6a8;box-shadow:0 0 0 2px rgba(94,230,168,.1)}
+.row{display:flex;justify-content:space-between;align-items:center;font-size:9px;letter-spacing:.1em;color:#557b8d;margin:2px 0 18px}
+.chk{display:flex;align-items:center;gap:7px;cursor:pointer}
+.chk input{accent-color:#5ee6a8;width:11px;height:11px}
+.lnk{color:#5ee6a8;text-decoration:none;cursor:pointer}
+.go{width:100%;padding:12px;border:0;cursor:pointer;font-size:11px;letter-spacing:.2em;font-weight:700;
+  background:#5ee6a8;color:#04140f;font-family:inherit}
+.go:hover{background:#8bf5c6}
+.or{position:relative;text-align:center;font-size:8.5px;letter-spacing:.2em;color:#3f5f70;margin:15px 0}
+.or:before,.or:after{content:"";position:absolute;top:50%;width:42%;height:1px;background:rgba(90,200,220,.14)}
+.or:before{left:0}.or:after{right:0}
+.guest{width:100%;padding:11px;background:none;border:1px solid rgba(90,200,220,.22);color:#7fa8ba;
+  font-size:10px;letter-spacing:.14em;cursor:pointer;font-family:inherit}
+.guest:hover{border-color:#5ee6a8;color:#5ee6a8}
+.foot{font-size:9px;letter-spacing:.02em;color:#4f7284;margin-top:16px;line-height:1.9}
+.foot b{color:#f0a868;font-weight:400}
+.bottom{position:relative;z-index:6;height:38px;border-top:1px solid rgba(90,200,220,.12);display:flex;
+  align-items:center;gap:24px;padding:0 34px;font-size:8.5px;letter-spacing:.18em;color:#3f5f70;background:rgba(6,14,20,.7)}
+.bottom .r{margin-left:auto;display:flex;gap:22px}
+.bottom b{color:#7fa8ba;font-weight:400}
+
+</style></head><body>
+<div class="grid"></div>
+<div class="bgholo"><svg width="900" height="900" viewBox="0 0 900 900" style="display:block"><defs><radialGradient id="gl9" cx="32%" cy="24%" r="80%"><stop offset="0" stop-color="rgba(46,140,180,.5)"/><stop offset="45%" stop-color="rgba(18,66,92,.45)"/><stop offset="100%" stop-color="rgba(4,14,20,.4)"/></radialGradient><radialGradient id="gl9_s" cx="34%" cy="26%" r="72%"><stop offset="55%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity="0.62"/></radialGradient><clipPath id="gl9_c"><circle cx="450.0" cy="450.0" r="450.0"/></clipPath></defs><circle cx="450.0" cy="450.0" r="450.0" fill="url(#gl9)"/><g clip-path="url(#gl9_c)" fill="none" stroke="rgba(110,220,235,.5)" stroke-width="0.9" opacity="0.5"><ellipse cx="450.0" cy="59.3" rx="172.2" ry="58.9"/><ellipse cx="450.0" cy="151.0" rx="318.2" ry="108.8"/><ellipse cx="450.0" cy="288.2" rx="415.7" ry="142.2"/><ellipse cx="450.0" cy="450.0" rx="450.0" ry="153.9"/><ellipse cx="450.0" cy="611.8" rx="415.7" ry="142.2"/><ellipse cx="450.0" cy="749.0" rx="318.2" ry="108.8"/><ellipse cx="450.0" cy="840.7" rx="172.2" ry="58.9"/><ellipse cx="450.0" cy="450.0" rx="139.1" ry="422.9"/><ellipse cx="450.0" cy="450.0" rx="264.5" ry="422.9"/><ellipse cx="450.0" cy="450.0" rx="364.1" ry="422.9"/><ellipse cx="450.0" cy="450.0" rx="428.0" ry="422.9"/><ellipse cx="450.0" cy="450.0" rx="450.0" ry="422.9"/><ellipse cx="450.0" cy="450.0" rx="428.0" ry="422.9"/><ellipse cx="450.0" cy="450.0" rx="364.1" ry="422.9"/><ellipse cx="450.0" cy="450.0" rx="264.5" ry="422.9"/><ellipse cx="450.0" cy="450.0" rx="139.1" ry="422.9"/></g></svg></div>
+<div class="rail"><b>ORBIS</b><span class="sep"></span>
+  <span class="ok"><i></i>SYSTEM ONLINE</span><span class="sep"></span>
+  <span>FEED / WDI · FRANKFURTER</span>
+  <div class="right"><span>AUTH / v2.4</span><span>2026-11-17 14:23</span><span id="lat">LATENCY 42ms</span></div>
+</div>
+<div class="body">
+  <div class="tel">
+    <div class="cap">// 用数据重新认识这颗星球</div>
+    <h1>用数据重新认识这颗星球<br>看数据如何改变一个国家</h1>
+    <p>217 个国家的 GDP、人口、寿命与汇率，全部落在同一颗球面上，每 6 小时与世界银行同步。</p>
+    <div class="rows">
+      <div class="r"><span>GDP</span><span class="b"><i style="width:92%"></i></span><span class="v">105.4T</span></div>
+      <div class="r"><span>POP</span><span class="b"><i style="width:78%"></i></span><span class="v">8.09B</span></div>
+      <div class="r"><span>LIFE</span><span class="b"><i style="width:64%"></i></span><span class="v">73.4Y</span></div>
+      <div class="r"><span>FX</span><span class="b"><i style="width:100%"></i></span><span class="v">111 CB</span></div>
+    </div>
+  </div>
+  <div class="panelwrap">
+    <div class="card">
+      <div class="hdr"><span>SEC.01 / SIGN IN</span><span>SECURE</span></div>
+      <h2>欢迎回来</h2>
+      <p class="cs">登录以使用完整账户功能 · 游客可免费浏览地球</p>
+      <div class="tabs"><button class="on">登录</button><button>注册</button></div>
+      <label class="fld"><span>邮箱</span><input type="email" value="2106812162@qq.com"></label>
+    <label class="fld"><span>密码</span><input type="password" value="········"></label>
+    <div class="row"><label class="chk"><input type="checkbox" checked><span>保持登录 30 天</span></label><a class="lnk">忘记密码</a></div>
+    <button class="go">登录并进入</button>
+    <div class="or">或</div>
+    <button class="guest">以访客身份浏览</button>
+      <p class="foot"><b>管理员入口 →</b> 此处请用邮箱登录，不是管理员账号</p>
+    </div>
+  </div>
+</div>
+<div class="bottom"><span>DATA SOURCE / WORLD BANK WDI · FRANKFURTER</span>
+  <div class="r"><span>217 COUNTRIES</span><span>1990—2025</span><span><b>SESSION</b> IDLE</span></div>
+</div>
+</body></html>

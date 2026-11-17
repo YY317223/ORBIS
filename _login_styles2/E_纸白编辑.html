@@ -1,0 +1,88 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><title>E_纸白编辑</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1440px;height:900px;overflow:hidden}
+body{font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+button,input{font:inherit;color:inherit}
+
+body{background:#f2eee4;color:#1b1812;display:flex;flex-direction:column}
+.rule{position:absolute;background:#cdc5b3}
+.hd{display:flex;justify-content:space-between;align-items:center;padding:26px 64px;border-bottom:1px solid #d8d0bd;position:relative;z-index:5}
+.hd .l{display:flex;align-items:baseline;gap:14px}
+.hd .l b{font-size:15px;letter-spacing:.36em;font-weight:700}
+.hd .l i{font-style:normal;font-size:10.5px;letter-spacing:.18em;color:#8b8371}
+.hd .r{font-size:11px;letter-spacing:.16em;color:#8b8371;display:flex;gap:26px}
+.hd .r b{color:#b4552d;font-weight:600}
+.main{flex:1;display:grid;grid-template-columns:1fr 560px;position:relative}
+.left{padding:78px 0 0 64px;position:relative}
+.tag{display:flex;align-items:center;gap:12px;font-size:10.5px;letter-spacing:.26em;color:#b4552d;font-weight:600;margin-bottom:30px}
+.tag em{font-style:normal;width:34px;height:1px;background:#b4552d;display:block}
+h1{font-family:Georgia,"Songti SC","Times New Roman","SimSun",serif;font-size:74px;line-height:1.05;letter-spacing:-.01em;font-weight:400}
+h1 i{font-style:italic;color:#b4552d}
+.sub{margin-top:24px;font-size:14px;line-height:1.9;color:#6b6455;max-width:410px}
+.dl{margin-top:56px;max-width:470px}
+.dl>div{display:grid;grid-template-columns:34px 1fr;align-items:baseline;gap:10px;
+  padding:15px 0;border-top:1px solid #dbd3c0}
+.dl>div:last-child{border-bottom:1px solid #dbd3c0}
+.dl i{font-style:normal;font-family:Consolas,"SF Mono","Courier New",monospace;font-size:10px;color:#b4552d}
+.dl b{font-size:13.5px;font-weight:600;letter-spacing:.02em}
+.dl small{display:block;font-size:11.5px;color:#8b8371;margin-top:5px;font-weight:400}
+.gwrap{position:absolute;left:-118px;bottom:-236px;opacity:.09;filter:grayscale(1)}
+.src{position:absolute;left:64px;bottom:34px;font-size:10.5px;color:#948b78;letter-spacing:.06em}
+.right{border-left:1px solid #d8d0bd;padding:0 72px;display:flex;flex-direction:column;justify-content:center;position:relative;background:rgba(255,255,255,.34)}
+.right:before{content:"02 / SIGN IN";position:absolute;top:34px;right:72px;font-size:10px;letter-spacing:.22em;color:#a89f8b}
+h2{font-family:Georgia,"Songti SC","Times New Roman","SimSun",serif;font-size:31px;font-weight:400;letter-spacing:.01em}
+.cs{font-size:12px;color:#7d7565;margin:10px 0 34px;letter-spacing:.02em}
+.tabs{display:flex;gap:30px;border-bottom:1px solid #d8d0bd;margin-bottom:30px}
+.tabs button{background:none;border:0;cursor:pointer;padding:0 0 11px;font-size:12.5px;letter-spacing:.14em;
+  color:#9a9280;position:relative}
+.tabs button.on{color:#1b1812;font-weight:600}
+.tabs button.on:after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:#1b1812}
+.fld{display:block;margin-bottom:26px}
+.fld span{display:block;font-size:10px;letter-spacing:.2em;color:#8b8371;margin-bottom:9px}
+.fld input{width:100%;background:none;border:0;border-bottom:1px solid #c9c0ac;padding:6px 0 10px;font-size:14px;color:#1b1812;outline:none;letter-spacing:.02em}
+.fld input:focus{border-color:#1b1812}
+.row{display:flex;justify-content:space-between;align-items:center;font-size:11.5px;color:#7d7565;margin:6px 0 34px}
+.chk{display:flex;align-items:center;gap:8px;cursor:pointer}
+.chk input{accent-color:#b4552d;width:13px;height:13px}
+.lnk{color:#7d7565;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.go{width:100%;padding:16px;background:#1b1812;color:#f6f2e9;border:0;cursor:pointer;
+  font-size:12.5px;letter-spacing:.22em;font-weight:600;border-radius:1px}
+.or{text-align:center;font-size:10px;letter-spacing:.2em;color:#a89f8b;margin:20px 0}
+.guest{width:100%;padding:14px;background:none;border:1px solid #c9c0ac;color:#4a4436;cursor:pointer;
+  font-size:12px;letter-spacing:.14em;border-radius:1px}
+.foot{font-size:10px;color:#a89f8b;margin-top:26px;line-height:1.8;letter-spacing:.04em}
+.foot b{color:#b4552d;font-weight:400}
+
+</style></head><body>
+<div class="hd">
+  <div class="l"><b>ORBIS</b><i>EARTH DATA ATLAS</i></div>
+  <div class="r"><span>世界银行 WDI</span><span>Frankfurter 111 家央行</span><b>v2.4</b></div>
+</div>
+<div class="main">
+  <div class="left">
+    <div class="tag"><em></em>用数据重新认识这颗星球</div>
+    <h1>用数据<br>重新认识<i>这颗星球</i>。</h1>
+    <p class="sub">把 200 多个国家的经济、人口与健康指标，画成一颗可以旋转的地球。拖动它，看数字在二十五年里如何改变一个国家的形状。</p>
+    <div class="dl">
+      <div><i>01</i><span><b>全球 200+ 国家</b><small>GDP · 人口 · 寿命 · 汇率实时数据</small></span></div>
+      <div><i>02</i><span><b>对比与分享</b><small>链接记住状态，一键生成分享图</small></span></div>
+      <div><i>03</i><span><b>变化提醒</b><small>关注国家数据大变，邮件自动通知</small></span></div>
+    </div>
+    <div class="gwrap"><svg width="380" height="380" viewBox="0 0 380 380" style="display:block"><defs><radialGradient id="gl1" cx="32%" cy="24%" r="80%"><stop offset="0" stop-color="#8d8574"/><stop offset="45%" stop-color="#5d564a"/><stop offset="100%" stop-color="#2c2721"/></radialGradient><radialGradient id="gl1_s" cx="34%" cy="26%" r="72%"><stop offset="55%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity="0.62"/></radialGradient><clipPath id="gl1_c"><circle cx="190.0" cy="190.0" r="190.0"/></clipPath></defs><circle cx="190.0" cy="190.0" r="190.0" fill="url(#gl1)"/><g clip-path="url(#gl1_c)" fill="none" stroke="#1b1812" stroke-width="0.9" opacity="0.9"><ellipse cx="190.0" cy="27.2" rx="82.4" ry="25.5"/><ellipse cx="190.0" cy="77.3" rx="148.5" ry="45.9"/><ellipse cx="190.0" cy="149.8" rx="185.2" ry="57.2"/><ellipse cx="190.0" cy="230.2" rx="185.2" ry="57.2"/><ellipse cx="190.0" cy="302.7" rx="148.5" ry="45.9"/><ellipse cx="190.0" cy="352.8" rx="82.4" ry="25.5"/><ellipse cx="190.0" cy="190.0" rx="65.0" ry="180.7"/><ellipse cx="190.0" cy="190.0" rx="122.1" ry="180.7"/><ellipse cx="190.0" cy="190.0" rx="164.5" ry="180.7"/><ellipse cx="190.0" cy="190.0" rx="187.1" ry="180.7"/><ellipse cx="190.0" cy="190.0" rx="187.1" ry="180.7"/><ellipse cx="190.0" cy="190.0" rx="164.5" ry="180.7"/><ellipse cx="190.0" cy="190.0" rx="122.1" ry="180.7"/><ellipse cx="190.0" cy="190.0" rx="65.0" ry="180.7"/></g><circle cx="190.0" cy="190.0" r="190.0" fill="url(#gl1_s)"/></svg></div>
+    <div class="src">数据源：世界银行 WDI · Frankfurter（111 家央行） · 更新于 2026-11</div>
+  </div>
+  <div class="right">
+    <h2>欢迎回来</h2>
+    <p class="cs">登录以使用完整账户功能 · 游客可免费浏览地球</p>
+    <div class="tabs"><button class="on">登录</button><button>注册</button></div>
+    <label class="fld"><span>邮箱</span><input type="email" value="2106812162@qq.com"></label>
+      <label class="fld"><span>密码</span><input type="password" value="········"></label>
+      <div class="row"><label class="chk"><input type="checkbox" checked><span>保持登录 30 天</span></label><a class="lnk">忘记密码</a></div>
+      <button class="go">登录并进入</button>
+      <div class="or">或</div>
+      <button class="guest">以访客身份浏览</button>
+    <p class="foot">继续即表示同意<b>服务条款</b>与<b>隐私政策</b><br>管理员请从 <b>/admin</b> 入口登录，此处使用邮箱账号</p>
+  </div>
+</div>
+</body></html>

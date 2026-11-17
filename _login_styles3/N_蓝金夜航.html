@@ -1,0 +1,81 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><title>N_蓝金夜航</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1440px;height:900px;overflow:hidden}
+body{font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+button,input{font:inherit;color:inherit}
+
+body{background:#060b14;position:relative;overflow:hidden;display:grid;place-items:center}
+.bg{position:absolute;inset:0;background:
+  radial-gradient(ellipse 60% 50% at 14% 88%,rgba(214,158,84,.16),transparent 62%),
+  radial-gradient(ellipse 70% 60% at 78% 12%,rgba(52,104,168,.2),transparent 66%),
+  linear-gradient(165deg,#0a1220 0%,#070d18 55%,#050a12 100%)}
+.eng{position:absolute;right:-260px;top:-160px;opacity:.5}
+.eng2{position:absolute;left:-320px;bottom:-380px;opacity:.32}
+.rule{position:absolute;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(214,175,116,.28),transparent)}
+.r1{top:96px}.r2{bottom:62px}
+.wrap{position:relative;z-index:6;width:590px;text-align:center}
+.mark{display:inline-flex;align-items:center;gap:12px;font-size:10px;letter-spacing:.34em;color:#c9a06a;margin-bottom:22px}
+.mark em{width:26px;height:1px;background:rgba(214,175,116,.5);display:block}
+h1{font-family:Georgia,"Songti SC","Times New Roman",serif;font-size:34px;font-weight:400;
+  letter-spacing:.22em;color:#f4efe4;margin-left:.24em;white-space:nowrap}
+.sub{font-family:Georgia,"Songti SC",serif;margin-top:14px;font-size:15px;letter-spacing:.14em;color:#c3b8a4}
+.tag{margin-top:10px;font-size:10.5px;letter-spacing:.16em;color:#6f7f92}
+.dia{display:flex;align-items:center;gap:12px;justify-content:center;margin:26px 0 24px}
+.dia i{width:4px;height:4px;background:rgba(214,175,116,.7);display:block;transform:rotate(45deg)}
+.dia span{height:1px;width:120px;background:linear-gradient(90deg,transparent,rgba(214,175,116,.32),transparent)}
+h2{font-family:Georgia,"Songti SC",serif;font-size:23px;font-weight:400;color:#f2ebdd;letter-spacing:.06em}
+.cs{font-size:11px;color:#7c8b9c;margin:10px 0 26px;letter-spacing:.06em}
+.tabs{display:flex;justify-content:center;gap:0;margin-bottom:26px}
+.tabs button{background:none;border:0;cursor:pointer;padding:0 22px;font-size:11.5px;letter-spacing:.18em;color:#6f7f92;
+  position:relative;font-family:inherit}
+.tabs button+button{border-left:1px solid rgba(214,175,116,.2)}
+.tabs button.on{color:#e8d5b0}
+.fld{display:block;text-align:left;margin-bottom:20px}
+.fld span{display:block;font-size:9.5px;letter-spacing:.22em;color:#7c8b9c;margin-bottom:9px}
+.fld input{width:100%;background:none;border:0;border-bottom:1px solid rgba(214,175,116,.26);
+  padding:5px 0 11px;font-size:13.5px;color:#f4efe4;outline:none;letter-spacing:.04em}
+.fld input:focus{border-color:#d6af74}
+.row{display:flex;justify-content:space-between;align-items:center;font-size:10.5px;color:#7c8b9c;margin:4px 0 26px}
+.chk{display:flex;align-items:center;gap:7px;cursor:pointer}
+.chk input{accent-color:#d6af74;width:12px;height:12px}
+.lnk{color:#a08b6d;text-decoration:none;cursor:pointer;letter-spacing:.06em}
+.go{width:100%;padding:15px;border:0;cursor:pointer;font-size:12px;letter-spacing:.26em;font-weight:600;
+  background:linear-gradient(135deg,#e2bd82,#c99a55);color:#241a0c;border-radius:2px;
+  box-shadow:0 12px 34px rgba(201,154,85,.22)}
+.go:hover{background:linear-gradient(135deg,#efcd96,#d6a862)}
+.or{position:relative;text-align:center;font-size:9.5px;letter-spacing:.22em;color:#5f7085;margin:18px 0}
+.or:before,.or:after{content:"";position:absolute;top:50%;width:44%;height:1px;background:rgba(214,175,116,.16)}
+.or:before{left:0}.or:after{right:0}
+.guest{width:100%;padding:13px;background:none;border:1px solid rgba(214,175,116,.24);color:#c3b8a4;
+  font-size:11px;letter-spacing:.14em;cursor:pointer;border-radius:2px}
+.guest:hover{border-color:rgba(214,175,116,.6);color:#e8d5b0}
+.foot{font-size:9px;color:#5f7085;margin-top:24px;line-height:1.9;letter-spacing:.06em}
+.foot b{color:#c9a06a;font-weight:400}
+.edge{position:absolute;z-index:6;font-size:9px;letter-spacing:.24em;color:#67788d}
+.e1{left:56px;top:52px}.e2{right:56px;top:52px}.e3{left:56px;bottom:46px}.e4{right:56px;bottom:46px}
+
+</style></head><body>
+<div class="bg"></div>
+<div class="eng"><svg width="760" height="760" viewBox="0 0 760 760" style="display:block"><defs><radialGradient id="gl10" cx="32%" cy="24%" r="80%"><stop offset="0" stop-color="rgba(226,196,150,.22)"/><stop offset="45%" stop-color="rgba(150,120,80,.12)"/><stop offset="100%" stop-color="rgba(20,20,26,.1)"/></radialGradient><radialGradient id="gl10_s" cx="34%" cy="26%" r="72%"><stop offset="55%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity="0.62"/></radialGradient><clipPath id="gl10_c"><circle cx="380.0" cy="380.0" r="380.0"/></clipPath></defs><circle cx="380.0" cy="380.0" r="380.0" fill="url(#gl10)"/><g clip-path="url(#gl10_c)" fill="none" stroke="rgba(226,196,150,.55)" stroke-width="0.9" opacity="0.55"><ellipse cx="380.0" cy="59.3" rx="145.4" ry="59.1"/><ellipse cx="380.0" cy="134.5" rx="268.7" ry="109.3"/><ellipse cx="380.0" cy="247.2" rx="351.1" ry="142.8"/><ellipse cx="380.0" cy="380.0" rx="380.0" ry="154.6"/><ellipse cx="380.0" cy="512.8" rx="351.1" ry="142.8"/><ellipse cx="380.0" cy="625.5" rx="268.7" ry="109.3"/><ellipse cx="380.0" cy="700.7" rx="145.4" ry="59.1"/><ellipse cx="380.0" cy="380.0" rx="117.4" ry="347.1"/><ellipse cx="380.0" cy="380.0" rx="223.4" ry="347.1"/><ellipse cx="380.0" cy="380.0" rx="307.4" ry="347.1"/><ellipse cx="380.0" cy="380.0" rx="361.4" ry="347.1"/><ellipse cx="380.0" cy="380.0" rx="380.0" ry="347.1"/><ellipse cx="380.0" cy="380.0" rx="361.4" ry="347.1"/><ellipse cx="380.0" cy="380.0" rx="307.4" ry="347.1"/><ellipse cx="380.0" cy="380.0" rx="223.4" ry="347.1"/><ellipse cx="380.0" cy="380.0" rx="117.4" ry="347.1"/></g></svg></div><div class="eng2"><svg width="820" height="820" viewBox="0 0 820 820" style="display:block"><defs><radialGradient id="gl11" cx="32%" cy="24%" r="80%"><stop offset="0" stop-color="rgba(150,190,230,.16)"/><stop offset="45%" stop-color="rgba(90,130,180,.08)"/><stop offset="100%" stop-color="rgba(10,16,26,.05)"/></radialGradient><radialGradient id="gl11_s" cx="34%" cy="26%" r="72%"><stop offset="55%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity="0.62"/></radialGradient><clipPath id="gl11_c"><circle cx="410.0" cy="410.0" r="410.0"/></clipPath></defs><circle cx="410.0" cy="410.0" r="410.0" fill="url(#gl11)"/><g clip-path="url(#gl11_c)" fill="none" stroke="rgba(160,190,220,.4)" stroke-width="0.9" opacity="0.4"><ellipse cx="410.0" cy="62.9" rx="177.9" ry="60.8"/><ellipse cx="410.0" cy="169.8" rx="320.6" ry="109.6"/><ellipse cx="410.0" cy="324.3" rx="399.7" ry="136.7"/><ellipse cx="410.0" cy="495.7" rx="399.7" ry="136.7"/><ellipse cx="410.0" cy="650.2" rx="320.6" ry="109.6"/><ellipse cx="410.0" cy="757.1" rx="177.9" ry="60.8"/><ellipse cx="410.0" cy="410.0" rx="140.2" ry="385.3"/><ellipse cx="410.0" cy="410.0" rx="263.5" ry="385.3"/><ellipse cx="410.0" cy="410.0" rx="355.1" ry="385.3"/><ellipse cx="410.0" cy="410.0" rx="403.8" ry="385.3"/><ellipse cx="410.0" cy="410.0" rx="403.8" ry="385.3"/><ellipse cx="410.0" cy="410.0" rx="355.1" ry="385.3"/><ellipse cx="410.0" cy="410.0" rx="263.5" ry="385.3"/><ellipse cx="410.0" cy="410.0" rx="140.2" ry="385.3"/></g></svg></div>
+<div class="rule r1"></div><div class="rule r2"></div>
+<div class="edge e1">ORBIS / ATLAS</div><div class="edge e2">用数据重新认识这颗星球</div>
+<div class="edge e3">WORLD BANK WDI · FRANKFURTER</div><div class="edge e4">EST. 2024</div>
+<div class="wrap">
+  <div class="mark"><em></em>ORBIS<em></em></div>
+  <h1>用数据重新认识这颗星球</h1>
+  <p class="sub">217 个国家 · 25 年 · 4 项指标</p>
+  <p class="tag">DATA ATLAS OF THE WORLD</p>
+  <div class="dia"><span></span><i></i><span></span></div>
+  <h2>欢迎回来</h2>
+  <p class="cs">登录以使用完整账户功能 · 游客可免费浏览地球</p>
+  <div class="tabs"><button class="on">登录</button><button>注册</button></div>
+  <label class="fld"><span>邮箱</span><input type="email" value="2106812162@qq.com"></label>
+    <label class="fld"><span>密码</span><input type="password" value="········"></label>
+    <div class="row"><label class="chk"><input type="checkbox" checked><span>保持登录 30 天</span></label><a class="lnk">忘记密码</a></div>
+    <button class="go">登录并进入</button>
+    <div class="or">或</div>
+    <button class="guest">以访客身份浏览</button>
+  <p class="foot"><b>管理员入口 →</b> 此处请用邮箱登录，不是管理员账号</p>
+</div>
+</body></html>
