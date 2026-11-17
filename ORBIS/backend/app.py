@@ -516,6 +516,25 @@ class Handler(BaseHTTPRequestHandler):
             if ep == "settings":
                 code, data = admin_api.settings()
                 return self._send(code, data)
+            # 待审数据通道
+            if ep == "staging/list":
+                code, data = admin_api.stage_list()
+                return self._send(code, data)
+            if ep.startswith("staging/get/"):
+                code, data = admin_api.stage_get(unquote(ep[len("staging/get/"):]))
+                return self._send(code, data)
+            if ep.startswith("staging/preview/"):
+                parts = ep[len("staging/preview/"):].split("/")
+                if len(parts) != 2:
+                    return self._send(400, {"ok": False, "error": "参数不完整"})
+                code, data = admin_api.stage_preview(unquote(parts[0]), unquote(parts[1]), one("limit", 5))
+                return self._send(code, data)
+            if ep.startswith("staging/compare/"):
+                parts = ep[len("staging/compare/"):].split("/")
+                if len(parts) != 2:
+                    return self._send(400, {"ok": False, "error": "参数不完整"})
+                code, data = admin_api.stage_compare(unquote(parts[0]), unquote(parts[1]))
+                return self._send(code, data)
             return self._send(404, {"ok": False, "error": "unknown admin api"})
         if p in ("/", "/index.html", "/orbis.html", "/太空地球.html"):
             return self.serve_page()
@@ -621,6 +640,18 @@ class Handler(BaseHTTPRequestHandler):
             if ep == "username":
                 ok, err = admin_auth.set_username(body.get("username"), body.get("password"))
                 return self._send(200 if ok else 400, {"ok": ok, "error": err})
+            # 待审数据通道
+            if ep == "staging/fetch":
+                code, data = admin_api.stage_fetch(body.get("kind"))
+                return self._send(code, data)
+            if ep == "staging/publish":
+                code, data = admin_api.stage_publish(
+                    body.get("id"), body.get("names"),
+                    reload_doc=load_doc, reload_fx=load_fx, do_notify=notify)
+                return self._send(code, data)
+            if ep == "staging/reject":
+                code, data = admin_api.stage_reject(body.get("id"))
+                return self._send(code, data)
             return self._send(404, {"ok": False, "error": "unknown admin api"})
 
         # ---- 真实账号系统 ----

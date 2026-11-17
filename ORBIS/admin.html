@@ -107,6 +107,23 @@ pre{white-space:pre-wrap;word-break:break-all;font:11px/1.7 ui-monospace,Consola
  pointer-events:none;transition:.22s}
 #toast.on{opacity:1;transform:none}
 #toast.err{border-color:rgba(239,122,122,.5);color:var(--err)}
+/* 数据审核 */
+.rv-item{padding:12px 14px;border:1px solid var(--line);border-radius:10px;margin-bottom:10px;cursor:pointer;transition:.14s}
+.rv-item:hover{border-color:var(--acc2);background:rgba(127,200,239,.05)}
+.rv-item.sel{border-color:var(--acc);background:rgba(240,168,104,.07)}
+.rv-item .r1{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.rv-item .r1 b{font-size:12.5px;color:var(--ink)}
+.rv-item .r1 .id{font:10px ui-monospace,Consolas,monospace;color:var(--ink3)}
+.rv-item .r1 .t{margin-left:auto;font-size:10.5px;color:var(--ink3)}
+.rv-item .note{font-size:11px;color:var(--ink2);margin-top:7px;line-height:1.6}
+.rv-item .files{font-size:10px;color:var(--ink3);margin-top:5px}
+.rv-kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.rv-kv div{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.rv-kv .k{font-size:10px;color:var(--ink3);letter-spacing:.06em}
+.rv-kv .v{font-size:15px;color:var(--ink);font-weight:600;margin-top:4px;font-variant-numeric:tabular-nums}
+#rvDetail h4{font-size:12px;color:var(--acc2);margin:16px 0 8px;font-weight:600}
+.diff-ok{color:var(--ink3)}.diff-add{color:var(--ok)}.diff-chg{color:var(--warn)}
+#rvDetail pre{max-height:220px}
 @media(max-width:820px){.side{width:62px}.side .brand .r h2,.side .brand small,.nav button span,.side .ft{display:none}
  .nav button{justify-content:center}.main{padding:20px 16px 50px}}
 </style>
@@ -136,6 +153,7 @@ pre{white-space:pre-wrap;word-break:break-all;font:11px/1.7 ui-monospace,Consola
       <button data-p="users"><i>◎</i><span>用户管理</span></button>
       <button data-p="subs"><i>✉</i><span>订阅管理</span></button>
       <button data-p="data"><i>▤</i><span>数据管理</span></button>
+      <button data-p="review"><i>◉</i><span>数据审核</span></button>
       <button data-p="mail"><i>✦</i><span>邮件中心</span></button>
       <button data-p="settings"><i>⚙</i><span>系统设置</span></button>
     </nav>
@@ -171,6 +189,26 @@ pre{white-space:pre-wrap;word-break:break-all;font:11px/1.7 ui-monospace,Consola
         <p class="hint">刷新在后台异步执行，世行数据约需数十秒。可到「总览」查看状态灯变化。</p>
       </div>
       <div class="box"><h3>数据事件（大变记录）</h3><div id="dEvents"></div></div>
+    </section>
+
+    <!-- 数据审核：抓取→暂存→人工检查→发布 -->
+    <section class="page" id="p-review">
+      <div class="box"><h3>抓取新数据到待审区</h3>
+        <div class="bar">
+          <button class="btn pri" data-stage="wb">抓取世行数据</button>
+          <button class="btn pri" data-stage="fx">抓取汇率</button>
+          <button class="btn pri" data-stage="all">全部抓取</button>
+          <span class="hint" style="margin:0">抓取结果只进暂存区，不会自动覆盖项目数据</span>
+        </div>
+        <p class="hint">抓取可能需要数十秒。完成后在下方待审列表检查，确认无误再点「发布」更新到项目。</p>
+      </div>
+      <div class="box"><h3>待审批次</h3><div id="rvList"></div></div>
+      <div class="box" id="rvDetailBox" style="display:none"><h3>批次详情 · 人工检查</h3><div id="rvDetail"></div>
+        <div class="bar" style="margin-top:14px">
+          <button class="btn pri" id="rvPublish">✓ 通过并发布到项目</button>
+          <button class="btn danger" id="rvReject">✕ 驳回并丢弃</button>
+        </div>
+      </div>
     </section>
 
     <!-- 邮件 -->
@@ -251,7 +289,7 @@ pre{white-space:pre-wrap;word-break:break-all;font:11px/1.7 ui-monospace,Consola
 
   /* 导航 */
   var TITLES={overview:['总览','OVERVIEW'],users:['用户管理','USERS'],subs:['订阅管理','SUBSCRIPTIONS'],
-    data:['数据管理','DATA'],mail:['邮件中心','MAIL'],settings:['系统设置','SETTINGS']};
+    data:['数据管理','DATA'],review:['数据审核','DATA REVIEW'],mail:['邮件中心','MAIL'],settings:['系统设置','SETTINGS']};
   function loadPage(p){
     $$('#nav button').forEach(function(b){b.classList.toggle('on',b.dataset.p===p)});
     $$('.page').forEach(function(s){s.classList.toggle('on',s.id==='p-'+p)});
@@ -260,6 +298,7 @@ pre{white-space:pre-wrap;word-break:break-all;font:11px/1.7 ui-monospace,Consola
     else if(p==='users')loadUsers();
     else if(p==='subs')loadSubs();
     else if(p==='data')loadData();
+    else if(p==='review')loadReview();
     else if(p==='mail')loadMail();
     else if(p==='settings')loadSettings();
   }
@@ -360,6 +399,117 @@ pre{white-space:pre-wrap;word-break:break-all;font:11px/1.7 ui-monospace,Consola
       setTimeout(function(){b.disabled=false;b.textContent=old},2500);
     });
   }});
+
+  /* 数据审核：抓取 → 暂存 → 人工检查 → 发布 */
+  var RV_SEL=null;
+  function loadReview(){
+    api('/api/admin/staging/list').then(function(r){
+      if(!r.ok){toast('加载待审列表失败',true);return}
+      var rows=r.j.rows||[];
+      if(!rows.length){
+        $('#rvList').innerHTML='<div class="empty"><span>◉</span>暂无待审数据 · 点上方按钮抓取新数据</div>';
+        $('#rvDetailBox').style.display='none'; RV_SEL=null; return;
+      }
+      $('#rvList').innerHTML=rows.map(function(x){
+        var badge=x.status==='published'?'<span class="badge ok">已发布</span>'
+          :'<span class="badge warn">待审核</span>';
+        return '<div class="rv-item'+(RV_SEL===x.id?' sel':'')+'" data-id="'+esc(x.id)+'">'+
+          '<div class="r1"><b>'+esc(x.source||'manual')+'</b>'+badge+
+          '<span class="id">'+esc(x.id)+'</span><span class="t">'+esc(x.created)+'</span></div>'+
+          (x.note?'<div class="note">'+esc(x.note)+'</div>':'')+
+          '<div class="files">'+esc((x.files||[]).join(', '))+' · '+(x.size||0)+' 字节</div></div>';
+      }).join('');
+      $$('#rvList .rv-item').forEach(function(el){
+        el.onclick=function(){ RV_SEL=el.dataset.id; loadReviewDetail(RV_SEL);
+          $$('#rvList .rv-item').forEach(function(x){x.classList.toggle('sel',x===el)}); };
+      });
+      if(RV_SEL&&rows.some(function(x){return x.id===RV_SEL})) loadReviewDetail(RV_SEL);
+      else $('#rvDetailBox').style.display='none';
+    });
+  }
+  function loadReviewDetail(bid){
+    api('/api/admin/staging/get/'+encodeURIComponent(bid)).then(function(r){
+      if(!r.ok){toast('读取批次失败',true);return}
+      var m=r.j.batch, html='', files=m.files_detail||{};
+      /* 元信息卡 */
+      html+='<div class="rv-kv">'+
+        '<div><div class="k">来源</div><div class="v" style="font-size:13px">'+esc(m.source||'—')+'</div></div>'+
+        '<div><div class="k">创建时间</div><div class="v" style="font-size:12px">'+esc(m.created)+'</div></div>'+
+        '<div><div class="k">状态</div><div class="v" style="font-size:13px">'+
+          (m.status==='published'?'<span class="badge ok">已发布</span>':'<span class="badge warn">待审核</span>')+'</div></div>'+
+        '</div>';
+      if(m.note) html+='<div class="row"><span class="k">说明</span><span class="v">'+esc(m.note)+'</span></div>';
+      /* 每个文件的摘要 + 差异 */
+      Object.keys(files).forEach(function(name){
+        var f=files[name], s=f.summary||{};
+        html+='<h4>文件：'+esc(name)+(f.publishable?' <span class="badge info">可发布</span>':'')+'</h4>';
+        var kv=Object.keys(s).map(function(k){
+          var v=s[k]; if(Array.isArray(v)) v=v.join(' – ');
+          return '<div><div class="k">'+esc(k)+'</div><div class="v" style="font-size:13px">'+esc(v)+'</div></div>';
+        }).join('');
+        html+='<div class="rv-kv">'+kv+'</div>';
+        /* 差异对比按钮（可发布文件） */
+        if(f.publishable){
+          html+='<div class="bar"><button class="btn" data-diff="'+esc(name)+'">与当前项目数据对比差异</button>'+
+            '<button class="btn" data-peek="'+esc(name)+'">查看内容预览</button></div>'+
+            '<div id="rv-diff-'+esc(name)+'"></div>';
+        }
+      });
+      $('#rvDetail').innerHTML=html;
+      $('#rvDetailBox').style.display='';
+      var pub=m.status==='published';
+      $('#rvPublish').disabled=pub; $('#rvReject').disabled=pub;
+      $('#rvPublish').textContent=pub?'该批次已发布':'✓ 通过并发布到项目';
+      $$('#rvDetail [data-diff]').forEach(function(b){b.onclick=function(){
+        api('/api/admin/staging/compare/'+encodeURIComponent(bid)+'/'+encodeURIComponent(b.dataset.diff)).then(function(r){
+          var box=document.getElementById('rv-diff-'+b.dataset.diff);
+          if(!r.ok){ box.innerHTML='<p class="hint">'+esc(r.j.error||'对比失败')+'</p>'; return; }
+          box.innerHTML='<table><thead><tr><th>字段</th><th>变化</th><th>详情</th></tr></thead><tbody>'+
+            (r.j.diffs||[]).map(function(d){
+              var cls=d.change.indexOf('无变化')>=0?'diff-ok':(d.change.indexOf('新增')>=0?'diff-add':'diff-chg');
+              var det=d.sample?(Array.isArray(d.sample)?d.sample.join(', '):esc(d.sample))
+                :(d.old!==undefined?('旧: '+esc(d.old)+' → 新: '+esc(d.new)):'—');
+              return '<tr class="'+cls+'"><td>'+esc(d.field)+'</td><td>'+esc(d.change)+'</td><td>'+esc(det)+'</td></tr>';
+            }).join('')+'</tbody></table>';
+        });
+      }});
+      $$('#rvDetail [data-peek]').forEach(function(b){b.onclick=function(){
+        api('/api/admin/staging/preview/'+encodeURIComponent(bid)+'/'+encodeURIComponent(b.dataset.peek)).then(function(r){
+          if(!r.ok){toast('预览失败',true);return}
+          var box=document.getElementById('rv-diff-'+b.dataset.peek);
+          box.innerHTML='<pre>'+esc(JSON.stringify(r.j.data,null,2))+'</pre>';
+        });
+      }});
+    });
+  }
+  $$('[data-stage]').forEach(function(b){b.onclick=function(){
+    b.disabled=true; var old=b.textContent; b.textContent='抓取中…';
+    api('/api/admin/staging/fetch',{method:'POST',body:{kind:b.dataset.stage}}).then(function(r){
+      b.disabled=false; b.textContent=old;
+      toast(r.j.ok?'已抓取到待审区，请在下方检查':(r.j.error||'抓取失败'),!r.j.ok);
+      if(r.j.ok){ RV_SEL=r.j.batch.id; loadReview(); }
+    });
+  }});
+  $('#rvPublish').onclick=function(){
+    if(!RV_SEL) return;
+    if(!confirm('确定通过并发布？正式数据将被覆盖（旧数据会自动备份）。')) return;
+    var b=this;b.disabled=true;
+    api('/api/admin/staging/publish',{method:'POST',body:{id:RV_SEL}}).then(function(r){
+      b.disabled=false;
+      toast(r.j.ok?('已发布：'+(r.j.published||[]).join(', ')):(r.j.error||'发布失败'),!r.j.ok);
+      loadReview();
+    });
+  };
+  $('#rvReject').onclick=function(){
+    if(!RV_SEL) return;
+    if(!confirm('确定驳回并丢弃该批次？')) return;
+    var b=this;b.disabled=true;
+    api('/api/admin/staging/reject',{method:'POST',body:{id:RV_SEL}}).then(function(r){
+      b.disabled=false;
+      toast(r.j.ok?'已驳回':'失败',!r.j.ok);
+      RV_SEL=null; loadReview();
+    });
+  };
 
   /* 邮件 */
   function loadMail(){

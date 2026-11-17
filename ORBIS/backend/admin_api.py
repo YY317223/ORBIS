@@ -8,6 +8,7 @@ import json
 import os
 import re
 import sqlite3
+import tempfile
 import threading
 from email.header import decode_header
 
@@ -292,3 +293,98 @@ def settings():
 def change_password(old, new):
     ok, err = admin_auth.set_password(new, old)
     return (200 if ok else 400), {"ok": ok, "error": err}
+
+
+# ============================================================
+# 待审数据通道（独立暂存区，不影响现有自动抓取/发布流程）
+# ============================================================
+import staging as _stage
+
+
+def stage_list():
+    return 200, {"ok": True, "rows": _stage.list_batches(),
+                 "targets": list(_stage.PUBLISH_TARGETS.keys())}
+
+
+def stage_get(bid):
+    meta = _stage.get_batch(bid)
+    if not meta:
+        return 404, {"ok": False, "error": "批次不存在"}
+    return 200, {"ok": True, "batch": meta}
+
+
+def stage_preview(bid, name, limit=5):
+    data = _stage.preview(bid, name, limit)
+    if data is None:
+        return 404, {"ok": False, "error": "文件不存在或无法解析"}
+    return 200, {"ok": True, "name": name, "data": data}
+
+
+def stage_compare(bid, name):
+    diffs = _stage.compare(bid, name)
+    if diffs is None:
+        return 400, {"ok": False, "error": "该文件不支持差异对比"}
+    return 200, {"ok": True, **diffs}
+
+
+def stage_fetch(kind, do_notify=None):
+    """抓取新数据到暂存区（不覆盖正式文件）。kind: wb / fx / all。"""
+    kind = (kind or "wb").lower()
+    if kind not in ("wb", "fx", "all"):
+        return 400, {"ok": False, "error": "kind 只能是 wb/fx/all"}
+    files = {}
+    note = []
+    try:
+        if kind in ("wb", "all"):
+            doc = fetch_wb.build()
+            files["wb.json"] = doc
+            note.append("世行数据 %s（%d 国，%d 事件）" % (
+                doc.get("fetched_at"), len(doc.get("countries") or {}),
+                len(doc.get("events") or [])))
+    except Exception as e:  # noqa: BLE001
+        return 500, {"ok": False, "error": "世行数据抓取失败: %s" % e}
+    if kind in ("fx", "all"):
+        old_out = fetch_fx.OUT
+        try:
+            # 抓到临时文件再把内容交给 staging，避免碰正式 fx.json
+            fd, tmppath = tempfile.mkstemp(prefix="fxstage_", suffix=".json", dir=_stage.STAGE)
+            os.close(fd)
+            fetch_fx.OUT = tmppath
+            doc = fetch_fx.run(verbose=False)
+            files["fx.json"] = doc
+            note.append("汇率 %s（%d 币种）" % (doc.get("date"), len(doc.get("currencies") or {})))
+            try:
+                os.remove(tmppath)
+            except OSError:
+                pass
+        except Exception as e:  # noqa: BLE001
+            return 500, {"ok": False, "error": "汇率抓取失败: %s" % e}
+        finally:
+            fetch_fx.OUT = old_out
+    ok, info = _stage.create(source="fetch:" + kind, note="；".join(note), files=files)
+    if not ok:
+        return 500, {"ok": False, "error": str(info)}
+    return 200, {"ok": True, "batch": info}
+
+
+def stage_publish(bid, names=None, reload_doc=None, reload_fx=None, do_notify=None):
+    ok, info = _stage.publish(bid, names)
+    if not ok:
+        return 400, {"ok": False, "error": str(info)}
+    # 发布后刷新内存缓存，让页面/接口立刻用上新数据（不影响调度线程）
+    try:
+        published = info.get("published") or []
+        if "wb.json" in published:
+            doc = reload_doc() if reload_doc else None
+            if doc and do_notify:
+                do_notify(doc)   # 发布时触发订阅提醒（与原自动流程一致）
+        if "fx.json" in published and reload_fx:
+            reload_fx()
+    except Exception as e:  # noqa: BLE001
+        print("[admin] post-publish refresh error:", e)
+    return 200, {"ok": True, **info}
+
+
+def stage_reject(bid):
+    ok, info = _stage.reject(bid)
+    return (200 if ok else 400), {"ok": ok, **({"error": info} if not ok else info)}

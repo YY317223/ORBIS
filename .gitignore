@@ -5,3 +5,7 @@
 # Python 编译缓存
 __pycache__/
 *.pyc
+
+# 运行数据与凭据（不入仓库）
+*.db
+backend/data/admin.json
