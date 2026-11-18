@@ -746,9 +746,15 @@ class Handler(BaseHTTPRequestHandler):
 
         if u.path == "/api/subscribe":
             email = (body.get("email") or "").strip().lower()
-            codes = [str(x).strip().upper() for x in (body.get("codes") or []) if str(x).strip()]
+            codes = []
+            for x in (body.get("codes") or []):
+                c = str(x).strip().upper()
+                if c and c not in codes:
+                    codes.append(c)
             if "@" not in email or len(email) < 5 or "." not in email.split("@")[-1]:
                 return self._send(400, {"ok": False, "error": "邮箱格式不对"})
+            if len(codes) > 60:
+                return self._send(400, {"ok": False, "error": "一次最多订阅 60 个国家"})
             if not codes:
                 return self._send(400, {"ok": False, "error": "先选几个国家"})
             con = db()
@@ -756,7 +762,7 @@ class Handler(BaseHTTPRequestHandler):
                 old = con.execute("SELECT token, codes FROM subs WHERE email=?", (email,)).fetchone()
                 is_new = old is None
                 if old:
-                    merged = sorted(set((old[1] or "").split(",")) | set(codes) - {""})
+                    merged = sorted((set((old[1] or "").split(",")) | set(codes)) - {""})
                     con.execute("UPDATE subs SET codes=? WHERE email=?", (",".join(merged), email))
                     token = old[0]
                 else:
@@ -766,7 +772,9 @@ class Handler(BaseHTTPRequestHandler):
                         (email, ",".join(sorted(set(codes))), token, now().isoformat(timespec="seconds")),
                     )
                 con.commit()
-                n = len(con.execute("SELECT codes FROM subs WHERE email=?", (email,)).fetchone()[0].split(","))
+                final = con.execute("SELECT codes FROM subs WHERE email=?", (email,)).fetchone()[0]
+                final_codes = sorted([c for c in (final or "").split(",") if c])
+                n = len(final_codes)
             finally:
                 con.close()
             confirm = "skip"
@@ -799,8 +807,9 @@ class Handler(BaseHTTPRequestHandler):
                 confirm = kind
             except Exception:  # noqa: BLE001
                 traceback.print_exc()
-            return self._send(200, {"ok": True, "email": email, "codes": codes, "watched": n,
-                                    "token": token, "mail": "smtp" if mailer.ready() else "outbox",
+            return self._send(200, {"ok": True, "email": email, "codes": final_codes, "watched": n,
+                                    "is_new": is_new, "token": token,
+                                    "mail": "smtp" if mailer.ready() else "outbox",
                                     "confirm": confirm})
 
         if u.path == "/api/unsubscribe":
