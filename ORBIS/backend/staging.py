@@ -198,25 +198,49 @@ def preview(bid, name, limit=5):
 
 
 def compare(bid, name):
-    """对比待审 JSON 与当前正式 JSON 的差异（摘要级），返回差异说明。"""
+    """对比待审 JSON 与当前正式 JSON。
+
+    优先走 diffdata 的「国家 × 指标」级对比（能看出具体谁变了、变多少）；
+    解析失败时退回字段级摘要，保证老数据文件也能对比。
+    """
     bdir = _batch_dir(bid)
     if not bdir or name not in PUBLISH_TARGETS:
         return None
     new_path = os.path.join(bdir, name)
-    old_path = PUBLISH_TARGETS[name]
+    if not os.path.isfile(new_path):
+        return None
     try:
         with open(new_path, encoding="utf-8") as f:
             new = json.load(f)
-        with open(old_path, encoding="utf-8") as f:
-            old = json.load(f)
     except (OSError, json.JSONDecodeError):
         return None
+
+    old = None
+    try:
+        with open(PUBLISH_TARGETS[name], encoding="utf-8") as f:
+            old = json.load(f)
+    except (OSError, json.JSONDecodeError):
+        old = None
+
+    try:
+        import diffdata
+        rich = diffdata.compare(name, old, new)
+        if rich is not None:
+            rich["file"] = name
+            return rich
+    except Exception as e:  # noqa: BLE001
+        print("[staging] diffdata 失败，退回字段级对比:", e)
+
+    return {"file": name, "diffs": _field_diffs(new, old)}
+
+
+def _field_diffs(new, old):
+    """字段级兜底对比：只看顶层字段有没有变。"""
     diffs = []
-    for key in sorted(set(list(new.keys()) + list(old.keys()))):
-        nv, ov = new.get(key), old.get(key)
+    for key in sorted(set(list((new or {}).keys()) + list((old or {}).keys()))):
+        nv, ov = (new or {}).get(key), (old or {}).get(key)
         if isinstance(nv, dict) and isinstance(ov, dict):
-            nk, ok = set(nv.keys()), set(ov.keys())
-            added, removed = nk - ok, ok - nk
+            added, removed = set(nv) - set(ov), set(ov) - set(nv)
             if added:
                 diffs.append({"field": key, "change": "新增 %d 项" % len(added),
                               "sample": sorted(added)[:8]})
@@ -224,13 +248,13 @@ def compare(bid, name):
                 diffs.append({"field": key, "change": "减少 %d 项" % len(removed),
                               "sample": sorted(removed)[:8]})
             if not added and not removed:
-                diffs.append({"field": key, "change": "条目数相同 (%d)" % len(nk)})
+                diffs.append({"field": key, "change": "条目数相同 (%d)" % len(nv)})
         elif nv != ov:
             diffs.append({"field": key, "change": "已更新",
                           "old": _short(ov), "new": _short(nv)})
         else:
             diffs.append({"field": key, "change": "无变化"})
-    return {"file": name, "diffs": diffs}
+    return diffs
 
 
 def _short(v):

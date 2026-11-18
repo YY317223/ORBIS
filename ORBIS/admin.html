@@ -496,16 +496,11 @@ pre{white-space:pre-wrap;word-break:break-all;font:11px/1.7 ui-monospace,Consola
       $('#rvPublish').disabled=pub; $('#rvReject').disabled=pub;
       $('#rvPublish').textContent=pub?'该批次已发布':'✓ 通过并发布到项目';
       $$('#rvDetail [data-diff]').forEach(function(b){b.onclick=function(){
+        var box=document.getElementById('rv-diff-'+b.dataset.diff);
+        box.innerHTML='<p class="hint">正在比对…</p>';
         api('/api/admin/staging/compare/'+encodeURIComponent(bid)+'/'+encodeURIComponent(b.dataset.diff)).then(function(r){
-          var box=document.getElementById('rv-diff-'+b.dataset.diff);
           if(!r.ok){ box.innerHTML='<p class="hint">'+esc(r.j.error||'对比失败')+'</p>'; return; }
-          box.innerHTML='<table><thead><tr><th>字段</th><th>变化</th><th>详情</th></tr></thead><tbody>'+
-            (r.j.diffs||[]).map(function(d){
-              var cls=d.change.indexOf('无变化')>=0?'diff-ok':(d.change.indexOf('新增')>=0?'diff-add':'diff-chg');
-              var det=d.sample?(Array.isArray(d.sample)?d.sample.join(', '):esc(d.sample))
-                :(d.old!==undefined?('旧: '+esc(d.old)+' → 新: '+esc(d.new)):'—');
-              return '<tr class="'+cls+'"><td>'+esc(d.field)+'</td><td>'+esc(d.change)+'</td><td>'+esc(det)+'</td></tr>';
-            }).join('')+'</tbody></table>';
+          box.innerHTML=renderCompare(r.j);
         });
       }});
       $$('#rvDetail [data-peek]').forEach(function(b){b.onclick=function(){
@@ -517,6 +512,102 @@ pre{white-space:pre-wrap;word-break:break-all;font:11px/1.7 ui-monospace,Consola
       }});
     });
   }
+  /* ---- 数据对比渲染：让变化一眼可见 ---- */
+  function dcPct(p){ if(p===null||p===undefined) return '—'; return (p>0?'+':'')+p.toFixed(2)+'%' }
+  function dcColor(p){ return (p>0)?'var(--err)':(p<0?'var(--ok)':'var(--ink3)') }
+  function dcBar(p,max){
+    var w=Math.min(100,Math.abs(p||0)/Math.max(max||0,0.01)*100);
+    return '<span class="dc-bar"><i style="width:'+w.toFixed(0)+'%;background:'+dcColor(p)+'"></i></span>';
+  }
+  function dcChip(k,v,extra){
+    return '<div class="dc-chip"><div class="k">'+esc(k)+'</div><div class="v">'+v+(extra?'<em>'+esc(extra)+'</em>':'')+'</div></div>';
+  }
+  function fmtVal(v,key){
+    if(v===null||v===undefined) return '—';
+    if(key==='gdp') return Math.abs(v)>=1e12?(v/1e12).toFixed(2)+' 万亿':(v/1e8).toFixed(1)+' 亿';
+    if(key==='pop') return v>=1e8?(v/1e8).toFixed(2)+' 亿':(v/1e4).toFixed(0)+' 万';
+    if(key==='pc') return Math.round(v).toLocaleString()+' 美元';
+    if(key==='le') return v.toFixed(1)+' 岁';
+    return String(v);
+  }
+  function dcRank(title, rows){
+    if(!rows||!rows.length) return '<div class="dc-rank"><h5>'+esc(title)+'</h5><p class="hint">无数据</p></div>';
+    var mx=0.01; rows.forEach(function(r){mx=Math.max(mx,Math.abs(r.pct))});
+    return '<div class="dc-rank"><h5>'+esc(title)+'</h5>'+rows.map(function(r){
+      return '<div class="dc-line"><span class="n">'+esc(r.name)+'</span><span class="b">'+dcBar(r.pct,mx)+'</span>'+
+             '<span class="p" style="color:'+dcColor(r.pct)+'">'+dcPct(r.pct)+'</span></div>';
+    }).join('')+'</div>';
+  }
+  function renderCompare(j){
+    if(!j.kind && j.diffs){   /* 老格式兜底 */
+      return '<table><thead><tr><th>字段</th><th>变化</th><th>详情</th></tr></thead><tbody>'+
+        j.diffs.map(function(d){return '<tr><td>'+esc(d.field)+'</td><td>'+esc(d.change)+'</td><td>'+esc(d.sample||d.new||'—')+'</td></tr>'}).join('')+'</tbody></table>';
+    }
+    var h='';
+    h+='<div class="dc-head '+(j.changed?'chg':'same')+'"><b>'+(j.changed?'有更新':'无变化')+'</b><span>'+esc(j.summary||'')+'</span></div>';
+    if(j.first) return h;
+
+    if(j.kind==='wb'){
+      var yrs=j.years||{}, added=yrs.added||[];
+      h+='<div class="dc-chips">';
+      h+=dcChip('年份轴', esc((yrs.old||[]).join('–'))+' <i>→</i> '+esc((yrs.new||[]).join('–')), added.length?('新增 '+added.join('、')):'没有新增年份');
+      h+=dcChip('国家/地区', (j.countries&&j.countries.new)||'—', '上一版 '+((j.countries&&j.countries.old)||'—'));
+      h+=dcChip('历史修订', (j.revisions||0)+' 处', (j.revised_countries||0)+' 国受影响');
+      h+=dcChip('数据版本', esc(j.source_updated||'—'), '抓取 '+esc((j.fetched_at||'').slice(0,10)));
+      h+='</div>';
+
+      var inds=j.indicators||[];
+      var maxPct=0.01; inds.forEach(function(it){maxPct=Math.max(maxPct,Math.abs(it.world_latest_pct||0))});
+      h+='<h4 style="margin:16px 0 8px">世界合计与最新年</h4>';
+      h+='<table><thead><tr><th>指标</th><th>'+(inds.length?esc(inds[0].base_year):'')+' 年</th><th>最新年</th><th>最新年同比</th><th>修订</th></tr></thead><tbody>';
+      inds.forEach(function(it){
+        var ch=(it.world_base_old.v!==it.world_base_new.v)?'<span class="badge warn">已修订</span>':'<span class="badge info">未变</span>';
+        h+='<tr><td><b>'+esc(it.label)+'</b></td><td>'+esc(it.world_base_new.text)+' '+ch+'</td>'+
+           '<td>'+esc(it.world_latest.text)+' <span style="color:var(--ink3)">'+esc(it.latest_year||'')+'</span></td>'+
+           '<td style="color:'+dcColor(it.world_latest_pct)+';white-space:nowrap;font-variant-numeric:tabular-nums">'+dcPct(it.world_latest_pct)+dcBar(it.world_latest_pct,maxPct)+'</td>'+
+           '<td>'+(it.revisions?('<span class="badge err">'+it.revisions+'</span>'):'<span style="color:var(--ink3)">0</span>')+'</td></tr>';
+      });
+      h+='</tbody></table>';
+
+      if((j.movers||[]).length){
+        var mx=0.01; j.movers.forEach(function(m){mx=Math.max(mx,Math.abs(m.pct||0))});
+        h+='<h4 style="margin:18px 0 8px">修订明细 <span style="color:var(--ink3);font-weight:400">按变化幅度排序</span></h4>';
+        h+='<table><thead><tr><th>国家</th><th>指标</th><th>年份</th><th>旧值</th><th>新值</th><th>变化</th></tr></thead><tbody>';
+        j.movers.forEach(function(m){
+          h+='<tr><td><b>'+esc(m.name)+'</b></td><td>'+esc(m.label)+'</td><td>'+esc(m.year)+'</td>'+
+             '<td style="color:var(--ink3)">'+esc(fmtVal(m.old,m.key))+'</td><td>'+esc(fmtVal(m.new,m.key))+'</td>'+
+             '<td style="color:'+dcColor(m.pct)+';white-space:nowrap">'+dcPct(m.pct)+dcBar(m.pct,mx)+'</td></tr>';
+        });
+        h+='</tbody></table>';
+      }else{
+        h+='<p class="hint" style="margin-top:14px">历史年份没有数值修订（世行这次没有改写往年数据）。</p>';
+      }
+
+      var hl=j.highlights||{};
+      if(hl.year){
+        h+='<h4 style="margin:18px 0 8px">'+esc(hl.year)+' 年同比亮点 <span style="color:var(--ink3);font-weight:400">人口 500 万以上国家</span></h4>';
+        h+='<div class="dc-cols"><div>'+dcRank('GDP 增长最快', hl.gdp&&hl.gdp.up)+'</div>'+
+           '<div>'+dcRank('GDP 下降最多', hl.gdp&&hl.gdp.down)+'</div></div>';
+      }
+    }else if(j.kind==='fx'){
+      h+='<div class="dc-chips">';
+      h+=dcChip('汇率日期', esc((j.date&&j.date.new)||'—'), '上一版 '+esc((j.date&&j.date.old)||'—'));
+      h+=dcChip('币种数', (j.counts&&j.counts.new)||'—', '上一版 '+((j.counts&&j.counts.old)||'—'));
+      h+=dcChip('变动币种', ((j.movers||[]).length)+' 个', '');
+      h+='</div>';
+      if((j.movers||[]).length){
+        var mx2=0.01; j.movers.forEach(function(m){mx2=Math.max(mx2,Math.abs(m.pct||0))});
+        h+='<table style="margin-top:12px"><thead><tr><th>币种</th><th>名称</th><th>旧汇率</th><th>新汇率</th><th>变化</th></tr></thead><tbody>';
+        j.movers.forEach(function(m){
+          h+='<tr><td><b>'+esc(m.code)+'</b></td><td>'+esc(m.name)+'</td><td style="color:var(--ink3)">'+esc(m.old)+'</td><td>'+esc(m.new)+'</td>'+
+             '<td style="color:'+dcColor(m.pct)+';white-space:nowrap">'+dcPct(m.pct)+dcBar(m.pct,mx2)+'</td></tr>';
+        });
+        h+='</tbody></table>';
+      }
+    }
+    return h;
+  }
+
   $$('[data-stage]').forEach(function(b){b.onclick=function(){
     b.disabled=true; var old=b.textContent; b.textContent='抓取中…';
     api('/api/admin/staging/fetch',{method:'POST',body:{kind:b.dataset.stage}}).then(function(r){
@@ -674,5 +765,29 @@ pre{white-space:pre-wrap;word-break:break-all;font:11px/1.7 ui-monospace,Consola
   checkLogin();
 })();
 </script>
+<style>
+/* 数据对比：概览条 / 指标卡 / 变化条 */
+.dc-head{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;margin-bottom:12px;font-size:12px}
+.dc-head.chg{background:rgba(232,174,62,.10);border:1px solid rgba(232,174,62,.30)}
+.dc-head.same{background:rgba(72,208,138,.08);border:1px solid rgba(72,208,138,.25)}
+.dc-head b{font-size:12px;letter-spacing:.04em}
+.dc-head.chg b{color:var(--warn)}.dc-head.same b{color:var(--ok)}
+.dc-head span{color:var(--ink2)}
+.dc-chips{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:10px}
+.dc-chip{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:10px 12px}
+.dc-chip .k{font-size:10px;color:var(--ink3);letter-spacing:.06em}
+.dc-chip .v{font-size:13px;color:var(--ink);font-weight:600;margin-top:5px}
+.dc-chip .v i{color:var(--acc);font-style:normal;margin:0 4px}
+.dc-chip .v em{display:block;font-style:normal;font-weight:400;font-size:10.5px;color:var(--ink3);margin-top:3px}
+.dc-bar{display:inline-block;width:62px;height:5px;border-radius:3px;background:rgba(120,160,210,.14);vertical-align:middle;margin-left:6px;overflow:hidden}
+.dc-bar i{display:block;height:100%;border-radius:3px}
+.dc-cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.dc-rank h5{font-size:11px;color:var(--ink3);margin:6px 0 8px;font-weight:500}
+.dc-line{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:11.5px}
+.dc-line .n{width:90px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dc-line .b{flex:1}
+.dc-line .p{width:64px;text-align:right;font-variant-numeric:tabular-nums}
+@media(max-width:820px){.dc-cols{grid-template-columns:1fr}}
+</style>
 </body>
 </html>
