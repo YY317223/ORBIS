@@ -3662,7 +3662,7 @@ body.plan-free #pcard .pc-more[data-pro] > button{color:rgba(232,163,74,.72)}
   background:rgba(3,6,10,.78);backdrop-filter:blur(8px)}
 #psnap.on{display:grid}
 #psnap .box{display:flex;flex-direction:column;align-items:center;gap:14px;max-height:92vh}
-#psnap img{max-height:78vh;width:auto;border-radius:12px;box-shadow:0 40px 90px -30px rgba(0,0,0,.9)}
+#psnap img{max-height:87vh;width:auto;border-radius:12px;box-shadow:0 40px 90px -30px rgba(0,0,0,.9)}
 #psnap .row{display:flex;gap:10px;align-items:center}
 #psnap button{border-radius:9px;border:1px solid rgba(160,200,230,.28);background:rgba(255,255,255,.08);
   color:#e9f2f8;font:inherit;font-size:12px;padding:9px 18px;cursor:pointer}
@@ -4185,21 +4185,29 @@ window.__PCARD__ = {"years":[2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2
   var FONT = '-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif';
 
   function wrapText(ctx, text, x, y, maxW, lh, maxLines) {
-    var line = '', n = 0;
+    /* 先切行、再画。原来是一边切一边画，行数超限时把「…」接到新起的那一行，
+       结果图上多出一行孤零零的省略号（看起来像一个点）。 */
+    var lines = [], line = '';
     for (var i = 0; i < text.length; i++) {
       var t = line + text[i];
       if (ctx.measureText(t).width > maxW && line) {
-        ctx.fillText(line, x, y + n * lh);
-        n++;
+        lines.push(line);
         line = text[i];
-        if (maxLines && n >= maxLines - 1 && i < text.length - 1) {
-          line += '…';
-          break;
-        }
       } else line = t;
     }
-    if (line) { ctx.fillText(line, x, y + n * lh); n++; }
-    return y + n * lh;
+    if (line) lines.push(line);
+
+    /* 标点不要单独占一行（句号被挤到下一行，看起来就是一个孤零零的点） */
+    while (lines.length > 1 && /^[，。、；：·…\s]+$/.test(lines[lines.length - 1])) {
+      lines[lines.length - 2] += lines.pop();
+    }
+
+    if (maxLines && lines.length > maxLines) {
+      lines = lines.slice(0, maxLines);
+      lines[maxLines - 1] = lines[maxLines - 1].replace(/[，、。；：\s]+$/, '') + '…';
+    }
+    for (var j = 0; j < lines.length; j++) ctx.fillText(lines[j], x, y + j * lh);
+    return y + lines.length * lh;
   }
 
   function snapSentence(iso, yi) {
@@ -4237,16 +4245,16 @@ window.__PCARD__ = {"years":[2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2
     ctx.letterSpacing = '10px';
     ctx.fillText('ORBIS', 72, 104);
     ctx.letterSpacing = '0px';
-    ctx.fillStyle = 'rgba(157,178,198,.72)';
-    ctx.font = '400 17px ' + FONT;
+    ctx.fillStyle = 'rgba(198,216,232,.92)';
+    ctx.font = '400 20px ' + FONT;
     ctx.fillText('从太空看地球 · 国家数据档案', 72, 136);
 
     ctx.textAlign = 'right';
     ctx.fillStyle = '#e8a34a';
     ctx.font = '600 20px ' + FONT;
     ctx.fillText(String(YEARS[yi]), SNAP_W - 72, 108);
-    ctx.fillStyle = 'rgba(157,178,198,.55)';
-    ctx.font = '400 15px ' + FONT;
+    ctx.fillStyle = 'rgba(198,216,232,.85)';
+    ctx.font = '400 17px ' + FONT;
     ctx.fillText('世界银行 WDI', SNAP_W - 72, 134);
     ctx.textAlign = 'left';
 
@@ -4276,8 +4284,8 @@ window.__PCARD__ = {"years":[2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2
       ctx.fillStyle = '#fff';
       ctx.font = '700 62px ' + FONT;
       ctx.fillText(m.zh, nx, y + 6);
-      ctx.fillStyle = 'rgba(157,178,198,.75)';
-      ctx.font = '400 19px ' + FONT;
+      ctx.fillStyle = 'rgba(200,218,234,.92)';
+      ctx.font = '400 22px ' + FONT;
       ctx.fillText([m.en, m.r, m.i].filter(Boolean).join(' · '), nx, y + 44);
 
       // 三个大数字
@@ -4293,21 +4301,21 @@ window.__PCARD__ = {"years":[2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2
       var colW = (SNAP_W - 144) / 3;
       cols.forEach(function (c, i) {
         var x0 = 72 + i * colW;
-        ctx.fillStyle = 'rgba(157,178,198,.7)';
-        ctx.font = '500 18px ' + FONT;
+        ctx.fillStyle = 'rgba(206,222,236,.95)';
+        ctx.font = '500 21px ' + FONT;
         ctx.fillText(c.k, x0, y);
         ctx.fillStyle = '#fff';
         ctx.font = '700 44px ' + FONT;
         ctx.fillText(c.v, x0, y + 54);
-        ctx.fillStyle = '#e8a34a';
-        ctx.font = '400 18px ' + FONT;
-        ctx.fillText(c.s, x0, y + 86);
+        ctx.fillStyle = '#f2b76b';
+        ctx.font = '500 21px ' + FONT;
+        ctx.fillText(c.s, x0, y + 88);
       });
 
       // 洞察
       y = 600;
-      ctx.fillStyle = 'rgba(233,242,248,.86)';
-      ctx.font = '400 25px ' + FONT;
+      ctx.fillStyle = '#f2f8fd';
+      ctx.font = '400 30px ' + FONT;
       var endY = wrapText(ctx, snapSentence(iso, yi), 72, y, SNAP_W - 144, 40, 3);
 
       // 走势
@@ -4334,13 +4342,14 @@ window.__PCARD__ = {"years":[2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2
       });
       ctx.stroke();
       ctx.lineWidth = 1;
-      ctx.fillStyle = 'rgba(157,178,198,.6)';
-      ctx.font = '400 16px ' + FONT;
+      ctx.fillStyle = 'rgba(198,216,232,.88)';
+      ctx.font = '400 20px ' + FONT;
       ctx.fillText(String(YEARS[0]), 72, y + h + 30);
       ctx.textAlign = 'right';
       ctx.fillText(String(YEARS[N - 1]), 72 + w, y + h + 30);
       ctx.textAlign = 'left';
-      ctx.fillStyle = 'rgba(157,178,198,.55)';
+      ctx.fillStyle = 'rgba(200,220,236,.9)';
+      ctx.font = '400 21px ' + FONT;
       ctx.fillText('GDP 走势 · 实际值（现价美元）', 72, y - 18);
 
       // 人口结构
@@ -4353,8 +4362,8 @@ window.__PCARD__ = {"years":[2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2
           { v: mid, c: '#7fa8bb', t: '#fff', l: '15–64 岁' },
           { v: g65, c: '#2b6b87', t: '#fff', l: '65 岁以上' }
         ];
-        ctx.fillStyle = 'rgba(157,178,198,.55)';
-        ctx.font = '400 16px ' + FONT;
+        ctx.fillStyle = 'rgba(200,220,236,.9)';
+        ctx.font = '400 21px ' + FONT;
         ctx.fillText('人口结构', 72, y - 20);
         var sx = 72;
         segs.forEach(function (sg) {
@@ -4363,7 +4372,7 @@ window.__PCARD__ = {"years":[2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2
           ctx.fillRect(sx, y + 12, sw, 44);
           if (sg.v > 8) {
             ctx.fillStyle = sg.t;
-            ctx.font = '600 17px ' + FONT;
+            ctx.font = '700 22px ' + FONT;
             ctx.fillText(sg.v.toFixed(0) + '%', sx + 14, y + 41);
           }
           sx += sw + 2;
@@ -4373,16 +4382,37 @@ window.__PCARD__ = {"years":[2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2
         segs.forEach(function (sg, i2) {
           ctx.fillStyle = sg.c;
           ctx.fillRect(72 + i2 * 156, y + 84, 12, 12);
-          ctx.fillStyle = 'rgba(157,178,198,.75)';
+          ctx.fillStyle = 'rgba(206,222,236,.9)';
+          ctx.font = '400 20px ' + FONT;
           ctx.fillText(sg.l, 72 + i2 * 156 + 20, y + 95);
+        });
+      }
+
+      // 全球位次：卡片里最能说明"排第几"的一行，也顺带填掉下半部的空白
+      var rmG = rankMap('gdp', yi), rmP = rankMap('gdppc', yi);
+      var gRk = rmG.get(iso), pRk = rmP.get(iso);
+      if (gRk || pRk) {
+        var ry = Math.min(y + 132, SNAP_H - 232);
+        ctx.fillStyle = 'rgba(206,222,236,.95)';
+        ctx.font = '500 21px ' + FONT;
+        ctx.fillText('全球位次', 72, ry);
+        [{ k: 'GDP', v: gRk ? '第 ' + gRk + ' / ' + rmG.count : '—' },
+         { k: '人均 GDP', v: pRk ? '第 ' + pRk + ' / ' + rmP.count : '—' }].forEach(function (c, i3) {
+          var x3 = 72 + i3 * 300;
+          ctx.fillStyle = 'rgba(200,220,236,.9)';
+          ctx.font = '400 20px ' + FONT;
+          ctx.fillText(c.k, x3, ry + 38);
+          ctx.fillStyle = '#ffffff';
+          ctx.font = '700 34px ' + FONT;
+          ctx.fillText(c.v, x3, ry + 78);
         });
       }
 
       // 页脚
       ctx.strokeStyle = 'rgba(150,185,215,.16)';
       ctx.beginPath(); ctx.moveTo(72, SNAP_H - 128); ctx.lineTo(SNAP_W - 72, SNAP_H - 128); ctx.stroke();
-      ctx.fillStyle = 'rgba(157,178,198,.62)';
-      ctx.font = '400 17px ' + FONT;
+      ctx.fillStyle = 'rgba(198,216,232,.85)';
+      ctx.font = '400 20px ' + FONT;
       ctx.fillText('数据来源 · 世界银行 WDI', 72, SNAP_H - 86);
       ctx.textAlign = 'right';
       ctx.fillText('ORBIS · 从太空看地球', SNAP_W - 72, SNAP_H - 86);

@@ -171,7 +171,7 @@ body.plan-free #pcard .pc-more[data-pro] > button{color:rgba(232,163,74,.72)}
   background:rgba(3,6,10,.78);backdrop-filter:blur(8px)}
 #psnap.on{display:grid}
 #psnap .box{display:flex;flex-direction:column;align-items:center;gap:14px;max-height:92vh}
-#psnap img{max-height:78vh;width:auto;border-radius:12px;box-shadow:0 40px 90px -30px rgba(0,0,0,.9)}
+#psnap img{max-height:87vh;width:auto;border-radius:12px;box-shadow:0 40px 90px -30px rgba(0,0,0,.9)}
 #psnap .row{display:flex;gap:10px;align-items:center}
 #psnap button{border-radius:9px;border:1px solid rgba(160,200,230,.28);background:rgba(255,255,255,.08);
   color:#e9f2f8;font:inherit;font-size:12px;padding:9px 18px;cursor:pointer}

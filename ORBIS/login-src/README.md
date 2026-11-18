@@ -39,3 +39,27 @@ python patch_gate.py
 ```
 
 脚本里 `SRC` 默认指向本地开发目录的原始页面，按需改成仓库里的 `ORBIS/orbis.html` 的旧版本（改版前的那一版）即可。地球贴图用 `../build/earth_tex.jpg`，会被 base64 内联进 HTML。
+
+## UI 层（指南 / 对比 / 快照）
+
+`.ag-*` 是登录封面；封面之外还有一层“UI 补丁”，由 `apply_ui.py` 负责：
+
+| 文件 | 作用 |
+|---|---|
+| `ui_patch.js` | 右侧工具条加「指南」「对比」；国家面板操作行加「快照」；点快照 → 出 1080×1440 竖版卡 |
+| `ui_patch.css` | 隐藏原来的两处指南入口与右侧档案卡；快照按钮样式；提示条 |
+| `apply_ui.py` | 把卡片数据、卡片模块、UI 补丁**可重复地**叠到任意版本的 orbis.html 上 |
+
+为什么不写进 `patch_gate.py`：那个脚本的输入是「没换过封面的原始页面」，只能跑一次；
+上游更新 orbis.html 后，只需要重跑 `apply_ui.py`，它先清掉上一次注入的区块再重新注入，可以反复执行。
+
+```bash
+python build/apply_ui.py                      # 默认读 _remote/latest/ORBIS/orbis.html
+python build/apply_ui.py --src 任意版本.html
+```
+
+### 为什么档案卡被隐藏
+
+卡片（`peer_card.js`）最初是叠在右侧的，后来发现和左侧面板信息重复，改成隐藏：
+`ui_patch.css` 里 `#pcard{display:none}`。但出图能力还在那个模块里（canvas 绘制 + 弹窗 + 下载），
+所以左侧「快照」按钮只是程序化点击它内部的 `.pc-snap`，不重复实现一遍绘图。

@@ -78,8 +78,32 @@ src = src[:a] + js.strip() + src[b:]
 # 「欢迎回来，探索者」已从封面删掉，这里也一并统一成新的副标。
 src = src.replace('从太空看地球 · 欢迎回来，探索者', '从太空看地球 · 带你用数据看世界')
 
+# ---- 5. 国家档案卡：数据包 + 卡片模块（Atlas 那一版）----
+# 卡片自带数据（26 年 × 10 指标 + 国旗 + 陆地邻国），只读页面的 hash 路由、
+# 指标条与年份，不依赖原页面的数据表，所以可以直接挂上来。
+card_data = open(os.path.join(ROOT, 'build', 'card_data.js'), encoding='utf-8').read()
+card_css = open(os.path.join(ROOT, 'build', 'peer_card.css'), encoding='utf-8').read()
+card_js = open(os.path.join(ROOT, 'build', 'peer_card.js'), encoding='utf-8').read()
+
+# ---- 6. 一级界面右侧工具条：指南 / 对比 / 快照 ----
+ui_css = open(os.path.join(ROOT, 'build', 'ui_patch.css'), encoding='utf-8').read()
+ui_js = open(os.path.join(ROOT, 'build', 'ui_patch.js'), encoding='utf-8').read()
+
+inject = ('\n<!-- 国家档案卡：数据（内联，保证单文件可离线运行）-->\n'
+          '<script id="pcard-data">\n' + card_data + '</script>\n'
+          '<style id="pcard-css">\n' + card_css + '</style>\n'
+          '<script id="pcard-js">\n' + card_js + '</script>\n'
+          '<style id="ui-patch-css">\n' + ui_css + '</style>\n'
+          '<script id="ui-patch-js">\n' + ui_js + '</script>\n')
+if '</body>' in src:
+    k = src.rindex('</body>')
+    src = src[:k] + inject + src[k:]
+else:
+    src += inject
+
 open(OUT, 'w', encoding='utf-8').write(src)
 
 print('%s  %.2f MB' % ('orbis.html', len(src.encode()) / 1048576))
-for k in ('id="authgate"', 'ag-word', 'agEarthTex', 'agGlobe', '带你用数据看世界', '欢迎回来'):
+for k in ('id="authgate"', 'ag-word', 'agEarthTex', 'agGlobe', '带你用数据看世界',
+          '欢迎回来', 'pcard-css', 'uzSnap'):
     print('%-22s %d' % (k, src.count(k)))
