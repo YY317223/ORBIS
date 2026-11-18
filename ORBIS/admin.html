@@ -240,6 +240,17 @@ pre{white-space:pre-wrap;word-break:break-all;font:11px/1.7 ui-monospace,Consola
         <p class="hint">抓取结果只进暂存区，<b>不会</b>覆盖正式数据。在「数据审核」页对比差异、确认无误后点「通过并发布」，才会合并进 data.js 并重建页面。</p>
       </div>
 
+      <div class="box"><h3>贸易数据 · 出口 / 进口前三</h3>
+        <div class="bar">
+          <button class="btn pri" id="twBoth">抓取全部</button>
+          <button class="btn" id="twX">只抓出口</button>
+          <button class="btn" id="twM">只抓进口</button>
+          <span class="hint" style="margin:0">UN Comtrade · 约 45 秒/国</span>
+        </div>
+        <div id="twStatus" style="margin-top:12px"></div>
+        <p class="hint">免费接口每日配额有限，配额用尽会自动停下并保留已抓进度；第二天再点「抓取全部」即可从断点继续。</p>
+      </div>
+
       <div class="box"><h3>运行状态</h3><div id="cwStatus"></div></div>
       <div class="box"><h3>最近运行记录</h3><div id="cwLog"></div></div>
     </section>
@@ -789,8 +800,7 @@ pre{white-space:pre-wrap;word-break:break-all;font:11px/1.7 ui-monospace,Consola
       $('#cwStatus').innerHTML=rows.map(function(x){
         return '<div class="row"><span class="k">'+x[0]+'</span><span class="v">'+x[1]+'</span></div>';
       }).join('');
-      $('#cwEnabled').checked=!!a.enabled;
-      $('#cwDay').value=a.day; $('#cwHour').value=a.hour; $('#cwMin').value=a.minute;
+      $('#cwEnabled').checked=!!a.enabled;      $('#cwDay').value=a.day; $('#cwHour').value=a.hour; $('#cwMin').value=a.minute;
       var log=d.log||[];
       $('#cwLog').innerHTML=log.length?('<table><thead><tr><th>时间</th><th>方式</th><th>结果</th><th>版本</th><th>耗时</th><th>说明</th></tr></thead><tbody>'+
         log.map(function(x){
@@ -800,6 +810,7 @@ pre{white-space:pre-wrap;word-break:break-all;font:11px/1.7 ui-monospace,Consola
             '</td><td>'+esc(x.seconds!=null?x.seconds+'s':'—')+'</td><td>'+esc(det)+'</td></tr>';
         }).join('')+'</tbody></table>')
         :'<div class="empty"><span>⟳</span>还没有运行记录</div>';
+      loadTrade();
     });
   }
   $('#cwSave').onclick=function(){
@@ -831,6 +842,40 @@ pre{white-space:pre-wrap;word-break:break-all;font:11px/1.7 ui-monospace,Consola
     });
   };
   $('#cwGoReview').onclick=function(){ loadPage('review'); };
+
+  /* 贸易数据抓取 */
+  function loadTrade(){
+    api('/api/admin/trade/status').then(function(r){
+      if(!r.ok){ $('#twStatus').innerHTML='<p class="hint">读取贸易抓取状态失败</p>'; return; }
+      var d=r.j, cov=d.coverage||{}, h='';
+      h+='<div class="row"><span class="k">覆盖</span><span class="v">出口 <b>'+cov.exports+'</b> 国 · 进口 <b>'+cov.imports+'</b> 国 · 共 '+cov.countries+' 国</span></div>';
+      if(d.running){
+        var pct=d.todo?Math.min(100,Math.round((d.index||0)/d.todo*100)):0;
+        h+='<div class="row"><span class="k">正在抓取</span><span class="v">'+esc(d.phase||'')+' · '+esc(d.current||'')+
+           ' <span class="dc-y">'+(d.index||0)+'/'+(d.todo||0)+'</span></span></div>';
+        h+='<div class="dc-prog"><i style="width:'+pct+'%"></i></div>';
+      }else if(d.quota){
+        h+='<div class="row"><span class="k">状态</span><span class="v"><span class="badge warn">配额用尽 · 明天继续</span></span></div>';
+      }else if(d.summary&&d.summary.build){
+        h+='<div class="row"><span class="k">上次结果</span><span class="v">已合并 <b>'+d.summary.build.countries+'</b> 国数据</span></div>';
+      }else{
+        h+='<div class="row"><span class="k">状态</span><span class="v"><span class="badge info">空闲</span></span></div>';
+      }
+      $('#twStatus').innerHTML=h;
+      if(d.running) setTimeout(loadTrade,5000);
+    });
+  }
+  function runTrade(mode,btn){
+    btn.disabled=true; var t=btn.textContent; btn.textContent='启动中…';
+    api('/api/admin/trade/run',{method:'POST',body:{mode:mode}}).then(function(r){
+      btn.disabled=false; btn.textContent=t;
+      toast(r.j.ok?'已开始抓取，进度见下方':(r.j.error||'启动失败'),!r.j.ok);
+      if(r.j.ok) setTimeout(loadTrade,1500);
+    });
+  }
+  $('#twBoth').onclick=function(){ runTrade('both',this) };
+  $('#twX').onclick=function(){ runTrade('x',this) };
+  $('#twM').onclick=function(){ runTrade('m',this) };
 
   checkLogin();
 })();
@@ -864,6 +909,8 @@ pre{white-space:pre-wrap;word-break:break-all;font:11px/1.7 ui-monospace,Consola
 .dc-cthead h4{margin:0!important}
 .dc-ctmeta{display:flex;flex-wrap:wrap;gap:6px 22px;font-size:10.5px;color:var(--ink3);margin:0 0 10px}
 .dc-ctmeta b{color:var(--ink2);font-weight:500}
+.dc-prog{height:5px;border-radius:3px;background:rgba(120,160,210,.14);margin:8px 0 2px;overflow:hidden}
+.dc-prog i{display:block;height:100%;background:var(--acc);border-radius:3px;transition:width .4s}
 .dc-ctools{display:flex;align-items:center;gap:12px;margin-left:auto}
 .dc-search{background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:6px 10px;color:var(--ink);font-size:11.5px;width:170px}
 .dc-search:focus{outline:none;border-color:var(--acc2)}

@@ -546,6 +546,9 @@ class Handler(BaseHTTPRequestHandler):
             if ep == "crawler/status":
                 code, data = admin_api.crawler_status()
                 return self._send(code, data)
+            if ep == "trade/status":
+                code, data = admin_api.trade_status()
+                return self._send(code, data)
             return self._send(404, {"ok": False, "error": "unknown admin api"})
         if p in ("/", "/index.html", "/orbis.html", "/太空地球.html"):
             return self.serve_page()
@@ -671,6 +674,9 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(code, data)
             if ep == "crawler/run":
                 code, data = admin_api.crawler_run(body.get("mode"))
+                return self._send(code, data)
+            if ep == "trade/run":
+                code, data = admin_api.trade_run(body.get("mode"))
                 return self._send(code, data)
             return self._send(404, {"ok": False, "error": "unknown admin api"})
 

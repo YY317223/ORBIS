@@ -9,3 +9,7 @@ __pycache__/
 # 运行数据与凭据（不入仓库）
 *.db
 **/backend/data/admin.json
+# 贸易抓取运行时数据（缓存可重抓，不进仓库）
+**/backend/data/trade_cache/
+**/backend/data/trade_progress.json
+**/backend/data/comtrade_reporters.json

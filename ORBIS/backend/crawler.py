@@ -140,6 +140,18 @@ def run_auto(trigger="manual"):
             except Exception as e:  # noqa: BLE001
                 err.append("页面重建: %s" % str(e)[:160])
 
+        # 贸易数据（出口/进口前三）在后台续抓：限速严，给它 30 分钟预算，
+        # 抓不完下次接着来，不影响本次更新时间。
+        trade_started = False
+        try:
+            import trade_fetch
+            if not trade_fetch.status().get("running"):
+                threading.Thread(target=trade_fetch.run, kwargs={"mode": "both", "budget": 1800},
+                                 daemon=True).start()
+                trade_started = True
+        except Exception as e:  # noqa: BLE001
+            err.append("贸易抓取: %s" % str(e)[:120])
+
         ok = wb_ok and fx_ok and page is not None
         entry = {
             "mode": "auto", "trigger": trigger, "ok": ok,
@@ -149,6 +161,7 @@ def run_auto(trigger="manual"):
             "countries": (page or {}).get("countries"),
             "page_bytes": (page or {}).get("bytes"),
             "seconds": round(time.time() - t0, 1),
+            "trade_started": trade_started,
             "error": "；".join(err) or None,
         }
         _log(entry)

@@ -453,3 +453,35 @@ def crawler_run(mode):
     if mode == "review":
         return stage_fetch("all")
     return 400, {"ok": False, "error": "mode 只能是 auto / review"}
+
+
+# ------------------------------------------------------------ 贸易数据（出口/进口）
+import trade_fetch as _trade_fetch
+
+
+def trade_status():
+    try:
+        return 200, {"ok": True, **_trade_fetch.status()}
+    except Exception as e:  # noqa: BLE001
+        return 500, {"ok": False, "error": str(e)}
+
+
+def trade_run(mode="both"):
+    """mode: both / x / m。后台线程跑，进度写 data/trade_progress.json。"""
+    mode = (mode or "both").lower()
+    if mode not in ("both", "x", "m"):
+        return 400, {"ok": False, "error": "mode 只能是 both / x / m"}
+    st = _trade_fetch.status()
+    if st.get("running"):
+        return 400, {"ok": False, "error": "已经在抓取中，请等这一轮结束"}
+
+    def job():
+        try:
+            r = _trade_fetch.run(mode)
+            print("[admin] 贸易抓取完成:", r)
+        except Exception as e:  # noqa: BLE001
+            print("[admin] 贸易抓取异常:", e)
+
+    threading.Thread(target=job, daemon=True).start()
+    return 200, {"ok": True, "started": True, "mode": mode,
+                 "note": "后台抓取，可在下方看进度"}
