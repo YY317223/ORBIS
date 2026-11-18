@@ -17,6 +17,7 @@ import auth
 import fetch_fx
 import fetch_wb
 import mailer
+import page_data
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(HERE, "data")
@@ -378,6 +379,12 @@ def stage_publish(bid, names=None, reload_doc=None, reload_fx=None, do_notify=No
             doc = reload_doc() if reload_doc else None
             if doc and do_notify:
                 do_notify(doc)   # 发布时触发订阅提醒（与原自动流程一致）
+            # 审核通过 = 数据正式上页面：合并进 data.js 并重建 orbis.html
+            try:
+                info["page"] = page_data.apply_and_rebuild()
+            except Exception as e:  # noqa: BLE001
+                info["page"] = {"error": str(e)[:200]}
+                print("[admin] 审核发布后重建页面失败:", e)
         if "fx.json" in published and reload_fx:
             reload_fx()
     except Exception as e:  # noqa: BLE001
@@ -388,3 +395,48 @@ def stage_publish(bid, names=None, reload_doc=None, reload_fx=None, do_notify=No
 def stage_reject(bid):
     ok, info = _stage.reject(bid)
     return (200 if ok else 400), {"ok": ok, **({"error": info} if not ok else info)}
+
+
+# ============================================================
+# 爬虫应用：两种更新模式
+#   auto   = 每月自动更新，抓完直接上页面，不审核
+#   review = 实时更新，抓完进待审区，管理员通过后才上页面
+# ============================================================
+import crawler as _crawler
+
+
+def crawler_status():
+    try:
+        return 200, _crawler.status()
+    except Exception as e:  # noqa: BLE001
+        return 500, {"ok": False, "error": str(e)}
+
+
+def crawler_config(day, hour, minute, enabled):
+    try:
+        cfg = _crawler.load_cfg()
+        a = cfg["auto"]
+        a["day"] = max(1, min(28, int(day)))
+        a["hour"] = max(0, min(23, int(hour)))
+        a["minute"] = max(0, min(59, int(minute)))
+        a["enabled"] = bool(enabled)
+        cfg["next_run"] = _crawler._iso(_crawler.next_occurrence(a["day"], a["hour"], a["minute"]))
+        _crawler.save_cfg(cfg)
+        return 200, {"ok": True, "auto": a, "next_run": cfg["next_run"]}
+    except Exception as e:  # noqa: BLE001
+        return 400, {"ok": False, "error": str(e)}
+
+
+def crawler_run(mode):
+    """mode=auto: 后台直接更新；mode=review: 抓到待审区等管理员审批。"""
+    mode = (mode or "auto").lower()
+    if mode == "auto":
+        def job():
+            ok, info = _crawler.run_auto(trigger="admin")
+            print("[admin] 自动更新完成:", ok, info.get("error") or info.get("version"))
+        threading.Thread(target=job, daemon=True).start()
+        return 200, {"ok": True, "started": True, "mode": "auto",
+                     "note": "抓取完成后直接更新到页面，无需审核"}
+    if mode == "review":
+        return stage_fetch("all")
+    return 400, {"ok": False, "error": "mode 只能是 auto / review"}

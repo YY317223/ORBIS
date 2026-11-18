@@ -32,6 +32,7 @@ import mailer
 import auth
 import admin_auth
 import admin_api
+import crawler
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -535,6 +536,10 @@ class Handler(BaseHTTPRequestHandler):
                     return self._send(400, {"ok": False, "error": "参数不完整"})
                 code, data = admin_api.stage_compare(unquote(parts[0]), unquote(parts[1]))
                 return self._send(code, data)
+            # 爬虫状态
+            if ep == "crawler/status":
+                code, data = admin_api.crawler_status()
+                return self._send(code, data)
             return self._send(404, {"ok": False, "error": "unknown admin api"})
         if p in ("/", "/index.html", "/orbis.html", "/太空地球.html"):
             return self.serve_page()
@@ -651,6 +656,15 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(code, data)
             if ep == "staging/reject":
                 code, data = admin_api.stage_reject(body.get("id"))
+                return self._send(code, data)
+            # 爬虫：两种更新模式
+            if ep == "crawler/config":
+                code, data = admin_api.crawler_config(
+                    body.get("day", 5), body.get("hour", 6),
+                    body.get("minute", 0), body.get("enabled", True))
+                return self._send(code, data)
+            if ep == "crawler/run":
+                code, data = admin_api.crawler_run(body.get("mode"))
                 return self._send(code, data)
             return self._send(404, {"ok": False, "error": "unknown admin api"})
 
@@ -818,6 +832,8 @@ def main():
         threading.Thread(target=refresh, args=(True,), daemon=True).start()
         threading.Thread(target=refresh_fx, daemon=True).start()
     threading.Thread(target=scheduler, daemon=True).start()
+    # 爬虫的「每月自动更新」常驻线程（模式一）
+    threading.Thread(target=crawler.scheduler_loop, daemon=True).start()
 
     srv = ThreadingHTTPServer((a.host, a.port), Handler)
     st = status_payload()

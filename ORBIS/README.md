@@ -61,6 +61,18 @@ HOST=0.0.0.0 PORT=8080 python3 app.py
 - 配了 SMTP：通过 `config.json` 里的 `smtp` 字段发送，并自动带上
   `List-Unsubscribe` 标准退订头。
 
+### 数据更新（管理员控制台 → 爬虫）
+
+管理后台 `/admin` 的「爬虫」页提供两种模式：
+
+| 模式 | 行为 | 是否审核 |
+|---|---|---|
+| 每月自动更新 | 到点抓世行 + 汇率，直接合并进 `data.js` 并重建 `orbis.html` | 否，用户刷新即可见 |
+| 实时更新 | 抓取结果只进 `data/staging/` 待审区 | 是，需在「数据审核」页通过 |
+
+实现在 `backend/crawler.py`（调度 + 两种模式）与 `backend/page_data.py`（合并数据、重建页面）。
+发布前会自动把旧 `data.js` 备份到 `backend/data/backups/`。
+
 ## 备注
 - 后端每 12 小时检查一次世界银行数据；也可 `python3 app.py --once` 挂系统计划任务。
 - 当前线上实例：http://8.137.183.172:8080 （部署目录 `/opt/orbis`，结构同本文件夹）。

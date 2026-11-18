@@ -154,6 +154,7 @@ pre{white-space:pre-wrap;word-break:break-all;font:11px/1.7 ui-monospace,Consola
       <button data-p="subs"><i>✉</i><span>订阅管理</span></button>
       <button data-p="data"><i>▤</i><span>数据管理</span></button>
       <button data-p="review"><i>◉</i><span>数据审核</span></button>
+      <button data-p="crawler"><i>⟳</i><span>爬虫</span></button>
       <button data-p="mail"><i>✦</i><span>邮件中心</span></button>
       <button data-p="settings"><i>⚙</i><span>系统设置</span></button>
     </nav>
@@ -209,6 +210,38 @@ pre{white-space:pre-wrap;word-break:break-all;font:11px/1.7 ui-monospace,Consola
           <button class="btn danger" id="rvReject">✕ 驳回并丢弃</button>
         </div>
       </div>
+    </section>
+
+    <!-- 爬虫：两种更新模式 -->
+    <section class="page" id="p-crawler">
+      <div class="cards" id="cwCards"></div>
+
+      <div class="box"><h3>模式一 · 每月自动更新（无需审核）</h3>
+        <div class="bar">
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px"><input type="checkbox" id="cwEnabled"> 启用每月自动更新</label>
+          <span class="hint" style="margin:0">每月</span>
+          <input id="cwDay" type="number" min="1" max="28" value="5" style="width:70px">
+          <span class="hint" style="margin:0">号</span>
+          <input id="cwHour" type="number" min="0" max="23" value="6" style="width:64px">
+          <span class="hint" style="margin:0">时</span>
+          <input id="cwMin" type="number" min="0" max="59" value="0" style="width:64px">
+          <span class="hint" style="margin:0">分</span>
+          <button class="btn pri" id="cwSave">保存计划</button>
+          <button class="btn" id="cwRunAuto">立即执行一次</button>
+        </div>
+        <p class="hint">到点自动抓取世行与汇率，<b>直接</b>合并进 data.js 并重建 orbis.html，用户刷新即可看到。旧数据自动备份到 <code>data/backups/</code>。</p>
+      </div>
+
+      <div class="box"><h3>模式二 · 实时更新（需管理员审批）</h3>
+        <div class="bar">
+          <button class="btn pri" id="cwRunReview">抓取到待审区</button>
+          <button class="btn" id="cwGoReview">去数据审核页</button>
+        </div>
+        <p class="hint">抓取结果只进暂存区，<b>不会</b>覆盖正式数据。在「数据审核」页对比差异、确认无误后点「通过并发布」，才会合并进 data.js 并重建页面。</p>
+      </div>
+
+      <div class="box"><h3>运行状态</h3><div id="cwStatus"></div></div>
+      <div class="box"><h3>最近运行记录</h3><div id="cwLog"></div></div>
     </section>
 
     <!-- 邮件 -->
@@ -289,7 +322,8 @@ pre{white-space:pre-wrap;word-break:break-all;font:11px/1.7 ui-monospace,Consola
 
   /* 导航 */
   var TITLES={overview:['总览','OVERVIEW'],users:['用户管理','USERS'],subs:['订阅管理','SUBSCRIPTIONS'],
-    data:['数据管理','DATA'],review:['数据审核','DATA REVIEW'],mail:['邮件中心','MAIL'],settings:['系统设置','SETTINGS']};
+    data:['数据管理','DATA'],review:['数据审核','DATA REVIEW'],crawler:['爬虫','CRAWLER'],
+    mail:['邮件中心','MAIL'],settings:['系统设置','SETTINGS']};
   function loadPage(p){
     $$('#nav button').forEach(function(b){b.classList.toggle('on',b.dataset.p===p)});
     $$('.page').forEach(function(s){s.classList.toggle('on',s.id==='p-'+p)});
@@ -299,6 +333,7 @@ pre{white-space:pre-wrap;word-break:break-all;font:11px/1.7 ui-monospace,Consola
     else if(p==='subs')loadSubs();
     else if(p==='data')loadData();
     else if(p==='review')loadReview();
+    else if(p==='crawler')loadCrawler();
     else if(p==='mail')loadMail();
     else if(p==='settings')loadSettings();
   }
@@ -566,6 +601,75 @@ pre{white-space:pre-wrap;word-break:break-all;font:11px/1.7 ui-monospace,Consola
       if(r.j.ok){$('#pwOld').value='';$('#pwNew').value='';loadSettings()}
     });
   };
+
+  /* 爬虫：两种更新模式 */
+  function fmtTime(s){ return s ? String(s).replace('T',' ').slice(0,16) : '—'; }
+  function loadCrawler(){
+    api('/api/admin/crawler/status').then(function(r){
+      if(!r.ok){toast('加载爬虫状态失败',true);return}
+      var d=r.j||{}, a=d.auto||{}, lr=d.last_result||{};
+      var okBadge = lr.ok===true?'<span class="badge ok">成功</span>':(lr.ok===false?'<span class="badge err">失败</span>':'<span class="badge info">—</span>');
+      var cards=[
+        ['数据版本', d.version||'—', '最近一个完整月份'],
+        ['下次自动更新', fmtTime(d.next_run), a.enabled?'已启用':'已停用'],
+        ['上次运行', fmtTime(d.last_run), lr.mode==='schedule'?'定时触发':'手动触发'],
+        ['待审批次', d.pending_batches||0, '个']
+      ];
+      $('#cwCards').innerHTML=cards.map(function(c){
+        return '<div class="card"><div class="k">'+c[0]+'</div><div class="v">'+esc(c[1])+'</div><div class="d">'+esc(c[2]||'')+'</div></div>';
+      }).join('');
+      var pad=function(n){n=String(n);return n.length<2?('0'+n):n};
+      var rows=[
+        ['自动更新', a.enabled?'<span class="badge ok">已启用</span>':'<span class="badge info">已停用</span>'],
+        ['计划', '每月 '+a.day+' 号 '+pad(a.hour)+':'+pad(a.minute)],
+        ['上次结果', okBadge+(lr.error?' <span class="badge err">'+esc(lr.error)+'</span>':'')],
+        ['当前时间', fmtTime(d.now)]
+      ];
+      $('#cwStatus').innerHTML=rows.map(function(x){
+        return '<div class="row"><span class="k">'+x[0]+'</span><span class="v">'+x[1]+'</span></div>';
+      }).join('');
+      $('#cwEnabled').checked=!!a.enabled;
+      $('#cwDay').value=a.day; $('#cwHour').value=a.hour; $('#cwMin').value=a.minute;
+      var log=d.log||[];
+      $('#cwLog').innerHTML=log.length?('<table><thead><tr><th>时间</th><th>方式</th><th>结果</th><th>版本</th><th>耗时</th><th>说明</th></tr></thead><tbody>'+
+        log.map(function(x){
+          var det=x.error||(x.years?('年份 '+(x.years[0]||'')+'–'+(x.years[1]||'')):'—');
+          return '<tr><td>'+esc(fmtTime(x.at))+'</td><td>'+esc(x.trigger||x.mode||'')+'</td><td>'+
+            (x.ok?'<span class="badge ok">成功</span>':'<span class="badge err">失败</span>')+'</td><td>'+esc(x.version||'—')+
+            '</td><td>'+esc(x.seconds!=null?x.seconds+'s':'—')+'</td><td>'+esc(det)+'</td></tr>';
+        }).join('')+'</tbody></table>')
+        :'<div class="empty"><span>⟳</span>还没有运行记录</div>';
+    });
+  }
+  $('#cwSave').onclick=function(){
+    var b=this;b.disabled=true;
+    api('/api/admin/crawler/config',{method:'POST',body:{
+      day:+$('#cwDay').value, hour:+$('#cwHour').value, minute:+$('#cwMin').value,
+      enabled:$('#cwEnabled').checked
+    }}).then(function(r){
+      b.disabled=false;
+      toast(r.j.ok?('已保存，下次自动更新：'+fmtTime(r.j.next_run)):(r.j.error||'保存失败'),!r.j.ok);
+      if(r.j.ok)loadCrawler();
+    });
+  };
+  $('#cwRunAuto').onclick=function(){
+    if(!confirm('立即执行一次自动更新？抓取后会直接合并进 data.js 并重建页面（旧数据自动备份）。')) return;
+    var b=this;b.disabled=true;b.textContent='执行中…';
+    api('/api/admin/crawler/run',{method:'POST',body:{mode:'auto'}}).then(function(r){
+      b.disabled=false;b.textContent='立即执行一次';
+      toast(r.j.ok?'已开始，约 30~90 秒完成，稍后刷新本页看记录':(r.j.error||'启动失败'),!r.j.ok);
+      if(r.j.ok)setTimeout(loadCrawler,12000);
+    });
+  };
+  $('#cwRunReview').onclick=function(){
+    var b=this;b.disabled=true;b.textContent='抓取中…';
+    api('/api/admin/crawler/run',{method:'POST',body:{mode:'review'}}).then(function(r){
+      b.disabled=false;b.textContent='抓取到待审区';
+      toast(r.j.ok?'已抓到待审区，请到「数据审核」检查':(r.j.error||'抓取失败'),!r.j.ok);
+      if(r.j.ok)loadCrawler();
+    });
+  };
+  $('#cwGoReview').onclick=function(){ loadPage('review'); };
 
   checkLogin();
 })();
