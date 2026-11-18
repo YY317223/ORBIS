@@ -234,6 +234,40 @@ def compare(bid, name):
     return {"file": name, "diffs": _field_diffs(new, old)}
 
 
+def countries(bid, name="wb.json"):
+    """逐国明细：人口 / GDP / 人均 GDP / 出口前三，含与线上的旧值对比。
+
+    与 compare() 不同，这里返回所有国家（500+ 行也无所谓），没有变化也照样给，
+    由前端决定怎么展示。出口数据来自 data/trade.json，缺失时该列显示未接入。
+    """
+    bdir = _batch_dir(bid)
+    if not bdir or name not in PUBLISH_TARGETS:
+        return None
+    new_path = os.path.join(bdir, name)
+    if not os.path.isfile(new_path):
+        return None
+    try:
+        with open(new_path, encoding="utf-8") as f:
+            new = json.load(f)
+    except (OSError, json.JSONDecodeError):
+        return None
+    old = None
+    try:
+        with open(PUBLISH_TARGETS[name], encoding="utf-8") as f:
+            old = json.load(f)
+    except (OSError, json.JSONDecodeError):
+        old = None
+
+    import diffdata
+    tdoc = None
+    try:
+        import trade
+        tdoc = trade.load()
+    except Exception:  # noqa: BLE001
+        tdoc = None
+    return diffdata.country_rows(old, new, tdoc)
+
+
 def _field_diffs(new, old):
     """字段级兜底对比：只看顶层字段有没有变。"""
     diffs = []

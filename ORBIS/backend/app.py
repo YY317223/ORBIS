@@ -536,6 +536,12 @@ class Handler(BaseHTTPRequestHandler):
                     return self._send(400, {"ok": False, "error": "参数不完整"})
                 code, data = admin_api.stage_compare(unquote(parts[0]), unquote(parts[1]))
                 return self._send(code, data)
+            if ep.startswith("staging/countries/"):
+                parts = ep[len("staging/countries/"):].split("/")
+                if len(parts) != 2:
+                    return self._send(400, {"ok": False, "error": "参数不完整"})
+                code, data = admin_api.stage_countries(unquote(parts[0]), unquote(parts[1]))
+                return self._send(code, data)
             # 爬虫状态
             if ep == "crawler/status":
                 code, data = admin_api.crawler_status()

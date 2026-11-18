@@ -502,7 +502,10 @@ pre{white-space:pre-wrap;word-break:break-all;font:11px/1.7 ui-monospace,Consola
           if(!r.ok){ box.innerHTML='<p class="hint">'+esc(r.j.error||'对比失败')+'</p>'; return; }
           var empty=!r.j.kind && !(r.j.diffs||[]).length;
           box.innerHTML=(empty?'<p class="hint">这次没有拿到对比结果，可能是数据未变化或接口异常。</p>':'')
-            +renderCompare(r.j);
+            +renderCompare(r.j)
+            +(b.dataset.diff==='wb.json'?'<div class="dc-ct"><p class="hint">正在加载逐国明细…</p></div>':'');
+          var ct=box.querySelector('.dc-ct');
+          if(ct) loadCountries(ct, bid, b.dataset.diff);
           /* 渲染完把结果滚进视口，并闪一下，避免"点了没反应"的错觉 */
           try{
             var top = box.getBoundingClientRect().top + window.pageYOffset - 84;
@@ -617,6 +620,54 @@ pre{white-space:pre-wrap;word-break:break-all;font:11px/1.7 ui-monospace,Consola
       }
     }
     return h;
+  }
+
+  /* ---- 逐国明细表：人口 / GDP / 人均 GDP / 出口前三 ---- */
+  function dcCell(c){
+    if(!c||c.v===null||c.v===undefined) return '<span class="dc-muted">—</span>';
+    var s='<b>'+esc(c.text)+'</b>'+(c.y?' <span class="dc-y">'+esc(c.y)+'</span>':'');
+    if(c.changed) s+='<div class="dc-delta" style="color:'+dcColor(c.pct)+'">'+esc(c.old_text)+' → '+dcPct(c.pct)+'</div>';
+    return s;
+  }
+  function dcExports(e){
+    if(!e) return '<span class="dc-muted">未接入</span>';
+    return (e.top3||[]).map(function(t){
+      return '<div class="dc-hs"><span class="dc-hs-n">HS'+esc(t.hs)+'</span>'+esc(t.zh)+
+             '<span class="dc-hs-v">'+(t.usd/1e8).toFixed(0)+' 亿'+(t.share!=null?' · '+Math.round(t.share*100)+'%':'')+'</span></div>';
+    }).join('')+'<div class="dc-y">'+esc(e.year||'')+'</div>';
+  }
+  function loadCountries(host, bid, name){
+    api('/api/admin/staging/countries/'+encodeURIComponent(bid)+'/'+encodeURIComponent(name)).then(function(r){
+      if(!r.ok){ host.innerHTML='<p class="hint">逐国明细加载失败：'+esc(r.j.error||'')+'</p>'; return; }
+      var d=r.j, rows=d.rows||[];
+      var h='<div class="dc-cthead"><h4>逐国明细 <span class="dc-y">共 '+d.total+' 国，'+d.changed+' 国有变化；出口数据 '+d.with_exports+' 国</span></h4>'+
+        '<div class="dc-ctools"><span class="dc-shown dc-y">显示 '+d.total+' 行</span>'+
+        '<input class="dc-search" placeholder="搜索国家 / ISO3">'+
+        '<label class="dc-only"><input type="checkbox" class="dc-onlycb"> 只看有变化</label></div></div>';
+      h+='<div class="dc-tablewrap"><table class="dc-table"><thead><tr>'+
+         '<th>国家</th><th>人口</th><th>GDP</th><th>人均 GDP</th><th>出口前三（营收）</th></tr></thead><tbody>';
+      rows.forEach(function(x){
+        h+='<tr data-k="'+esc((x.name+' '+x.iso).toLowerCase())+'" data-chg="'+(x.changed?1:0)+'" class="'+(x.changed?'dc-chgrow':'')+'">'+
+           '<td><b>'+esc(x.name)+'</b> <span class="dc-y">'+esc(x.iso)+'</span></td>'+
+           '<td>'+dcCell(x.pop)+'</td><td>'+dcCell(x.gdp)+'</td><td>'+dcCell(x.pc)+'</td>'+
+           '<td class="dc-ex">'+dcExports(x.exports)+'</td></tr>';
+      });
+      h+='</tbody></table></div>';
+      host.innerHTML=h;
+      var q=host.querySelector('.dc-search'), cb=host.querySelector('.dc-onlycb');
+      function apply(){
+        var s=(q.value||'').trim().toLowerCase(), only=cb.checked;
+        var shown=0;
+        host.querySelectorAll('tbody tr').forEach(function(tr){
+          var ok=(!s||tr.dataset.k.indexOf(s)>=0)&&(!only||tr.dataset.chg==='1');
+          tr.style.display=ok?'':'none';
+          if(ok) shown++;
+        });
+        var tip=host.querySelector('.dc-shown');
+        if(tip) tip.textContent='显示 '+shown+' 行';
+      }
+      q.oninput=apply; cb.onchange=apply;
+    });
   }
 
   $$('[data-stage]').forEach(function(b){b.onclick=function(){
@@ -799,6 +850,27 @@ pre{white-space:pre-wrap;word-break:break-all;font:11px/1.7 ui-monospace,Consola
 .dc-line .b{flex:1}
 .dc-line .p{width:64px;text-align:right;font-variant-numeric:tabular-nums}
 @media(max-width:820px){.dc-cols{grid-template-columns:1fr}}
+/* 逐国明细表 */
+.dc-ct{margin-top:22px;border-top:1px solid var(--line);padding-top:16px}
+.dc-cthead{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:10px}
+.dc-cthead h4{margin:0!important}
+.dc-ctools{display:flex;align-items:center;gap:12px;margin-left:auto}
+.dc-search{background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:6px 10px;color:var(--ink);font-size:11.5px;width:170px}
+.dc-search:focus{outline:none;border-color:var(--acc2)}
+.dc-only{font-size:11px;color:var(--ink2);display:flex;align-items:center;gap:5px;cursor:pointer}
+.dc-tablewrap{max-height:520px;overflow:auto;border:1px solid var(--line);border-radius:10px}
+.dc-table{margin:0}
+.dc-table thead th{position:sticky;top:0;z-index:2;background:#0b1624}
+.dc-table tbody tr:hover{background:rgba(127,200,239,.045)}
+.dc-table td{vertical-align:top;padding:8px 10px;border-bottom:1px solid rgba(120,160,210,.08)}
+.dc-table td b{font-variant-numeric:tabular-nums}
+.dc-chgrow{background:rgba(232,174,62,.05)}
+.dc-y{font-size:9.5px;color:var(--ink3);font-weight:400}
+.dc-muted{color:var(--ink3);font-size:11px}
+.dc-delta{font-size:10px;margin-top:2px;font-variant-numeric:tabular-nums}
+.dc-hs{font-size:10.5px;line-height:1.55;color:var(--ink2);white-space:nowrap}
+.dc-hs-n{display:inline-block;min-width:34px;color:var(--ink3);font:9.5px ui-monospace,Consolas,monospace}
+.dc-hs-v{color:var(--acc2);margin-left:5px;font-variant-numeric:tabular-nums}
 [data-dc-box],.dc-flash{outline:1px solid rgba(240,168,104,.55);outline-offset:6px;border-radius:8px;animation:dcpulse 1.4s ease-out}
 @keyframes dcpulse{0%{background:rgba(240,168,104,.10)}100%{background:transparent}}
 </style>

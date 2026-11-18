@@ -262,3 +262,66 @@ def compare(name, old, new):
     if name == "fx.json":
         return build_fx_diff(old, new)
     return None
+
+
+# ---------------------------------------------------------------- 逐国明细
+CORE_LABEL = {"pop": "人口", "gdp": "GDP", "pc": "人均 GDP"}
+
+
+def _cell(old_series, new_series, oy, ny, key):
+    """取某国某指标：新值 + 旧值，供表格显示「未变 / 旧→新」。"""
+    def last(series, years):
+        if not series:
+            return None, None
+        for i in range(len(years) - 1, -1, -1):
+            if i < len(series) and series[i] is not None:
+                return series[i], years[i]
+        return None, None
+
+    nv, ny_ = last(new_series, ny)
+    ov, oy_ = last(old_series, oy)
+    changed = (nv is not None and ov is not None and nv != ov)
+    return {
+        "v": nv, "y": ny_, "text": _fmt(nv, key),
+        "old": ov, "old_y": oy_, "old_text": _fmt(ov, key),
+        "changed": changed,
+        "pct": _pct(ov, nv) if changed else None,
+    }
+
+
+def country_rows(old, new, trade_doc=None, sort="gdp"):
+    """逐国一行：人口 / GDP / 人均 GDP / 出口前三。
+
+    与线上比没有变化的国家同样返回（changed=False），由前端决定是否过滤。
+    """
+    oy = (old or {}).get("years") or []
+    ny = new.get("years") or []
+    oc = (old or {}).get("countries") or {}
+    nc = new.get("countries") or {}
+    tcs = (trade_doc or {}).get("countries") or {}
+
+    rows = []
+    nmap = names()          # data.js 里的国家表；用它把世行的地区聚合值（WLD/EAS…）滤掉
+    for iso, c in nc.items():
+        if iso not in nmap:
+            continue
+        o = oc.get(iso) or {}
+        row = {"iso": iso, "name": _nm(iso), "changed": False,
+               "pop": _cell(o.get("pop"), c.get("pop"), oy, ny, "pop"),
+               "gdp": _cell(o.get("gdp"), c.get("gdp"), oy, ny, "gdp"),
+               "pc": _cell(o.get("pc"), c.get("pc"), oy, ny, "pc")}
+        row["changed"] = any(row[k]["changed"] for k in ("pop", "gdp", "pc"))
+        t = tcs.get(iso)
+        row["exports"] = ({"year": t.get("year"), "top3": t.get("top3") or []}
+                          if t and t.get("top3") else None)
+        rows.append(row)
+
+    key = {"gdp": "gdp", "pop": "pop", "pc": "pc"}.get(sort, "gdp")
+    rows.sort(key=lambda r: (r[key]["v"] is None, -(r[key]["v"] or 0)))
+    return {
+        "rows": rows,
+        "total": len(rows),
+        "changed": sum(1 for r in rows if r["changed"]),
+        "with_exports": sum(1 for r in rows if r["exports"]),
+        "years": {"old": [oy[0], oy[-1]] if oy else [], "new": [ny[0], ny[-1]] if ny else []},
+    }

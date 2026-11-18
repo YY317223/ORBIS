@@ -328,6 +328,19 @@ def stage_compare(bid, name):
     return 200, {"ok": True, **diffs}
 
 
+def stage_countries(bid, name="wb.json"):
+    """逐国明细（人口 / GDP / 人均 / 出口前三），无变化的国家也返回。"""
+    data = _stage.countries(bid, name)
+    if data is None:
+        return 404, {"ok": False, "error": "批次或文件不存在"}
+    try:
+        import trade
+        data["trade"] = trade.coverage()
+    except Exception:  # noqa: BLE001
+        data["trade"] = {"ready": False}
+    return 200, {"ok": True, **data}
+
+
 def stage_fetch(kind, do_notify=None):
     """抓取新数据到暂存区（不覆盖正式文件）。kind: wb / fx / all。"""
     kind = (kind or "wb").lower()
