@@ -1,18 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""出口数据（各国出口额前三的 HS 商品章）。
+"""出口 / 进口前三的贸易数据（UN Comtrade，HS 2 位章）。
 
-数据来自 UN Comtrade，由外部取数工具生成后落到 data/trade.json；
-没有这个文件时，逐国对比表里的「出口前三」显示为未接入，不影响其他指标。
-
-文件格式：
+文件：data/trade.json
 {
-  "generated_at": "...", "source": "UN Comtrade",
+  "generated_at": "...", "source": "UN Comtrade（…）",
   "countries": {
-    "CHN": {"year": 2025, "total_usd": 3.9e12,
-            "top3": [{"hs":"85","zh":"电机、电气设备","usd":9199.9e8,"share":0.26}, ...]}
+    "CHN": {"exports": {"year":2025, "total_usd":..., "top3":[...]},
+            "imports": {"year":2025, "total_usd":..., "top3":[...]}}
   }
 }
+
+没有该文件、或某国缺某项时，界面显示「暂无数据」，不影响人口/GDP 等指标。
 """
 import json
 import os
@@ -24,7 +23,7 @@ _cache = {"mtime": None, "doc": None}
 
 
 def load():
-    """带 mtime 缓存的读取：文件没变就不重复解析。"""
+    """带 mtime 缓存：文件没更新就不重复解析。"""
     try:
         st = os.stat(TRADE)
     except OSError:
@@ -40,10 +39,31 @@ def load():
     return doc
 
 
+def _norm(rec):
+    """兼容老格式（国家级 top3 直接挂载）：统一成 {exports, imports}。"""
+    if not isinstance(rec, dict):
+        return None
+    if "exports" in rec or "imports" in rec:
+        return rec
+    if rec.get("top3"):
+        return {"exports": {"year": rec.get("year"), "total_usd": rec.get("total_usd"),
+                            "top3": rec["top3"]}, "imports": None}
+    return None
+
+
+def for_country(iso):
+    doc = load() or {}
+    return _norm((doc.get("countries") or {}).get(iso))
+
+
 def coverage():
     doc = load()
     if not doc:
-        return {"ready": False, "countries": 0, "generated_at": None}
+        return {"ready": False, "exports": 0, "imports": 0,
+                "generated_at": None, "source": None}
     cs = doc.get("countries") or {}
-    return {"ready": True, "countries": sum(1 for v in cs.values() if v.get("top3")),
-            "generated_at": doc.get("generated_at")}
+    ex = sum(1 for v in cs.values() if (_norm(v) or {}).get("exports"))
+    im = sum(1 for v in cs.values() if (_norm(v) or {}).get("imports"))
+    return {"ready": True, "exports": ex, "imports": im,
+            "countries": len(cs), "generated_at": doc.get("generated_at"),
+            "source": doc.get("source")}

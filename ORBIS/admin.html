@@ -629,28 +629,36 @@ pre{white-space:pre-wrap;word-break:break-all;font:11px/1.7 ui-monospace,Consola
     if(c.changed) s+='<div class="dc-delta" style="color:'+dcColor(c.pct)+'">'+esc(c.old_text)+' → '+dcPct(c.pct)+'</div>';
     return s;
   }
-  function dcExports(e){
-    if(!e) return '<span class="dc-muted">未接入</span>';
-    return (e.top3||[]).map(function(t){
-      return '<div class="dc-hs"><span class="dc-hs-n">HS'+esc(t.hs)+'</span>'+esc(t.zh)+
-             '<span class="dc-hs-v">'+(t.usd/1e8).toFixed(0)+' 亿'+(t.share!=null?' · '+Math.round(t.share*100)+'%':'')+'</span></div>';
-    }).join('')+'<div class="dc-y">'+esc(e.year||'')+'</div>';
+  function dcTrade(t, kind){
+    if(!t||!(t.top3||[]).length)
+      return '<span class="dc-muted" title="该国 '+(kind==='imports'?'进口':'出口')+'数据尚未抓取，补齐后自动显示">暂无数据</span>';
+    return t.top3.map(function(x){
+      return '<div class="dc-hs"><span class="dc-hs-n">HS'+esc(x.hs)+'</span>'+esc(x.zh)+
+             '<span class="dc-hs-v">'+(x.usd/1e8).toFixed(0)+' 亿'+(x.share!=null?' · '+Math.round(x.share*100)+'%':'')+'</span></div>';
+    }).join('')+'<div class="dc-y">'+esc(t.year||'')+' 年</div>';
   }
   function loadCountries(host, bid, name){
     api('/api/admin/staging/countries/'+encodeURIComponent(bid)+'/'+encodeURIComponent(name)).then(function(r){
       if(!r.ok){ host.innerHTML='<p class="hint">逐国明细加载失败：'+esc(r.j.error||'')+'</p>'; return; }
-      var d=r.j, rows=d.rows||[];
-      var h='<div class="dc-cthead"><h4>逐国明细 <span class="dc-y">共 '+d.total+' 国，'+d.changed+' 国有变化；出口数据 '+d.with_exports+' 国</span></h4>'+
+      var d=r.j, rows=d.rows||[], tr=d.trade||{}, src=d.source||{};
+      var ny=(d.years&&d.years.new&&d.years.new[d.years.new.length-1])||'';
+      var h='<div class="dc-cthead"><h4>逐国明细 <span class="dc-y">共 '+d.total+' 国，'+d.changed+' 国有变化</span></h4>'+
         '<div class="dc-ctools"><span class="dc-shown dc-y">显示 '+d.total+' 行</span>'+
         '<input class="dc-search" placeholder="搜索国家 / ISO3">'+
         '<label class="dc-only"><input type="checkbox" class="dc-onlycb"> 只看有变化</label></div></div>';
+      h+='<div class="dc-ctmeta">'+
+         '<span><b>人口 / GDP / 人均 GDP</b>：'+esc(ny)+' 年 · 世行 WDI（来源更新 '+esc(src.updated||'—')+'，抓取 '+esc((src.fetched_at||'').slice(0,10)||'—')+'）</span>'+
+         '<span><b>出口 / 进口前三</b>：各国最新年份 · UN Comtrade（'+
+           '出口 '+((tr.exports)||0)+' 国，进口 '+((tr.imports)||0)+' 国，'+esc((tr.generated_at||'—').slice(0,10))+' 汇总）</span>'+
+         '</div>';
       h+='<div class="dc-tablewrap"><table class="dc-table"><thead><tr>'+
-         '<th>国家</th><th>人口</th><th>GDP</th><th>人均 GDP</th><th>出口前三（营收）</th></tr></thead><tbody>';
+         '<th>国家</th><th>人口</th><th>GDP</th><th>人均 GDP</th><th>出口前三（营收）</th><th>进口前三（支出）</th></tr></thead><tbody>';
       rows.forEach(function(x){
         h+='<tr data-k="'+esc((x.name+' '+x.iso).toLowerCase())+'" data-chg="'+(x.changed?1:0)+'" class="'+(x.changed?'dc-chgrow':'')+'">'+
            '<td><b>'+esc(x.name)+'</b> <span class="dc-y">'+esc(x.iso)+'</span></td>'+
            '<td>'+dcCell(x.pop)+'</td><td>'+dcCell(x.gdp)+'</td><td>'+dcCell(x.pc)+'</td>'+
-           '<td class="dc-ex">'+dcExports(x.exports)+'</td></tr>';
+           '<td class="dc-ex">'+dcTrade(x.exports,'exports')+'</td>'+
+           '<td class="dc-ex">'+dcTrade(x.imports,'imports')+'</td></tr>';
       });
       h+='</tbody></table></div>';
       host.innerHTML=h;
@@ -854,6 +862,8 @@ pre{white-space:pre-wrap;word-break:break-all;font:11px/1.7 ui-monospace,Consola
 .dc-ct{margin-top:22px;border-top:1px solid var(--line);padding-top:16px}
 .dc-cthead{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:10px}
 .dc-cthead h4{margin:0!important}
+.dc-ctmeta{display:flex;flex-wrap:wrap;gap:6px 22px;font-size:10.5px;color:var(--ink3);margin:0 0 10px}
+.dc-ctmeta b{color:var(--ink2);font-weight:500}
 .dc-ctools{display:flex;align-items:center;gap:12px;margin-left:auto}
 .dc-search{background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:6px 10px;color:var(--ink);font-size:11.5px;width:170px}
 .dc-search:focus{outline:none;border-color:var(--acc2)}

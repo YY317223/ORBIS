@@ -298,7 +298,6 @@ def country_rows(old, new, trade_doc=None, sort="gdp"):
     ny = new.get("years") or []
     oc = (old or {}).get("countries") or {}
     nc = new.get("countries") or {}
-    tcs = (trade_doc or {}).get("countries") or {}
 
     rows = []
     nmap = names()          # data.js 里的国家表；用它把世行的地区聚合值（WLD/EAS…）滤掉
@@ -311,9 +310,14 @@ def country_rows(old, new, trade_doc=None, sort="gdp"):
                "gdp": _cell(o.get("gdp"), c.get("gdp"), oy, ny, "gdp"),
                "pc": _cell(o.get("pc"), c.get("pc"), oy, ny, "pc")}
         row["changed"] = any(row[k]["changed"] for k in ("pop", "gdp", "pc"))
-        t = tcs.get(iso)
-        row["exports"] = ({"year": t.get("year"), "top3": t.get("top3") or []}
-                          if t and t.get("top3") else None)
+        t = None
+        try:
+            import trade as _trade
+            t = _trade.for_country(iso)
+        except Exception:  # noqa: BLE001
+            t = None
+        row["exports"] = (t or {}).get("exports")
+        row["imports"] = (t or {}).get("imports")
         rows.append(row)
 
     key = {"gdp": "gdp", "pop": "pop", "pc": "pc"}.get(sort, "gdp")
@@ -323,5 +327,7 @@ def country_rows(old, new, trade_doc=None, sort="gdp"):
         "total": len(rows),
         "changed": sum(1 for r in rows if r["changed"]),
         "with_exports": sum(1 for r in rows if r["exports"]),
+        "with_imports": sum(1 for r in rows if r["imports"]),
+        "source": {"updated": new.get("source_updated"), "fetched_at": new.get("fetched_at")},
         "years": {"old": [oy[0], oy[-1]] if oy else [], "new": [ny[0], ny[-1]] if ny else []},
     }
