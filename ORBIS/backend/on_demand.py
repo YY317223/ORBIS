@@ -29,10 +29,33 @@ import trade_fetch
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(HERE, "data")
 WB = os.path.join(DATA, "wb.json")
+TRADE = os.path.join(DATA, "trade.json")
 STORE = os.path.join(DATA, "country_requests.json")
 
 MAX_PER_USER = 10          # 每用户每天
 DEDUPE_HOURS = 6           # 同一国家去重窗口
+
+# 用户可勾选的 5 个指标（顺序即前端展示顺序）
+METRICS = [
+    ("pop", "人口"),
+    ("gdp", "GDP"),
+    ("pc", "人均 GDP"),
+    ("exports", "出口前三"),
+    ("imports", "进口前三"),
+]
+METRIC_KEYS = [k for k, _ in METRICS]
+TRADE_KEYS = ("exports", "imports")
+
+
+def normalize_metrics(metrics):
+    """把前端传来的勾选列表收敛成合法子集；空/非法时默认全选。"""
+    if not metrics:
+        return list(METRIC_KEYS)
+    if isinstance(metrics, str):
+        metrics = [x.strip() for x in metrics.split(",")]
+    want = [m for m in METRIC_KEYS if m in set(metrics)]
+    return want or list(METRIC_KEYS)
+
 WB_API = "https://api.worldbank.org/v2/country/{iso}/indicator/{code}?format=json&per_page=200&date=2000:2026"
 IND = ["gdp", "pc", "pop", "le", "a0", "a65", "urb", "agr", "ind", "srv"]
 CODES = {"gdp": "NY.GDP.MKTP.CD", "pc": "NY.GDP.PCAP.CD", "pop": "SP.POP.TOTL",
@@ -182,9 +205,12 @@ def _job(rid, iso, reporter_code):
             raise RuntimeError("世行快照里没有该国的数据")
         doc = _merge_into_wb(iso, series, {"years": snap.get("years")})
 
-        # 贸易（出口/进口），失败不阻塞主流程
+        # 贸易（出口/进口）：只抓用户勾选的，失败不阻塞主流程
+        wanted = set(rec.get("metrics") or METRIC_KEYS)
         trade_note = []
         for flow, key in (("X", "exports"), ("M", "imports")):
+            if key not in wanted:
+                continue
             try:
                 rr, year = trade_fetch.fetch_country(reporter_code, flow)
                 if rr:
@@ -201,7 +227,10 @@ def _job(rid, iso, reporter_code):
 
         ok, info = staging.create(
             source="按需：%s" % _zh(iso),
-            note="用户 %s 请求；贸易：%s" % (rec.get("email") or rec.get("uid"), "、".join(trade_note) or "无"),
+            note="用户 %s 请求 %s；贸易：%s" % (
+                rec.get("email") or rec.get("uid"),
+                "、".join(dict(METRICS).get(k, k) for k in (rec.get("metrics") or METRIC_KEYS)),
+                "、".join(trade_note) or ("未选择" if not wanted & set(TRADE_KEYS) else "无")),
             files={"wb.json": doc})
         if not ok:
             raise RuntimeError(str(info))
@@ -215,40 +244,46 @@ def _job(rid, iso, reporter_code):
     _save(rows)
 
 
-def request(iso, user):
+def request(iso, user, metrics=None):
     """用户发起按需刷新。返回 (ok, payload)。"""
     iso = (iso or "").upper()
     if not re.match(r"^[A-Z]{3}$", iso):
         return False, "国家代码不合法"
+    wanted = normalize_metrics(metrics)
     uid = str(user.get("id"))
     rows = _load()
     with _LOCK:
         dup = _recent_for(rows, iso)
         if dup:
             return True, {"status": dup.get("status"), "batch_id": dup.get("batch_id"),
-                          "reused": True, "message": "该国最近已请求过，等待审核"}
+                          "reused": True, "metrics": dup.get("metrics") or wanted,
+                          "message": "该国最近已请求过，等待审核"}
         if _today_count(rows, uid) >= MAX_PER_USER:
             return False, "今天的按需更新次数已用完（%d 次/天）" % MAX_PER_USER
 
         rid = "r" + _now().strftime("%Y%m%d%H%M%S") + str(int(time.time() * 1000) % 1000)
         rec = {"id": rid, "iso3": iso, "uid": uid, "email": user.get("email"),
-               "created": _iso_now(), "status": "queued"}
+               "metrics": wanted, "created": _iso_now(), "status": "queued"}
         rows.append(rec)
         _save(rows)
 
-    try:
-        rep = trade_fetch.reporters()
-        code = rep.get(iso)
-    except Exception:  # noqa: BLE001
-        code = None
-    if not code:
-        rec["status"] = "failed"
-        rec["error"] = "该国没有 Comtrade 报送，无法按需抓取贸易数据"
-        _save(rows)
-        return False, rec["error"]
+    # 只要勾了贸易指标才需要 Comtrade 报送号；纯世行指标不查，省一次外网请求
+    code = None
+    if set(wanted) & set(TRADE_KEYS):
+        try:
+            rep = trade_fetch.reporters()
+            code = rep.get(iso)
+        except Exception:  # noqa: BLE001
+            code = None
+        if not code:
+            rec["status"] = "failed"
+            rec["error"] = "该国没有 Comtrade 报送，抓不到出口/进口数据；可只勾世行指标重试"
+            _save(rows)
+            return False, rec["error"]
 
     threading.Thread(target=_job, args=(rid, iso, code), daemon=True).start()
-    return True, {"status": "queued", "id": rid, "message": "已开始抓取，审核通过后会通知你"}
+    return True, {"status": "queued", "id": rid, "metrics": wanted,
+                  "message": "已开始抓取，审核通过后会通知你"}
 
 
 def status(iso, user=None):
@@ -275,7 +310,137 @@ def status(iso, user=None):
             elif meta.get("status") == "rejected":
                 rec["status"] = "rejected"
     return {"iso3": iso, "status": rec.get("status"), "batch_id": rec.get("batch_id"),
-            "created": rec.get("created"), "error": rec.get("error")}
+            "created": rec.get("created"), "metrics": rec.get("metrics") or METRIC_KEYS,
+            "error": rec.get("error")}
+
+
+
+# ---------------------------------------------------------------- 详情（5 指标）
+_TRADE_CACHE = {"mtime": None, "doc": {}}
+
+
+def _trade_doc():
+    """trade.json 按 mtime 缓存，避免每次请求都读 40KB 文件。"""
+    try:
+        m = os.path.getmtime(TRADE)
+    except OSError:
+        return {}
+    if _TRADE_CACHE["mtime"] == m:
+        return _TRADE_CACHE["doc"] or {}
+    try:
+        with open(TRADE, encoding="utf-8") as f:
+            doc = json.load(f)
+    except (OSError, json.JSONDecodeError):
+        doc = {}
+    _TRADE_CACHE.update(mtime=m, doc=doc if isinstance(doc, dict) else {})
+    return _TRADE_CACHE["doc"]
+
+
+def _usd(v):
+    """金额格式化：万亿美元 / 亿美元 / 万美元。"""
+    try:
+        v = float(v)
+    except (TypeError, ValueError):
+        return "—"
+    if v >= 1e12:
+        return "%.2f 万亿美元" % (v / 1e12)
+    if v >= 1e8:
+        return "%s 亿美元" % format(round(v / 1e8), ",")
+    if v >= 1e4:
+        return "%s 万美元" % format(round(v / 1e4), ",")
+    return "%s 美元" % format(round(v), ",")
+
+
+def _pop_text(v):
+    try:
+        v = float(v)
+    except (TypeError, ValueError):
+        return "—"
+    if v >= 1e8:
+        return "%.2f 亿人" % (v / 1e8)
+    if v >= 1e4:
+        return "%s 万人" % format(round(v / 1e4), ",")
+    return "%s 人" % format(round(v), ",")
+
+
+def _pc_text(v):
+    try:
+        v = float(v)
+    except (TypeError, ValueError):
+        return "—"
+    return "%s 美元" % format(int(round(v)), ",")
+
+
+def _last(series, years):
+    """取该指标最近一个非空年份的值（年份一起返回，避免把旧值当成新年份）。"""
+    if not isinstance(series, list):
+        return None, None
+    for i in range(len(series) - 1, -1, -1):
+        v = series[i]
+        if v is not None:
+            return v, (years[i] if i < len(years) else None)
+    return None, None
+
+
+def detail(iso, doc=None, name=None):
+    """返回某国 5 个指标的当前（已发布）数值，供前端勾选框展示。
+
+    缺失一律 available=False，前端显示「此数据未公开」，不编造数字。
+    """
+    iso = (iso or "").upper()
+    if not re.match(r"^[A-Z]{3}$", iso):
+        return None
+    if doc is None:
+        try:
+            with open(WB, encoding="utf-8") as f:
+                doc = json.load(f)
+        except (OSError, json.JSONDecodeError):
+            doc = {}
+    doc = doc or {}
+    years = doc.get("years") or []
+    c = (doc.get("countries") or {}).get(iso) or {}
+    trade = (_trade_doc().get("countries") or {}).get(iso) or {}
+
+    out = {}
+    for key, label, src, text_of, reason in (
+        ("pop", "人口", "pop", _pop_text, "世界银行 WDI 未收录该国人口数据"),
+        ("gdp", "GDP", "gdp", _usd, "世界银行 WDI 未收录该国 GDP 数据"),
+        ("pc", "人均 GDP", "pc", _pc_text, "世界银行 WDI 未收录该国人均 GDP 数据"),
+    ):
+        v, y = _last(c.get(src), years)
+        out[key] = {"label": label, "available": v is not None, "value": v, "year": y,
+                    "text": text_of(v) if v is not None else "此数据未公开"}
+        if v is None:
+            out[key]["reason"] = reason
+
+    for key, label, word in (("exports", "出口前三", "出口"), ("imports", "进口前三", "进口")):
+        fl = trade.get(key) or {}
+        rows = fl.get("top3") or []
+        if rows:
+            items = []
+            for r in rows[:3]:
+                share = r.get("share")
+                items.append({
+                    "hs": r.get("hs"),
+                    "zh": r.get("zh") or r.get("en") or ("HS " + str(r.get("hs") or "")),
+                    "usd": r.get("usd"),
+                    "text": _usd(r.get("usd")),
+                    "share_text": ("%.1f%%" % (share * 100)) if isinstance(share, (int, float)) else "",
+                })
+            out[key] = {"label": label, "available": True, "year": fl.get("year"),
+                        "total_usd": fl.get("total_usd"), "total_text": _usd(fl.get("total_usd")),
+                        "rows": items}
+        else:
+            out[key] = {"label": label, "available": False, "text": "此数据未公开",
+                        "reason": "联合国 Comtrade 暂无该国%s数据" % word}
+
+    return {
+        "iso3": iso,
+        "name": name or _zh(iso),
+        "updated": doc.get("fetched_at"),
+        "years": years,
+        "metrics": out,
+    }
 
 
 def list_requests(limit=50):

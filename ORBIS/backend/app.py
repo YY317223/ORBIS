@@ -67,6 +67,7 @@ STATE = {
     "error": None,
     "last_try": None,
     "doc": None,
+    "doc_key": None,
     "fx": None,
     "fx_fetching": False,
     "notified": 0,
@@ -116,14 +117,26 @@ def now():
 
 
 def load_doc():
-    if STATE["doc"] is not None:
+    """读 wb.json（按 mtime 缓存）。
+
+    为什么要看 mtime：发布新数据（审核通过 / 全量抓取）会直接覆盖 wb.json，
+    但进程里的缓存不会自己失效——旧实现在发布后仍然返回旧 doc，
+    导致 /api/country、/api/country/detail 拿到的是改之前的数。
+    """
+    try:
+        st = os.stat(WB)
+    except OSError:
         return STATE["doc"]
-    if os.path.exists(WB):
-        try:
-            with open(WB, encoding="utf-8") as f:
-                STATE["doc"] = json.load(f)
-        except (OSError, json.JSONDecodeError):
-            STATE["doc"] = None
+    key = (st.st_mtime_ns, st.st_size)
+    if STATE["doc"] is not None and STATE.get("doc_key") == key:
+        return STATE["doc"]
+    try:
+        with open(WB, encoding="utf-8") as f:
+            STATE["doc"] = json.load(f)
+        STATE["doc_key"] = key
+    except (OSError, json.JSONDecodeError):
+        STATE["doc"] = None
+        STATE["doc_key"] = None
     return STATE["doc"]
 
 
@@ -355,6 +368,7 @@ def refresh(force=False):
     try:
         new = fetch_wb.run(verbose=True)
         STATE["doc"] = new
+        STATE["doc_key"] = None     # 让下次 load_doc() 重新对 mtime
         STATE["error"] = None
         if new.get("events"):
             notify(new)
@@ -582,6 +596,14 @@ class Handler(BaseHTTPRequestHandler):
             if not c:
                 return self._send(404, {"ok": False, "error": "unknown iso"})
             return self._send(200, {"ok": True, "iso": iso, "years": doc.get("years"), "values": c})
+        if p == "/api/country/detail":
+            iso = (q.get("iso", [""])[0] or "").upper()
+            doc = load_doc() or {}
+            data = on_demand.detail(iso, doc)
+            if data is None:
+                return self._send(404, {"ok": False, "error": "unknown iso"})
+            data["name"] = name_of(doc, iso)
+            return self._send(200, {"ok": True, **data})
         if p == "/api/country/status":
             iso = (q.get("iso", [""])[0] or "").upper()
             usr = auth.user_by_token(auth.token_from_cookie(self.headers.get("Cookie")))
@@ -690,7 +712,7 @@ class Handler(BaseHTTPRequestHandler):
             usr = auth.user_by_token(auth.token_from_cookie(self.headers.get("Cookie")))
             if not usr:
                 return self._send(401, {"ok": False, "error": "登录后才能请求更新该国数据"})
-            ok, payload = on_demand.request(body.get("iso3"), usr)
+            ok, payload = on_demand.request(body.get("iso3"), usr, body.get("metrics"))
             if ok:
                 return self._send(200, {"ok": True, **payload})
             return self._send(400, {"ok": False, "error": payload})
