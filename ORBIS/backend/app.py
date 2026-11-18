@@ -33,6 +33,7 @@ import auth
 import admin_auth
 import admin_api
 import crawler
+import on_demand
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -581,6 +582,10 @@ class Handler(BaseHTTPRequestHandler):
             if not c:
                 return self._send(404, {"ok": False, "error": "unknown iso"})
             return self._send(200, {"ok": True, "iso": iso, "years": doc.get("years"), "values": c})
+        if p == "/api/country/status":
+            iso = (q.get("iso", [""])[0] or "").upper()
+            usr = auth.user_by_token(auth.token_from_cookie(self.headers.get("Cookie")))
+            return self._send(200, {"ok": True, **on_demand.status(iso, usr)})
         if p == "/api/subscriptions":
             con = db()
             try:
@@ -679,6 +684,16 @@ class Handler(BaseHTTPRequestHandler):
                 code, data = admin_api.trade_run(body.get("mode"))
                 return self._send(code, data)
             return self._send(404, {"ok": False, "error": "unknown admin api"})
+
+        # 按需抓取：登录用户点国家触发
+        if u.path == "/api/country/request":
+            usr = auth.user_by_token(auth.token_from_cookie(self.headers.get("Cookie")))
+            if not usr:
+                return self._send(401, {"ok": False, "error": "登录后才能请求更新该国数据"})
+            ok, payload = on_demand.request(body.get("iso3"), usr)
+            if ok:
+                return self._send(200, {"ok": True, **payload})
+            return self._send(400, {"ok": False, "error": payload})
 
         # ---- 真实账号系统 ----
         if u.path == "/api/auth/register":

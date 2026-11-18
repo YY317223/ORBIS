@@ -195,6 +195,12 @@ def rebuild_page(timeout=300):
         data += ";"
 
     out = html[:i] + data + "\n" + html[j:]
+    # 顺带确保「按需更新」按钮还在（重建页面时不丢）
+    try:
+        import ondemand_patch
+        out = ondemand_patch.apply(out)
+    except Exception:  # noqa: BLE001
+        pass
     tmp = ORBIS_HTML + ".tmp"
     with open(tmp, "w", encoding="utf-8") as f:
         f.write(out)
