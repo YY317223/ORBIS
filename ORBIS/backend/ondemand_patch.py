@@ -34,13 +34,17 @@ BLOCK = MARK_START + """
     return null;
   }
   function btn(){
-    var host=document.querySelector('#ctitle'); if(!host) return null;
+    /* 挂在操作栏 #cacts 里：标题区 #ctitle 被 #cmap 画布盖住，鼠标点不到 */
+    var host=document.querySelector('#cacts')||document.querySelector('#ctitle');
+    if(!host) return null;
     var b=document.getElementById('odBtn');
     if(!b){
       b=document.createElement('button');
       b.id='odBtn';
-      b.style.cssText='margin-left:auto;padding:5px 10px;border-radius:7px;border:1px solid rgba(200,160,106,.55);'+
-        'background:rgba(200,160,106,.12);color:#d8b784;font:11px/1.2 inherit;cursor:pointer;white-space:nowrap';
+      b.type='button';
+      b.style.cssText='position:relative;z-index:30;padding:6px 10px;border-radius:7px;'+
+        'border:1px solid rgba(200,160,106,.55);background:rgba(200,160,106,.12);color:#d8b784;'+
+        'font:11px/1.2 inherit;cursor:pointer;white-space:nowrap;margin-left:6px';
       host.appendChild(b);
     }
     return b;
@@ -85,11 +89,24 @@ BLOCK = MARK_START + """
     if(!iso||iso===CUR) return;
     CUR=iso;
     var b=btn(); if(!b) return;
+    /* 每次换国家都重新确认登录态：之前只在第一次查，导致点按钮时 LOGGED 还是 null 被静默忽略 */
     setBtn(b,'请求实时更新',false);
-    if(LOGGED===null){
-      api('/api/auth/me').then(function(r){ LOGGED=!!(r.user); if(!LOGGED) setBtn(b,'登录后可请求更新',true); });
-    } else if(!LOGGED){ setBtn(b,'登录后可请求更新',true); return; }
-    b.onclick=function(){ if(LOGGED) doRequest(iso,b); };
+    api('/api/auth/me').then(function(r){
+      LOGGED=!!(r.user);
+      setBtn(b, LOGGED?'请求实时更新':'登录后可请求更新', !LOGGED);
+    });
+    b.onclick=function(){
+      if(LOGGED===false){ alert('请先登录，再请求更新该国数据'); return; }
+      if(LOGGED===null){
+        api('/api/auth/me').then(function(r){
+          LOGGED=!!(r.user);
+          if(LOGGED){ doRequest(iso,b); }
+          else { setBtn(b,'登录后可请求更新',true); alert('请先登录，再请求更新该国数据'); }
+        });
+        return;
+      }
+      doRequest(iso,b);
+    };
   }
   setInterval(sync, 700);
 })();
