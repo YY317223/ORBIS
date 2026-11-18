@@ -28,111 +28,118 @@ body{color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","P
 
 /* 品牌 */
 /* 登录封面 */
-#authgate{position:fixed;inset:0;z-index:9999;background:#050b12;overflow:hidden;
+#authgate{position:fixed;inset:0;z-index:9999;background:#080b10;overflow:hidden;
   font-family:"PingFang SC","Microsoft YaHei",-apple-system,sans-serif}
-#authgate.gone{opacity:0;pointer-events:none;transition:opacity .5s}
+#authgate.gone{opacity:0;pointer-events:none;transition:opacity .6s}
 .ag-bg{position:absolute;inset:0;background:
-  radial-gradient(ellipse 60% 80% at 68% 48%,rgba(24,66,86,.42) 0%,transparent 62%),
-  radial-gradient(ellipse 40% 60% at 12% 30%,rgba(14,40,60,.3) 0%,transparent 70%),
-  linear-gradient(160deg,#07111b 0%,#050b12 55%,#03070c 100%)}
-.ag-grid{position:absolute;inset:0;background-image:
-  linear-gradient(rgba(90,150,190,.045) 1px,transparent 1px),
-  linear-gradient(90deg,rgba(90,150,190,.045) 1px,transparent 1px);
-  background-size:52px 52px;mask-image:radial-gradient(ellipse at 60% 50%,#000 0%,transparent 80%)}
-.ag-scan{position:absolute;inset:0;pointer-events:none;opacity:.5;
-  background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(0,0,0,.12) 3px 4px)}
-/* 右侧动态地球 */
-.ag-globe-wrap{position:absolute;right:2%;top:50%;transform:translateY(-50%);
-  width:min(58vw,760px);height:min(58vw,760px);pointer-events:none;z-index:1}
-#agGlobe{position:absolute;inset:0;width:100%;height:100%;display:block}
-.ag-hud{position:absolute;font:10px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace;
-  letter-spacing:.08em;color:#5b8498;white-space:nowrap}
-.ag-hud b{display:block;color:#8fb8c8;font-weight:500}
-.ag-hud span{display:block;opacity:.7}
-.hud-tl{left:6%;top:8%;padding-left:11px;border-left:1px solid rgba(127,178,200,.45)}
-.hud-tr{right:2%;top:18%;padding-right:11px;border-right:1px solid rgba(127,178,200,.45);text-align:right}
-.hud-r{right:0;top:32%;height:38%;display:flex;flex-direction:column;justify-content:space-between;
-  padding-right:34px;text-align:right}
-.hud-r span{position:relative;opacity:.55}
-.hud-r span:after{content:"";position:absolute;right:-30px;top:50%;width:22px;height:1px;background:rgba(127,178,200,.35)}
-.hud-b{right:14%;bottom:6%;padding-top:9px;border-top:1px solid rgba(127,178,200,.45)}
-.ag-cross{position:absolute;left:50%;top:50%;width:11px;height:11px;transform:translate(-50%,-50%);opacity:.5}
-.ag-cross:before,.ag-cross:after{content:"";position:absolute;background:rgba(127,200,220,.5)}
-.ag-cross:before{left:50%;top:0;bottom:0;width:1px}.ag-cross:after{top:50%;left:0;right:0;height:1px}
+  radial-gradient(ellipse 42% 52% at 76% 48%,rgba(46,86,120,.28) 0%,rgba(20,40,60,.12) 45%,transparent 72%),
+  radial-gradient(ellipse 55% 70% at 72% 46%,rgba(20,32,42,.5) 0%,transparent 68%),
+  linear-gradient(135deg,#0c1016 0%,#080b10 52%,#05070a 100%)}
+.ag-grid,.ag-scan{display:none}
+/* 右侧写实地球 + 轨道环 */
+.ag-globe-wrap{position:absolute;right:6%;top:50%;transform:translateY(-50%);
+  width:min(39vw,540px);height:min(39vw,540px);pointer-events:none;z-index:1}
+#agGlobe{position:absolute;inset:0;width:100%;height:100%;display:block;border-radius:50%;
+  box-shadow:0 0 26px rgba(120,180,225,.28),0 0 90px rgba(70,130,190,.2),0 18px 60px rgba(0,0,0,.5)}
+.ag-orbit{position:absolute;left:50%;top:50%;width:158%;height:158%;
+  border:1px solid rgba(160,190,215,.24);border-radius:50%;
+  transform:translate(-50%,-50%) rotate(-17deg) scaleY(.32);pointer-events:none}
+.ag-hud,.ag-cross,.ag-timeline{display:none}
 /* 左侧内容 */
-.ag-wrap{position:relative;z-index:2;display:flex;align-items:center;height:100vh;
-  width:min(1180px,94vw);margin:0 auto;pointer-events:none}
-.ag-brand{width:420px;max-width:42vw;color:#d8ecf7;pointer-events:auto}
-.ag-mark{font-size:14px;font-weight:700;letter-spacing:.32em;color:#e8f4fa;margin-bottom:34px}
-.ag-mark span{font-size:9px;font-weight:400;letter-spacing:.16em;color:#5b8498;margin-left:10px}
-.ag-kicker{font-size:11px;color:#e8935a;letter-spacing:.12em;margin:0 0 8px}
-.ag-brand h1{margin:0;font-size:34px;letter-spacing:.02em;font-weight:600;color:#eaf5fb}
-.ag-brand h1 em{font-style:normal;color:#6fc4e8}
-.ag-sub{margin:10px 0 24px;color:#7fa2b6;font-size:12px;letter-spacing:.03em}
-.ag-card{width:390px;max-width:100%;padding:20px 22px 16px;
-  background:rgba(8,18,28,.82);border:1px solid rgba(110,160,190,.22);
-  box-shadow:0 18px 60px rgba(0,0,0,.45);backdrop-filter:blur(10px);position:relative}
-.ag-card:before,.ag-card:after{content:"";position:absolute;width:13px;height:13px;pointer-events:none}
-.ag-card:before{left:-1px;top:-1px;border-left:2px solid #e8935a;border-top:2px solid #e8935a}
-.ag-card:after{right:-1px;bottom:-1px;border-right:2px solid rgba(232,147,90,.6);border-bottom:2px solid rgba(232,147,90,.6)}
-.ag-tabs{display:flex;gap:20px;margin-bottom:16px;border-bottom:1px solid rgba(110,160,190,.2)}
-.ag-tabs button{background:none;border:0;border-bottom:2px solid transparent;color:#6f93a8;
-  padding:6px 0 9px;font:inherit;font-size:12px;cursor:pointer;transition:.15s;margin-bottom:-1px}
-.ag-tabs button.on{color:#e8f4fa;border-bottom-color:#e8935a}
-.ag-card label{display:block;font-size:10.5px;color:#7fa2b6;margin-bottom:12px;letter-spacing:.04em}
-.ag-card label i{font-style:normal;color:#e8935a;font:10px ui-monospace,Consolas,monospace;margin-right:7px;opacity:.8}
-.ag-card input[type=email],.ag-card input[type=password]{display:block;width:100%;margin-top:6px;padding:10px 12px;
-  background:rgba(255,255,255,.035);border:1px solid rgba(120,170,200,.22);
-  color:#e8f4fb;font:inherit;font-size:12.5px;outline:none;transition:.15s;border-radius:2px}
-.ag-card input:focus{border-color:rgba(111,196,232,.55);background:rgba(111,196,232,.05)}
-.ag-card input::placeholder{color:#547589}
-.ag-rem{display:flex!important;align-items:center;gap:7px;font-size:10.5px!important;
-  color:#7fa2b6;cursor:pointer;margin:2px 0 0}
-.ag-rem input{accent-color:#6fc4e8;width:12px;height:12px}
-.ag-fog{float:right;margin-top:-16px;font-size:10px;color:#6f93a8;cursor:pointer}
-.ag-fog:hover{color:#8fd6f3}
-.ag-go,.ag-guest{width:100%;padding:11px;border-radius:2px;font:inherit;font-size:12.5px;cursor:pointer;transition:.15s}
-.ag-go{margin-top:18px;background:rgba(111,196,232,.14);color:#cfeaf5;
-  border:1px solid rgba(111,196,232,.4);letter-spacing:.1em}
-.ag-go:hover{background:rgba(111,196,232,.24)}
+.ag-wrap{position:relative;z-index:2;display:flex;align-items:flex-start;height:100vh;
+  width:min(1180px,92vw);margin:0 auto;padding-top:5vh;padding-bottom:24px;
+  overflow-y:auto;scrollbar-width:none;pointer-events:auto}
+.ag-wrap::-webkit-scrollbar{display:none}
+.ag-brand{width:400px;max-width:44vw;color:#e8e6e2;pointer-events:auto}
+.ag-mark{font-family:Georgia,"Times New Roman",serif;font-size:88px;font-weight:400;
+  letter-spacing:.02em;color:#f2f5f7;line-height:.9;margin:-16px 0 22px -5px}
+.ag-mark span{display:none}
+.ag-kicker{font-size:11px;color:#a8a9a4;letter-spacing:.42em;margin:0 0 30px;padding-bottom:13px;
+  border-bottom:1px solid rgba(210,205,195,.28);display:inline-block}
+.ag-brand h1,.ag-sub{display:none}
+.ag-card{width:360px;max-width:100%;padding:0;background:none;border:0;box-shadow:none;backdrop-filter:none}
+.ag-card:before,.ag-card:after{display:none}
+.ag-tabs{display:flex;gap:22px;margin-bottom:21px;border-bottom:1px solid rgba(210,205,195,.2)}
+.ag-tabs button{background:none;border:0;border-bottom:1px solid transparent;color:#9a9b96;
+  padding:0 0 10px;font:inherit;font-size:13px;letter-spacing:.14em;cursor:pointer;margin-bottom:-1px}
+.ag-tabs button.on{color:#f4f2ed;border-bottom-color:#f4f2ed}
+.ag-card label{display:block;font-size:11px;color:#b0b0a9;letter-spacing:.16em;margin-bottom:20px}
+.ag-card label i{display:none}
+.ag-card input[type=email],.ag-card input[type=password]{display:block;width:100%;margin-top:8px;padding:7px 0;
+  background:none;border:0;border-bottom:1px solid rgba(210,205,195,.38);border-radius:0;
+  color:#f4f2ed;font:inherit;font-size:14px;outline:none;transition:.15s}
+.ag-card input:focus{border-bottom-color:#f4f2ed}
+.ag-card input::placeholder{color:#85867f}
+.ag-rem{display:flex!important;align-items:center;gap:7px;font-size:10px!important;
+  color:#b0b0a9;cursor:pointer;margin:2px 0 22px;letter-spacing:.04em}
+.ag-rem input{accent-color:#d8a668;width:13px;height:13px}
+.ag-fog{float:right;margin-top:-40px;font-size:11px;color:#9a9b96;cursor:pointer;letter-spacing:.04em}
+.ag-fog:hover{color:#dfe9ef}
+/* 主按钮：浅色实心 */
+.ag-go,.ag-guest{width:100%;padding:12px;border-radius:1px;font:inherit;font-size:13px;
+  letter-spacing:.08em;cursor:pointer;transition:.16s}
+.ag-go{background:#f2f0eb;color:#12100d;border:1px solid #f2f0eb;font-weight:500}
+.ag-go:hover{background:#fff}
 .ag-go:disabled{opacity:.5;cursor:wait}
-.ag-or{text-align:center;margin:11px 0;color:#5f8197;font-size:10px;position:relative}
-.ag-or:before,.ag-or:after{content:"";position:absolute;top:50%;width:42%;height:1px;background:rgba(120,170,205,.15)}
+.ag-or{text-align:center;margin:13px 0;color:#8a8b85;font-size:11px;position:relative;letter-spacing:.2em}
+.ag-or:before,.ag-or:after{content:"";position:absolute;top:50%;width:43%;height:1px;background:rgba(210,205,195,.2)}
 .ag-or:before{left:0}.ag-or:after{right:0}
-.ag-guest{background:none;color:#8fb0c4;border:1px solid rgba(120,170,205,.22)}
-.ag-guest:hover{background:rgba(120,170,205,.08)}
-.ag-admin{display:flex;align-items:center;gap:8px;margin-top:12px;padding:9px 11px;
-  border:1px solid rgba(232,147,90,.5);background:rgba(232,147,90,.07);
-  color:#f0a868;text-decoration:none;transition:.14s}
-.ag-admin:hover{background:rgba(232,147,90,.16)}
-.ag-admin .lk{font-size:11px;font-weight:500;white-space:nowrap}
-.ag-admin em{font:9px ui-monospace,Consolas,monospace;letter-spacing:.08em;color:#b98a5e;
-  font-style:normal;flex:1}
-.ag-admin b{font-size:14px}
-.ag-note{font-size:9px;color:#5b7d92;margin:8px 0 0;line-height:1.5}
-.ag-err{min-height:16px;font-size:11px;color:#ff9a8a;margin-bottom:6px}
-.ag-foot{text-align:center;font-size:9.5px;color:#5f8197;margin:10px 0 0;line-height:1.6}
-.ag-src{margin-top:18px;font:9px ui-monospace,Consolas,monospace;color:#4d7085;letter-spacing:.09em}
-.ag-warn{margin-top:12px;padding:10px 11px;border-radius:2px;background:rgba(240,168,104,.1);
-  border:1px solid rgba(240,168,104,.3);color:#f0c08a;font-size:10.5px;line-height:1.7}
-.ag-warn a{color:#8fd6f3;text-decoration:underline;word-break:break-all}
-.ag-switch{width:100%;margin-top:10px;padding:8px;border-radius:2px;background:none;
-  border:1px dashed rgba(127,200,239,.3);color:#8fc4dc;font:inherit;font-size:10.5px;cursor:pointer}
-.ag-switch:hover{border-color:#7fc8ef;color:#bfe8f8}
-.ag-timeline{position:absolute;left:5%;right:5%;bottom:22px;z-index:2;display:flex;
-  justify-content:space-between;font:9px ui-monospace,Consolas,monospace;color:#46687c;letter-spacing:.1em}
-.ag-timeline span{position:relative}
-.ag-timeline span:before{content:"";position:absolute;top:-9px;left:50%;width:1px;height:6px;background:rgba(90,140,170,.4)}
-@media (max-width:900px){
-  .ag-globe-wrap{opacity:.35;right:-20%;width:90vw;height:90vw}
-  .ag-wrap{width:92vw}.ag-brand{max-width:92vw;width:420px}
+.ag-guest{background:none;color:#d6d4cd;border:1px solid rgba(210,205,195,.36)}
+.ag-guest:hover{background:rgba(200,220,235,.06);border-color:rgba(200,220,235,.5)}
+/* 管理员入口 */
+.ag-admin{display:flex;align-items:center;justify-content:space-between;margin-top:24px;
+  color:#b6b6af;text-decoration:none;font-size:11px;letter-spacing:.08em;transition:.14s}
+.ag-admin:hover{color:#e6edf2}
+.ag-admin .lk{white-space:nowrap}
+.ag-admin em{display:none}
+.ag-admin b{font-size:13px;font-weight:400}
+.ag-note{font-size:10px;color:#83847d;margin:8px 0 0;line-height:1.7}
+.ag-err{min-height:14px;font-size:10px;color:#ff9a8a;margin-bottom:8px}
+.ag-foot{font-size:10px;color:#83847d;margin:12px 0 0;line-height:1.7}
+.ag-src{display:none}
+.ag-warn{margin-top:16px;padding:10px 12px;border-left:2px solid rgba(160,180,195,.4);
+  color:#b0b0a9;font-size:11px;line-height:1.8;background:rgba(255,255,255,.02)}
+.ag-warn b{color:#dfe9ef;font-weight:500}
+.ag-warn a{color:#9fb4c4;text-decoration:underline}
+.ag-switch{width:100%;margin-top:12px;padding:10px;border:1px solid rgba(160,180,195,.28);
+  background:none;color:#aebcc6;font:inherit;font-size:10px;letter-spacing:.06em;cursor:pointer}
+.ag-switch:hover{border-color:#cdd8df;color:#e6edf2}
+/* 矮窗口：压缩纵向间距，确保底部的登录/退出按钮不被截断 */
+@media (max-height:820px){
+  .ag-wrap{padding-top:2.5vh}
+  .ag-mark{font-size:74px;margin:-12px 0 14px -4px}
+  .ag-kicker{margin-bottom:20px;padding-bottom:10px}
+  .ag-tabs{margin-bottom:15px}
+  .ag-card label{margin-bottom:14px}
+  .ag-rem{margin-bottom:15px}
+  .ag-or{margin:10px 0}
+  .ag-admin{margin-top:18px}
+  .ag-note{margin-top:6px}
+  .ag-foot{margin-top:8px}
+  .ag-warn{margin-top:10px;padding:8px 11px}
+  .ag-switch{margin-top:8px;padding:8px}
 }
-.ag-switch{width:100%;margin-top:14px;padding:9px;border-radius:8px;background:none;
-  border:1px dashed rgba(127,200,239,.3);color:#8fc4dc;font:inherit;font-size:11px;cursor:pointer}
-.ag-switch:hover{border-color:var(--acc2);color:#bfe8f8;background:rgba(127,200,239,.07)}
-@media (max-width:820px){.ag-wrap{grid-template-columns:1fr;gap:28px}.ag-brand{text-align:center}
-  .ag-feats,.ag-src{display:none}.ag-orb{margin:0 auto 16px;width:60px;height:60px}.ag-brand h1{font-size:30px}}
-
+@media (max-height:640px){
+  .ag-mark{font-size:60px;margin:0 0 10px -3px}
+  .ag-kicker{margin-bottom:14px}
+  .ag-tabs{margin-bottom:12px}
+  .ag-card label{margin-bottom:11px}
+  .ag-rem{margin-bottom:12px}
+}
+@media (max-width:900px){
+  /* 窄屏也保留地球作背景，不推出屏幕——否则看不到球 */
+  .ag-globe-wrap{opacity:.42;right:-14%;top:52%;width:78vw;height:78vw}
+  /* 左侧暗化，保证表单文字压在地球上仍清晰 */
+  #authgate:before{content:"";position:absolute;inset:0;z-index:1;
+    background:linear-gradient(90deg,rgba(6,9,14,.92) 0%,rgba(6,9,14,.72) 38%,transparent 68%)}
+  .ag-wrap{width:90vw}.ag-brand{max-width:92vw;width:380px}
+  .ag-mark{font-size:64px}
+  .ag-card{width:340px;max-width:100%}
+}
+@media (max-width:600px){
+  .ag-globe-wrap{opacity:.28;right:-30%;width:100vw;height:100vw}
+  .ag-mark{font-size:54px}
+}
 #brand{top:26px;left:32px;pointer-events:none}
 #brand .row{display:flex;align-items:center;gap:11px}
 #brand .orb{width:26px;height:26px;border-radius:50%;position:relative;
@@ -822,7 +829,7 @@ body.panel-dragging *{cursor:grabbing!important}
   -webkit-user-drag:none;user-select:none;pointer-events:none}
 #clist button span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #clist button em{margin-left:auto;font-style:normal;font-size:9.5px;color:var(--ink3);flex:none}
-/* 完整版：国家列表整行可拖入对比卡 */
+/* 国家列表整行可拖入对比卡 */
 #clist button[draggable="true"]{cursor:grab}
 #clist button[draggable="true"]:active{cursor:grabbing}
 #clist button.dragging{opacity:.45;background:rgba(240,168,104,.12)}
@@ -893,45 +900,32 @@ body.panel-dragging *{cursor:grabbing!important}
   <div class="ag-bg"></div>
   <div class="ag-grid"></div>
   <div class="ag-scan"></div>
-  <!-- 右侧动态线框地球 -->
   <div class="ag-globe-wrap">
     <canvas id="agGlobe"></canvas>
-    <div class="ag-hud hud-tl"><b>ORBIT / 1.00 R</b><span>INCLINATION 23.4°</span></div>
-    <div class="ag-hud hud-tr"><b>GRATICULE 8–18</b><span>ORTHOGRAPHIC</span></div>
-    <div class="ag-hud hud-r">
-      <span>1998</span><span>2004</span><span>2011</span><span>2018</span><span>2025</span>
-    </div>
-    <div class="ag-hud hud-b"><b>NODE CHN 39.9°N</b><span>116.4°E · R 9.25 V△</span></div>
-    <div class="ag-cross"></div>
+    <div class="ag-orbit"></div>
   </div>
-  <!-- 左侧品牌 + 登录卡 -->
   <div class="ag-wrap">
     <div class="ag-brand">
-      <div class="ag-mark">ORBIS <span>/ ATLAS / SCHEMATIC 01</span></div>
-      <p class="ag-kicker">用数据重新认识这颗星球</p>
-      <h1>欢迎回来，<em>探索者</em></h1>
-      <p class="ag-sub">登录以使用完整账户功能 · 游客可免费浏览地球</p>
+      <div class="ag-mark">ORBIS</div>
+      <p class="ag-kicker">带 你 用 数 据 看 世 界</p>
       <div class="ag-card">
         <div class="ag-tabs"><button data-m="login" class="on">登录</button><button data-m="reg">注册</button></div>
         <div id="ag-err" class="ag-err"></div>
-        <label><i>01</i> 邮箱<input id="ag-email" type="email" autocomplete="email" placeholder="you@example.com"></label>
-        <label><i>02</i> 密码<input id="ag-pass" type="password" autocomplete="current-password" placeholder="至少 6 位"></label>
+        <label>邮箱<input id="ag-email" type="email" autocomplete="email" placeholder="you@example.com"></label>
+        <label>密码<input id="ag-pass" type="password" autocomplete="current-password" placeholder="至少 6 位"></label>
         <label class="ag-rem"><input id="ag-remember" type="checkbox" checked> 保持登录 30 天</label>
         <a class="ag-fog" id="ag-fog">忘记密码?</a>
         <button id="ag-go" class="ag-go">登录并进入</button>
         <div class="ag-or"><span>或</span></div>
         <button id="ag-guest" class="ag-guest">以访客身份浏览</button>
-        <a class="ag-admin" href="/admin"><span class="lk">🔒 管理员登录</span><em>ADMIN CONSOLE / ADMIN</em><b>→</b></a>
-        <p class="ag-note">管理员账号与普通用户分开，普通邮箱无法进入管理后台。</p>
-        <p class="ag-foot" id="ag-foot">登录后可使用完整账户功能 · 游客可免费浏览地球</p>
+        <a class="ag-admin" href="/admin"><span class="lk">管理员登录</span><b>→</b></a>
+        <p class="ag-note">管理员账号与普通用户分开，请用专用账号进入管理后台。</p>
+        <p class="ag-foot" id="ag-foot">登录即可使用全部功能 · 游客可免费浏览地球</p>
         <div class="ag-warn" id="ag-warn" style="display:none"></div>
         <button id="ag-switch" class="ag-switch" style="display:none">当前已登录 · 切换账号 / 退出</button>
       </div>
-      <p class="ag-src">WORLD BANK DATA / FRANKFURTER · 111 CENTRAL BANKS</p>
     </div>
   </div>
-  <!-- 底部时间轴刻度 -->
-  <div class="ag-timeline"><span>2000</span><span>2005</span><span>2010</span><span>2015</span><span>2020</span><span>2025</span></div>
 </div>
 <canvas id="globe"></canvas>
 <div id="vignette"></div>
@@ -958,38 +952,26 @@ body.panel-dragging *{cursor:grabbing!important}
 </div>
 
 <div id="acc" class="chrome">
-  <button id="insbtn" class="glass" title="完整版专属 · 洞察工作台"><span class="ins-ico">✦</span> 洞察工作台 <span class="ins-lock">🔒</span></button>
-  <button id="accbtn" class="glass" title="我的账户 / 虚拟币">👤 <span id="accid">···</span> · <span id="accoins">0</span> 币</button>
+  <button id="insbtn" class="glass" title="洞察工作台 · 排名 / 汇率 / 轨迹孪生 / 相关性 / 报告"><span class="ins-ico">✦</span> 洞察工作台</button>
+  <button id="accbtn" class="glass" title="我的账户">👤 <span id="accid">···</span></button>
 </div>
 <div id="accpanel" class="chrome">
   <div class="hd"><b>我的账户</b><button id="accx" title="收起">✕</button></div>
-  <div class="ademo">
-    <span>预览版本差异</span>
-    <div class="aseg">
-      <button data-v="free">免费版</button>
-      <button data-v="full">完整版</button>
-      <button data-v="real" class="on">真实状态</button>
-    </div>
-    <em id="ap-view">当前：真实状态</em>
-  </div>
   <div class="arow"><span>账号</span><b id="ap-id">—</b></div>
-  <div class="arow"><span>虚拟币</span><b id="ap-coins">0</b><em>演示货币 · 不涉真实支付</em></div>
-  <div id="ap-mem" class="amem off">未开通完整版</div>
-  <div class="aplans">
-    <div class="ap"><b>免费版</b><span>3D 地球 · 4 项指标 · 25 年回放 · 洲/国/城市下钻 · 排行榜</span></div>
-    <div class="ap mem"><b>完整版</b><span>洞察工作台 · 多国/城市对比 · 排名轨迹 · CSV 导出 · 实时数据 · 无水印分享 · 数据订阅</span><em>39 虚拟币 / 月</em></div>
-  </div>
-  <button id="ap-buy" class="abuy">开通完整版（39 虚拟币）</button>
+  <div id="ap-view" class="ap-allopen" style="padding:10px 12px;background:rgba(72,208,138,.07);border:1px solid rgba(72,208,138,.25);border-radius:8px"><em style="font-style:normal;font-size:11px;color:var(--ok)">当前：全部功能已开放 · 对比 / 洞察 / 订阅 / 无水印分享均可使用</em></div>
   <div id="ap-msg" class="amsg"></div>
   <div class="auser">
     <input id="ap-userin" type="text" autocomplete="off" placeholder="输入手机号 登录 / 切换">
     <button id="ap-login">登录 / 切换</button>
   </div>
   <button id="ap-logout" class="alogout">退出登录</button>
-  <div class="afoot">演示环境：账号 17823107586 已预置 100 虚拟币，可一键开通完整版。</div>
 </div>
 <style>
-/* 洞察工作台入口：完整版高亮，免费版带锁（一眼可见的差异） */
+/* 单版本：兼容旧样式，相关元素已移除 */
+#accpanel .ademo,#accpanel .aplans,#accpanel .abuy,#accpanel .afoot,
+#accpanel #ap-coins,#accpanel #ap-coins+em,#accpanel #ap-mem{display:none!important}
+#accbtn .coin-suffix{display:none}
+/* 洞察工作台入口 */
 #insbtn{height:42px;padding:0 13px;border-radius:12px;color:var(--ink2);font:inherit;font-size:12px;
   cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap;transition:.18s}
 #insbtn .ins-ico{color:var(--acc);font-size:14px}
@@ -1270,7 +1252,7 @@ body.panel-dragging *{cursor:grabbing!important}
         <li><b>城市点与人口</b>：Natural Earth 1:10m populated places（城市仅有人口，无 GDP / 寿命）</li>
         <li><b>中文国名</b>：i18n-iso-countries · <b>国旗</b>：flagcdn.com（已内嵌，离线可显示）</li>
         <li><b>地球影像</b>：NASA Blue Marble / Solar System Scope</li>
-        <li><b>内置快照</b>：2026-10-08 抓取 · <b>实时同步</b>：完整版由服务端每 12 小时检查世行更新</li>
+        <li><b>内置快照</b>：2026-10-08 抓取 · <b>实时同步</b>：服务端每 12 小时检查世行更新</li>
       </ul>
 
       <h4>读数据时要注意</h4>
@@ -1333,7 +1315,7 @@ body.panel-dragging *{cursor:grabbing!important}
 <div id="insight">
   <div class="ins-card">
     <div class="ins-hd">
-      <div><b>洞察工作台</b><span>INSIGHT STUDIO · 完整版专属</span></div>
+      <div><b>洞察工作台</b><span>INSIGHT STUDIO</span></div>
       <button id="insx" title="关闭">✕</button>
     </div>
     <div class="ins-tabs">
@@ -2022,10 +2004,15 @@ scene.add(stars(900,1.15,0x9fc4ff,0.55));
 var manager=new THREE.LoadingManager();
 var tloader=new THREE.TextureLoader(manager);
 function tex(url,srgb){ var t=tloader.load(url); t.anisotropy=renderer.capabilities.getMaxAnisotropy(); if(srgb&&THREE.sRGBEncoding)t.encoding=THREE.sRGBEncoding; return t; }
-var dayTex=tex('__TEX_DAY__',true);
-var normTex=tex('__TEX_NORMAL__',false);
-var specTex=tex('__TEX_SPEC__',false);
-var cloudTex=tex('__TEX_CLOUDS__',true);
+/* 贴图 data URL 只内联一份，主场景与登录页地球共用 */
+var AG_DAY_URL='__TEX_DAY__';
+var dayTex=tex(AG_DAY_URL,true);
+var AG_NORMAL_URL='__TEX_NORMAL__';
+var AG_SPEC_URL='__TEX_SPEC__';
+var normTex=tex(AG_NORMAL_URL,false);
+var specTex=tex(AG_SPEC_URL,false);
+var AG_CLOUD_URL='__TEX_CLOUDS__';
+var cloudTex=tex(AG_CLOUD_URL,true);
 
 var earthMat=new THREE.MeshPhongMaterial({
   map:dayTex, normalMap:normTex, normalScale:new THREE.Vector2(0.85,0.85),
@@ -2075,7 +2062,7 @@ var edgeMesh=new THREE.Mesh(new THREE.SphereGeometry(1.0096,128,72),
   new THREE.MeshLambertMaterial({map:edgeTex,transparent:true,depthWrite:false,opacity:1}));
 edgeMesh.renderOrder=3; scene.add(edgeMesh);
 
-/* ---- 对比数据连线（完整版）：对比国之间的发光弧线 + 流动光点 + 端点脉冲 ----
+/* ---- 对比数据连线：对比国之间的发光弧线 + 流动光点 + 端点脉冲 ----
    静止时按需渲染，只有弧线光点在跑时才低频标记 dirty，不拖累省电策略。 */
 var LINK={
   group:new THREE.Group(), arcs:[], running:false, lastTick:0,
@@ -3814,7 +3801,7 @@ function cmpKey(){ return DS.cmp.some(function(c){ return c && c.isCity; })?'pop
 
 /* ---- 添加国家选择器：搜索 + 按洲分组，跨洲任意选 ---- */
 function openAddPick(){
-  if(!isMember()){ toast('对比是完整版功能'); return; }
+  if(!isMember()){ toast('对比暂不可用'); return; }
   $('#addpick').classList.add('on');
   $('#apq').value='';
   renderAddList('');
@@ -4371,7 +4358,7 @@ var SCENES={
     var t=(a&&b)?(a/b).toFixed(1):'?';
     return isMember()
       ? ('中国人均 GDP 是印度的 '+t+' 倍 · 对比卡已生成，点「轨迹」看名次变化')
-      : ('中国人均 GDP 是印度的 '+t+' 倍 · 完整版可一键生成对比');
+      : ('中国人均 GDP 是印度的 '+t+' 倍 · 可一键生成对比');
   }}
 };
 function playScene(id){
@@ -4436,10 +4423,10 @@ var GUIDE_CH=[
 '<h4>第一次进入</h4>'+
 '<ol class="gu-steps">'+
 '<li>打开网站后首先看到<b>登录封面</b>。你有三种选择：<b>注册</b>新账号、用已有账号<b>登录</b>、或点<b>以访客身份浏览</b>。</li>'+
-'<li>注册只需邮箱和密码（至少 6 位），注册后<b>自动登录</b>，新账号预置 <b>100 虚拟币</b>。勾选"保持登录 30 天"可免重复登录。</li>'+
+'<li>注册只需邮箱和密码（至少 6 位），注册后<b>自动登录</b>。勾选"保持登录 30 天"可免重复登录。</li>'+
 '<li>进入后先看到主地球视图。底部是<b>数据台</b>（时间轴），右上角是<b>搜索框</b>和<b>洞察工作台</b>入口，左上角是品牌区（数据说明 / 使用指南）。</li>'+
 '</ol>'+
-'<div class="gu-tip"><b>游客 vs 会员：</b>游客可自由浏览地球、时间轴、国家详情和分享图（带水印）；<b>多国对比、洞察工作台、无水印分享、数据订阅</b>是完整版专属，需 39 虚拟币开通。</div>'+
+'<div class="gu-tip"><b>游客 vs 注册用户：</b>游客可自由浏览地球与基础功能；<b>注册后</b>还可使用多国对比、洞察工作台、无水印分享、数据订阅等全部功能。</div>'+
 '<h4>页面整体结构</h4>'+
 '<ul>'+
 '<li><b>主地球视图</b>：默认进入的 3D 地球，可旋转缩放、按指标染色。</li>'+
@@ -4458,8 +4445,8 @@ var GUIDE_CH=[
 '<h4>账户面板</h4>'+
 '<p>右上角点账户按钮（显示邮箱 + 币数）展开面板：</p>'+
 '<ul>'+
-'<li><b>虚拟币</b>：注册送 100 币，演示货币，不涉及真实支付。</li>'+
-'<li><b>开通完整版</b>：花 39 币，解锁对比、洞察、无水印分享、订阅。</li>'+
+
+
 '<li><b>版本预览</b>：<code>v=free / full / real</code> 三个按钮切换视图体验，<b>只改显示，不动真实购买记录</b>。地址栏也会同步 <code>?v=free</code> 参数，方便发给别人看不同版本。</li>'+
 '<li><b>退出登录</b>：清除登录态并回到封面。</li>'+
 '</ul>'+
@@ -4517,8 +4504,8 @@ var GUIDE_CH=[
 '<div class="gu-tip"><b>操作按钮：</b>详情卡片底部有"加入对比 / 链接 / 存为图"，分别用于对比、复制当前视图链接、导出分享图。</div>'},
 
 {n:'多国对比',s:'COMPARE',h:''+
-'<h3>多国对比</h3><div class="gu-sub">COMPARE · 完整版</div>'+
-'<div class="gu-tip warn">此功能为<b>完整版专属</b>。免费版对比卡完全隐藏。</div>'+
+'<h3>多国对比</h3><div class="gu-sub">COMPARE</div>'+
+
 '<h4>加入国家</h4>'+
 '<ol class="gu-steps">'+
 '<li>进入任意国家详情，点底部<b>加入对比</b>。</li>'+
@@ -4540,8 +4527,8 @@ var GUIDE_CH=[
 '</ul>'},
 
 {n:'洞察工作台',s:'INSIGHTS',h:''+
-'<h3>洞察工作台</h3><div class="gu-sub">INSIGHTS · 完整版</div>'+
-'<div class="gu-tip warn">此功能为<b>完整版专属</b>。免费版点击会提示并弹出账户面板。按 <code>ESC</code> 关闭工作台。</div>'+
+'<h3>洞察工作台</h3><div class="gu-sub">INSIGHTS</div>'+
+'<div class="gu-tip">按 <code>ESC</code> 关闭工作台。</div>'+
 '<p>右上角带锁标的入口点开，有 5 个分析页签：</p>'+
 '<h4>① 排名变化榜</h4>'+
 '<p>24 年间人均 GDP 名次涨跌最大的 9 个国家（仅样本充足国家），看谁崛起、谁掉队。</p>'+
@@ -4560,11 +4547,11 @@ var GUIDE_CH=[
 '<ul>'+
 '<li>入口：国家详情"存为图"、对比卡"存图"、报告内"存为分享图"，都会导出一张 <b>1080×1350 PNG</b>。</li>'+
 '<li>有对比组时取对比国家（1–4 个），没有则取当前国家。</li>'+
-'<li><b>免费版</b>导出带"ORBIS 免费版"斜向水印；<b>完整版</b>无水印，仅加"完整版"角标。</li>'+
+'<li>导出为<b>无水印</b>高清分享图，仅加 ORBIS 品牌角标。</li>'+
 '</ul>'+
 '<h4>复制链接</h4>'+
 '<p>国家详情的"链接"、对比卡的"链接"会复制当前视图 URL（含指标、年份、对比国）。发给别人打开即可复现，<b>无需登录</b>。</p>'+
-'<h4>数据订阅提醒 <span style="font-size:10px;color:var(--acc)">（完整版）</span></h4>'+
+'<h4>数据订阅提醒 <span style="font-size:10px;color:var(--acc)"></span></h4>'+
 '<ol class="gu-steps">'+
 '<li>在有对比组的状态下，对比卡底部填邮箱，点订阅。</li>'+
 '<li>订阅的是<b>当前对比组里的国家</b>（城市不参与），同一邮箱再次订阅会合并关注范围。</li>'+
@@ -4835,7 +4822,7 @@ function buildCSV(){
   return {csv:csv, filename:filename, lines:lines, name:IN.n||k};
 }
 function exportCSV(){
-  if(!isMember()){ toast('导出数据是完整版功能'); return; }
+  if(!isMember()){ toast('导出暂不可用'); return; }
   if(!DS.cmp.length){ cmpMsg('先加入国家再导出','err'); return; }
   var b=buildCSV();
   /* 预览只显示前 12 行，避免 26 年数据刷屏 */
@@ -5031,20 +5018,20 @@ function probeStatus(){
     LIVE.ok=true;
     var y=st.years&&st.years[1];
     var t=(st.last_fetch||'').replace('T',' ').slice(0,16);
-    /* 实时数据是完整版专属：免费版只吃内嵌静态快照 */
+    /* 实时数据：在线时同步世行最新数据 */
     if(isMember()){
       setLight('live','实时已更新至 <b>'+y+'</b> 年',
         (st.source_updated?'世行更新 '+st.source_updated+' · ':'')+'抓取于 '+t+' · 每 12 小时自动同步');
       if(y && y>YEARS[YEARS.length-1]) loadLive();
     }else{
       setLight('','内置 <b>'+YEARS[YEARS.length-1]+'</b> 年',
-        '完整版可同步世行实时数据（服务当前已到 '+(y||'—')+' 年）');
+        '可同步世行实时数据（服务当前已到 '+(y||'—')+' 年）');
     }
     return st;
   }).catch(function(){
     LIVE.ok=false;
     setLight('','离线 · 内置 <b>'+YEARS[YEARS.length-1]+'</b> 年',
-      '没连上本地数据服务。完整版在线时会自动同步世行最新数据。');
+      '没连上本地数据服务。在线时会自动同步世行最新数据。');
     return null;
   });
 }
@@ -5389,18 +5376,18 @@ function drawShare(k,list,flags,opts){
   g.fillText(link, 72, by);
   var linkY=by;
 
-  /* 水印：免费版导出带斜向水印 + 角标；完整版导出干净图 */
-  if(typeof isMember==='function' && isMember()){
+  /* 单版本：所有用户导出干净图，仅加品牌角标 */
+  if(true){
     g.fillStyle='rgba(240,168,104,.95)'; g.font='500 18px '+SHARE_FONT;
-    g.textAlign='right'; g.fillText('ORBIS 完整版 · 无水印', W-72, linkY); g.textAlign='left';
+    g.textAlign='right'; g.fillText('ORBIS · 从太空看地球', W-72, linkY); g.textAlign='left';
   }else{
     g.save();
     g.translate(W/2, H/2); g.rotate(-Math.PI/6);
     g.textAlign='center'; g.textBaseline='middle';
     g.fillStyle='rgba(240,168,104,.10)'; g.font='700 96px '+SHARE_FONT;
-    g.fillText('ORBIS 免费版', 0, -40);
+    g.fillText('ORBIS', 0, -40);
     g.fillStyle='rgba(240,168,104,.16)'; g.font='500 34px '+SHARE_FONT;
-    g.fillText('开通完整版 · 去除水印', 0, 70);
+    g.fillText('从太空看地球', 0, 70);
     g.restore();
     g.textAlign='left'; g.textBaseline='alphabetic';
   }
@@ -5424,7 +5411,7 @@ function cmpMsg(t,cls){
   el.className=cls||'';
 }
 function subscribe(){
-  if(!isMember()){ cmpMsg('数据订阅是完整版功能，请先开通','err'); return; }
+  if(!isMember()){ cmpMsg('数据订阅暂不可用','err'); return; }
   var email=($('#cmpmail').value||'').trim();
   var codes=DS.cmp.map(function(c){ return c.iso3; }).filter(Boolean).filter(function(x){ return String(x).indexOf('CITY:')!==0; });
   if(!API_BASE){ cmpMsg('需要从本地服务打开才能订阅（python server/app.py）','err'); return; }
@@ -5444,7 +5431,7 @@ function subscribe(){
 /* ---- 拖放投放：对比卡与列表投放槽共用一套解析 ---- */
 function handleDropData(d){
   if(!d) return;
-  if(!isMember()){ toast('对比是完整版功能，请先开通'); return; }
+  if(!isMember()){ toast('对比暂不可用'); return; }
   if(d.indexOf('c:')===0){
     var iso=d.slice(2).toUpperCase();
     var c=CS.filter(function(x){ return (x.iso3||'').toUpperCase()===iso; })[0];
@@ -5478,12 +5465,12 @@ function renderSlot(){
   });
 }
 
-/* ============ 洞察工作台（完整版专属） ============
-   免费版能看到入口（带锁），点了引导开通；完整版打开三个真实分析页。 */
+/* ============ 洞察工作台 ============
+   打开三个真实分析页：排名 / 汇率 / 轨迹孪生 / 相关性 / 报告。 */
 var INS={open:false,tab:'movers',repCountry:null,twinCountry:null};
 function insOpen(){
   if(!isMember()){
-    toast('洞察工作台是完整版功能，点右上角账户可开通');
+    toast('洞察工作台加载中…');
     /* 顺手把账户面板弹出来，别让用户自己找 */
     var ap=$('#accpanel'); if(ap) ap.style.display='block';
     return;
@@ -5821,13 +5808,12 @@ document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&INS.open) 
 /* 版本切换后刷新入口样式与面板内容 */
 function insRefresh(){
   var b=$('#insbtn'); if(!b) return;
-  b.classList.toggle('mem',isMember());
-  b.querySelector('.ins-lock').style.display=isMember()?'none':'';
-  b.title=isMember()?'洞察工作台 · 排名 / 汇率 / 轨迹孪生 / 相关性 / 报告':'完整版专属 · 洞察工作台（点击了解）';
-  if(INS.open&&!isMember()) insClose();
+  b.classList.add('mem');
+  var lk=b.querySelector('.ins-lock'); if(lk) lk.style.display='none';
+  b.title='洞察工作台 · 排名 / 汇率 / 轨迹孪生 / 相关性 / 报告';
 }
 
-/* ============ 账户 / 虚拟币（演示，localStorage，不接真实支付） ============ */
+/* ============ 账户（真实账号登录，本地兼容） ============ */
 var ACC_KEY='ORBIS_ACC_V1';
 /* 版本预览：real=按真实会员状态；free/full=仅预览 UI 差异，不改动真实购买记录 */
 var DEMO_VIEW='real';
@@ -5851,62 +5837,28 @@ function loadAcc(){
 var ACC=loadAcc();
 function saveAcc(){ try{ localStorage.setItem(ACC_KEY, JSON.stringify(ACC)); }catch(e){} }
 function isMember(){
-  if(DEMO_VIEW==='free') return false;
-  if(DEMO_VIEW==='full') return true;
-  return !!(ACC && ACC.member);
+  /* 单版本：所有用户可使用全部功能 */
+  return true;
 }
 function accRefresh(){
   if(typeof window.__syncClistAdd==='function') window.__syncClistAdd();
   var logged=!!ACC.id;
-  $('#accid').textContent=logged?ACC.id:'未登录'; $('#accoins').textContent=ACC.coins;
-  $('#ap-id').textContent=logged?ACC.id:'未登录'; $('#ap-coins').textContent=ACC.coins;
+  $('#accid').textContent=logged?ACC.id:'未登录';
+  var api=$('#ap-id'); if(api) api.textContent=logged?ACC.id:'未登录';
   /* 真实账号登录后隐藏旧的演示登录行（真实账号用全屏登录页） */
   var demoIn=$('#ap-userin'); if(demoIn) demoIn.parentNode.style.display=AUTH_USER?'none':'';
-  var mem=$('#ap-mem');
-  if(isMember()){ mem.textContent='已开通完整版 ✓'; mem.className='amem on'; }
-  else { mem.textContent=logged?'未开通完整版':'免费版 · 未登录'; mem.className='amem off'; }
-  var buy=$('#ap-buy');
-  buy.disabled=isMember();
-  buy.textContent=isMember()?'已开通完整版':(logged?'开通完整版（39 虚拟币）':'登录后可开通完整版');
   var sv=$('#csave');
-  if(sv){ sv.classList.toggle('mem',isMember()); sv.title=isMember()?'导出无水印高清分享图':'导出分享图（带水印，完整版可去水印）'; }
-  var cb=$('#cmpcsv'); if(cb) cb.style.display=isMember()?'':'none';
+  if(sv){ sv.classList.add('mem'); sv.title='导出无水印高清分享图'; }
+  var cb=$('#cmpcsv'); if(cb) cb.style.display='';
   if(typeof insRefresh==='function') insRefresh();
-  Array.prototype.forEach.call(document.querySelectorAll('#accpanel .aseg button'),function(b){
-    b.classList.toggle('on',b.dataset.v===DEMO_VIEW);
-  });
   var vl=$('#ap-view');
-  if(vl){
-    vl.innerHTML = DEMO_VIEW==='free' ? '当前：<b>免费版视图</b> · 对比等付费功能已隐藏'
-      : DEMO_VIEW==='full' ? '当前：<b>完整版视图</b> · 对比 / 拖拽 / 无水印分享可用'
-      : '当前：真实状态（'+(isMember()?'已开通完整版':'未开通完整版')+'）';
-  }
+  if(vl) vl.innerHTML='<em style="font-style:normal;font-size:11px;color:var(--ok)">当前：<b>全部功能已开放</b> · 对比 / 洞察 / 订阅 / 无水印分享均可使用</em>';
 }
 /* 切换预览版本：只改视图，不动真实购买记录 */
 function setDemoView(v){
-  if(v!=='free'&&v!=='full'&&v!=='real') v='real';
-  DEMO_VIEW=v;
-  try{
-    var u=new URL(location.href);
-    if(v==='real') u.searchParams.delete('v'); else u.searchParams.set('v',v);
-    history.replaceState(null,'',u.toString());
-  }catch(e){}
-  accRefresh();
-  if(CV&&CV.open&&CV.c) fillHudCountry(CV.c);
-  if(typeof renderCmp==='function') renderCmp();
-  if(typeof refreshHud==='function') refreshHud();
-  toast(v==='free'?'已切到免费版视图':(v==='full'?'已切到完整版视图':'已恢复真实状态'));
+  /* 单版本：版本切换已取消，保留空函数兼容旧调用 */
 }
-function accBuy(){
-  if(!ACC.id){ $('#ap-msg').className='amsg err'; $('#ap-msg').textContent='请先输入账号登录'; return; }
-  if(isMember()){ $('#ap-msg').textContent='你已是完整版会员'; $('#ap-msg').className='amsg'; return; }
-  if(ACC.coins<39){ $('#ap-msg').className='amsg err'; $('#ap-msg').textContent='虚拟币不足，需 39，当前 '+ACC.coins; return; }
-  ACC.coins-=39; ACC.member=true; ACC.since=Date.now(); saveAcc(); accRefresh();
-  $('#ap-msg').className='amsg ok'; $('#ap-msg').textContent='已开通完整版！对比等功能已解锁。';
-  if(CV && CV.open && CV.c) fillHudCountry(CV.c);
-  if(typeof renderCmp==='function') renderCmp();
-}
-/* 切换账号（演示：任意手机号，预置 100 币） */
+/* 切换账号（真实账号用全屏登录页，此处为本地演示兼容） */
 function accLogin(id){
   id=String(id||'').trim();
   if(!id){ $('#ap-msg').className='amsg err'; $('#ap-msg').textContent='请输入账号'; return; }
@@ -5915,14 +5867,14 @@ function accLogin(id){
   saveAcc(); accRefresh();
   DS.cmp=[]; if(typeof renderCmp==='function') renderCmp();
   var ui=$('#ap-userin'); if(ui) ui.value='';
-  $('#ap-msg').className='amsg ok'; $('#ap-msg').textContent='已切换为 '+id+'（演示：预置 100 虚拟币）';
+  $('#ap-msg').className='amsg ok'; $('#ap-msg').textContent='已切换为 '+id;
   if(typeof playIntro==='function') playIntro({quick:true});
 }
 function accLogout(){
   ACC={id:'', coins:0, member:false, since:null};
   saveAcc(); accRefresh();
   DS.cmp=[]; if(typeof renderCmp==='function') renderCmp();
-  $('#ap-msg').className='amsg'; $('#ap-msg').textContent='已退出登录（免费版）';
+  $('#ap-msg').className='amsg'; $('#ap-msg').textContent='已退出登录';
 }
 /* ---- 登录封面：进入主界面前先认证（后端真实账号） ---- */
 var AUTH_USER=null;             // 当前后端登录用户，null=游客
@@ -5975,89 +5927,94 @@ function showWelcome(user){
   showWelcome._t2=setTimeout(function(){ wl.classList.remove('on','out'); },3750);
 }
 
-/* ===== 登录页动态线框地球（Canvas 2D 正交投影，持续自转） ===== */
+/* ===== 登录页写实 3D 地球：独立纹理加载，避免与主渲染器共享 texture ===== */
 (function initAgGlobe(){
-  var cv=document.getElementById('agGlobe'); if(!cv) return;
-  var ctx=cv.getContext('2d'), R=0, cx=0, cy=0, dpr=1;
-  var rot=0.6, tilt=-0.28, last=0, running=true;
+  var cv=document.getElementById('agGlobe'); if(!cv||typeof THREE==='undefined') return;
+  var renderer,scene,camera,earth,clouds,atmo,raf=0,running=true,last=0;
+  try{ renderer=new THREE.WebGLRenderer({canvas:cv,alpha:true,antialias:true}); }
+  catch(e){ return; }
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+  renderer.setClearColor(0x000000,0);
+  if(THREE.sRGBEncoding) renderer.outputEncoding=THREE.sRGBEncoding;
+  scene=new THREE.Scene();
+  camera=new THREE.PerspectiveCamera(32,1,0.1,100);
+  camera.position.set(0,0,3.5);
+
+  /* 独立加载：同一 data URL，独立 Texture 对象（共享对象的 GPU 状态会冲突） */
+  var loader=new THREE.TextureLoader();
+  function load(url,srgb){
+    var t=loader.load(url);
+    if(srgb&&THREE.sRGBEncoding) t.encoding=THREE.sRGBEncoding;
+    return t;
+  }
+  var url=(typeof AG_DAY_URL!=='undefined')?AG_DAY_URL:'';
+  if(!url) return;
+  var dayMap=load(url,true);
+  var cloudMap=load((typeof AG_CLOUD_URL!=='undefined')?AG_CLOUD_URL:'',true);
+  var normMap=(typeof AG_NORMAL_URL!=='undefined')?load(AG_NORMAL_URL,false):null;
+  var specMap=(typeof AG_SPEC_URL!=='undefined')?load(AG_SPEC_URL,false):null;
+
+  /* 法线贴图做地形起伏，高光贴图让海洋反光、陆地不反光 —— 参考图那种质感 */
+  var earthMat=new THREE.MeshPhongMaterial({
+    map:dayMap,
+    normalMap:normMap,
+    normalScale:new THREE.Vector2(0.9,0.9),
+    specularMap:specMap,
+    specular:new THREE.Color(0x5a7fa6),
+    shininess:26
+  });
+  earth=new THREE.Mesh(new THREE.SphereGeometry(1,160,96),earthMat);
+  earth.rotation.y=2.6; earth.rotation.z=-0.12;   /* 起始对准亚洲/澳洲，地轴微倾 */
+  scene.add(earth);
+
+  /* 云层：独立球壳，比之前更明显，形成立体云带 */
+  if(cloudMap){
+    try{
+      clouds=new THREE.Mesh(new THREE.SphereGeometry(1.014,128,80),
+        new THREE.MeshPhongMaterial({map:cloudMap,transparent:true,opacity:.42,
+          depthWrite:false,blending:THREE.NormalBlending}));
+      clouds.rotation.y=2.6; clouds.rotation.z=-0.12;
+      scene.add(clouds);
+    }catch(e){}
+  }
+  /* 双层大气：内层浅蓝薄雾 + 外层深蓝辉光，边缘散射 */
+  try{
+    atmo=new THREE.Mesh(new THREE.SphereGeometry(1.06,128,80),
+      new THREE.MeshBasicMaterial({color:0x6fb4f0,transparent:true,opacity:.2,
+        side:THREE.BackSide,blending:THREE.AdditiveBlending,depthWrite:false}));
+    scene.add(atmo);
+    var atmo2=new THREE.Mesh(new THREE.SphereGeometry(1.13,128,80),
+      new THREE.MeshBasicMaterial({color:0x2f6fb8,transparent:true,opacity:.12,
+        side:THREE.BackSide,blending:THREE.AdditiveBlending,depthWrite:false}));
+    scene.add(atmo2);
+  }catch(e){}
+
+  /* 光照：强主光形成海面高光 + 蓝调补光 + 轮廓光 */
+  scene.add(new THREE.AmbientLight(0x35485c,0.62));
+  var key=new THREE.DirectionalLight(0xfff4e4,1.15); key.position.set(-3.2,2.0,2.6); scene.add(key);
+  var fill=new THREE.DirectionalLight(0x8ab6e0,.3); fill.position.set(2.5,0,-2); scene.add(fill);
+
   function resize(){
-    var r=cv.getBoundingClientRect();
-    dpr=Math.min(window.devicePixelRatio||1,2);
-    cv.width=Math.max(2,Math.round(r.width*dpr));
-    cv.height=Math.max(2,Math.round(r.height*dpr));
-    ctx.setTransform(dpr,0,0,dpr,0,0);
-    cx=r.width/2; cy=r.height/2; R=Math.min(r.width,r.height)*0.41;
+    var r=cv.getBoundingClientRect(), s=Math.max(2,Math.min(r.width,r.height));
+    renderer.setSize(s,s,false); camera.aspect=1; camera.updateProjectionMatrix();
   }
-  /* 经纬点 -> 屏幕。先绕 y 轴转 rot，再绕 x 轴倾 tilt；z>0 为正面 */
-  function proj(lonDeg,latDeg){
-    var la=latDeg*Math.PI/180, lo=(lonDeg+rot*180/Math.PI)*Math.PI/180;
-    var x=Math.cos(la)*Math.sin(lo), y=Math.sin(la), z=Math.cos(la)*Math.cos(lo);
-    var y2=y*Math.cos(tilt)-z*Math.sin(tilt), z2=y*Math.sin(tilt)+z*Math.cos(tilt);
-    return {x:cx+x*R, y:cy-y2*R, z:z2};
-  }
-  function line(points,alpha,width,color){
-    if(points.length<2) return;
-    ctx.beginPath();
-    var started=false;
-    for(var i=0;i<points.length;i++){
-      var p=points[i];
-      if(p.z<0){ started=false; continue; }
-      if(!started){ ctx.moveTo(p.x,p.y); started=true; } else ctx.lineTo(p.x,p.y);
-    }
-    ctx.strokeStyle=color.replace('ALPHA',alpha);
-    ctx.lineWidth=width||1; ctx.stroke();
-  }
-  function draw(){
+  function draw(now){
     if(!running) return;
-    var w=cv.clientWidth,h=cv.clientHeight;
-    ctx.clearRect(0,0,w,h);
-    /* 球体淡填充 + 边缘辉光 */
-    var grd=ctx.createRadialGradient(cx-R*0.3,cy-R*0.35,R*0.1,cx,cy,R);
-    grd.addColorStop(0,'rgba(28,66,88,.34)');
-    grd.addColorStop(.62,'rgba(12,34,50,.42)');
-    grd.addColorStop(1,'rgba(6,18,28,.72)');
-    ctx.fillStyle=grd; ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.fill();
-    ctx.strokeStyle='rgba(120,190,215,.28)'; ctx.lineWidth=1;
-    ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.stroke();
-    /* 背面经纬线（极淡，营造通透线框感） */
-    ctx.save(); ctx.globalAlpha=.3;
-    for(var lat=-75;lat<=75;lat+=15){ var p=[]; for(var lon=0;lon<=360;lon+=3) p.push(proj(lon,lat)); line(p,.16,.7,'rgba(110,180,210,ALPHA)'); }
-    for(var lon=0;lon<360;lon+=15){ var p2=[]; for(var la=-90;la<=90;la+=3) p2.push(proj(lon,la)); line(p2,.16,.7,'rgba(110,180,210,ALPHA)'); }
-    ctx.restore();
-    /* 正面经纬线 */
-    for(var lat2=-75;lat2<=75;lat2+=15){
-      var eq=lat2===0, pp=[]; for(var lo2=0;lo2<=360;lo2+=3) pp.push(proj(lo2,lat2));
-      line(pp,eq?.55:.32,eq?1.4:1,'rgba(150,205,228,ALPHA)');
-    }
-    for(var lon2=0;lon2<360;lon2+=15){
-      var pm=lon2%45===0, pp2=[]; for(var la2=-90;la2<=90;la2+=3) pp2.push(proj(lon2,la2));
-      line(pp2,pm?.42:.26,pm?1.1:.85,'rgba(140,198,224,ALPHA)');
-    }
-    /* 赤道高亮描边 */
-    var eqp=[]; for(var lo3=0;lo3<=360;lo3+=3) eqp.push(proj(lo3,0));
-    line(eqp,.7,1.6,'rgba(232,147,90,ALPHA)');
-    /* 中国节点标记（随球旋转，转到背面则隐藏） */
-    var node=proj(116.4,39.9);
-    if(node.z>0){
-      ctx.fillStyle='rgba(240,168,104,.95)';
-      ctx.beginPath(); ctx.arc(node.x,node.y,3.2,0,Math.PI*2); ctx.fill();
-      ctx.strokeStyle='rgba(240,168,104,.35)'; ctx.lineWidth=1;
-      ctx.beginPath(); ctx.arc(node.x,node.y,8,0,Math.PI*2); ctx.stroke();
-    }
-    /* 自转：约 60 秒一圈 */
-    var now=Date.now();
-    if(last){ var d=now-last; rot+=(d>0?d*0.000105:0.0016); }
-    else rot+=0.0016;
+    if(last){ var d=now-last; earth.rotation.y+=(d>0?d*0.00011:0.0018);
+      if(clouds) clouds.rotation.y+=0.0004; }
     last=now;
-    requestAnimationFrame(draw);
+    renderer.render(scene,camera);
+    raf=requestAnimationFrame(draw);
   }
-  resize(); draw();
+  resize(); raf=requestAnimationFrame(draw);
   window.addEventListener('resize',resize);
-  /* 进入主界面后停止绘制，省性能 */
   var obs=setInterval(function(){
     var g=document.getElementById('authgate');
-    if(g&&g.classList.contains('gone')){ running=false; clearInterval(obs); }
-  },600);
+    if(g&&g.classList.contains('gone')){
+      running=false; cancelAnimationFrame(raf); clearInterval(obs);
+      try{ renderer.dispose(); }catch(e){}
+    }
+  },700);
 })();
 
 function initAuthGate(){
@@ -6092,7 +6049,7 @@ function initAuthGate(){
       AUTH_MODE=b.dataset.m;
       Array.prototype.forEach.call(gate.querySelectorAll('.ag-tabs button'),function(x){x.classList.toggle('on',x===b);});
       $('#ag-go').textContent=AUTH_MODE==='login'?'登录并进入':'注册并进入';
-      $('#ag-foot').textContent=AUTH_MODE==='login'?'登录后可使用完整账户功能 · 游客可免费浏览地球':'新账号预置 100 虚拟币，可开通完整版';
+      $('#ag-foot').textContent=AUTH_MODE==='login'?'登录后可使用完整账户功能 · 游客可免费浏览地球':'注册即可使用全部功能';
       $('#ag-err').textContent='';
     };
   });
@@ -6120,22 +6077,6 @@ function initAuthGate(){
     authAPI('/api/auth/logout',{}).then(function(){ location.reload(); });
   };
 }
-/* 后端会员开通（登录后走真接口，游客沿用本地演示） */
-function accBuyRemote(){
-  if(!AUTH_USER){
-    $('#ap-msg').className='amsg err';
-    $('#ap-msg').textContent='请先登录账号再开通完整版';
-    return;
-  }
-  return authAPI('/api/auth/buy',{}).then(function(res){
-    if(!res.ok||!res.j.ok){ $('#ap-msg').className='amsg err'; $('#ap-msg').textContent=res.j.error||'开通失败'; return; }
-    ACC.coins=res.j.user.coins; ACC.member=res.j.user.member; ACC.since=res.j.user.since;
-    saveAcc(); accRefresh();
-    $('#ap-msg').className='amsg ok'; $('#ap-msg').textContent='已开通完整版！对比等功能已解锁。';
-    if(CV&&CV.open&&CV.c) fillHudCountry(CV.c);
-    if(typeof renderCmp==='function') renderCmp();
-  });
-}
 function accLogoutRemote(){
   if(AUTH_USER) authAPI('/api/auth/logout',{});
   AUTH_USER=null;
@@ -6146,13 +6087,8 @@ function accLogoutRemote(){
 }
 
 (function initAccount(){
-  try{
-    var _v=new URLSearchParams(location.search).get('v');
-    if(_v==='free'||_v==='full') DEMO_VIEW=_v;
-  }catch(e){}
   initAuthGate();
   accRefresh();
-  if(DEMO_VIEW!=='real'&&typeof renderCmp==='function') renderCmp();
   var btn=$('#accbtn'), panel=$('#accpanel');
   btn.onclick=function(e){ e.stopPropagation(); panel.classList.toggle('on'); };
   /* 拖拽上膛：任何拖拽一开始就让对比卡显形，作为放置目标（完整版） */
@@ -6175,10 +6111,6 @@ function accLogoutRemote(){
   document.addEventListener('visibilitychange',function(){ if(document.hidden) disarmCompare(); });
   $('#accx').onclick=function(e){ e.preventDefault(); e.stopPropagation(); panel.classList.remove('on'); };
   $('#accx').onmousedown=function(e){ e.stopPropagation(); };
-  $('#ap-buy').onclick=function(e){ e.stopPropagation(); accBuyRemote(); };
-  Array.prototype.forEach.call(document.querySelectorAll('#accpanel .aseg button'),function(b){
-    b.onclick=function(e){ e.stopPropagation(); setDemoView(b.dataset.v); };
-  });
   $('#ap-login').onclick=function(e){ e.stopPropagation(); accLogin($('#ap-userin').value); };
   $('#ap-userin').addEventListener('keydown',function(e){
     if(e.key==='Enter'){ e.preventDefault(); e.stopPropagation(); accLogin($('#ap-userin').value); }
