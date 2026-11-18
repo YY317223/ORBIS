@@ -500,7 +500,18 @@ pre{white-space:pre-wrap;word-break:break-all;font:11px/1.7 ui-monospace,Consola
         box.innerHTML='<p class="hint">正在比对…</p>';
         api('/api/admin/staging/compare/'+encodeURIComponent(bid)+'/'+encodeURIComponent(b.dataset.diff)).then(function(r){
           if(!r.ok){ box.innerHTML='<p class="hint">'+esc(r.j.error||'对比失败')+'</p>'; return; }
-          box.innerHTML=renderCompare(r.j);
+          var empty=!r.j.kind && !(r.j.diffs||[]).length;
+          box.innerHTML=(empty?'<p class="hint">这次没有拿到对比结果，可能是数据未变化或接口异常。</p>':'')
+            +renderCompare(r.j);
+          /* 渲染完把结果滚进视口，并闪一下，避免"点了没反应"的错觉 */
+          try{
+            var top = box.getBoundingClientRect().top + window.pageYOffset - 84;
+            window.scrollTo({top: Math.max(0, top), behavior:'smooth'});
+            box.classList.add('dc-flash');
+            setTimeout(function(){box.classList.remove('dc-flash')},1600);
+          }catch(e){
+            try{ box.scrollIntoView(); }catch(_e){}
+          }
         });
       }});
       $$('#rvDetail [data-peek]').forEach(function(b){b.onclick=function(){
@@ -788,6 +799,8 @@ pre{white-space:pre-wrap;word-break:break-all;font:11px/1.7 ui-monospace,Consola
 .dc-line .b{flex:1}
 .dc-line .p{width:64px;text-align:right;font-variant-numeric:tabular-nums}
 @media(max-width:820px){.dc-cols{grid-template-columns:1fr}}
+[data-dc-box],.dc-flash{outline:1px solid rgba(240,168,104,.55);outline-offset:6px;border-radius:8px;animation:dcpulse 1.4s ease-out}
+@keyframes dcpulse{0%{background:rgba(240,168,104,.10)}100%{background:transparent}}
 </style>
 </body>
 </html>
