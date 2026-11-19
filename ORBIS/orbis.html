@@ -819,7 +819,7 @@ body.panel-dragging *{cursor:grabbing!important}
 #cmpacts button{flex:1;height:27px;border-radius:8px;font:inherit;font-size:11px;cursor:pointer;
   color:var(--ink2);background:rgba(255,255,255,.05);border:1px solid rgba(120,160,220,.2)}
 #cmpacts button:hover{color:#fff;border-color:rgba(240,168,104,.5);background:rgba(240,168,104,.12)}
-#subbar{position:fixed;left:0;top:0;z-index:40;display:none;padding:8px 11px 7px;border-radius:12px;
+#subbar{position:fixed;right:84px;bottom:120px;z-index:40;display:none;width:322px;padding:10px 12px 9px;border-radius:12px;
   background:rgba(10,15,24,.86);border:1px solid rgba(120,160,220,.2);
   backdrop-filter:blur(16px) saturate(1.2);-webkit-backdrop-filter:blur(16px) saturate(1.2);
   box-shadow:0 10px 28px rgba(0,0,0,.4)}
@@ -4107,27 +4107,21 @@ function addCityCompare(ct){
 /* 订阅条浮在对比卡正上方：跟随对比卡的位置与宽度 */
 window.addEventListener('resize',function(){ try{ placeSubbar(); }catch(e){} });
 function placeSubbar(){
-  var el=$('#cmp'), bar=$('#subbar');
-  if(!el||!bar) return;
-  var cs=getComputedStyle(el);
-  var on=el.classList.contains('on') && cs.display!=='none';
-  if(!on){ bar.classList.remove('on'); return; }
-  var h=el.offsetHeight||0;
-  if(!h||!cs.width||cs.width==='auto'){ bar.classList.remove('on'); return; }
-  bar.classList.add('on');
-  var bottom=parseFloat(cs.bottom);
-  if(!isFinite(bottom)) bottom=132;
-  bar.style.width=cs.width;
-  if(el.classList.contains('ov')){
-    bar.style.left=cs.left;
-    bar.style.transform='none';
-  }else{
-    bar.style.left='50%';
-    bar.style.transform='translateX(-50%)';
-  }
-  bar.style.bottom=(bottom+h+8)+'px';
-  bar.style.top='auto';
+  var bar=$('#subbar'), btn=$('#uzSub');
+  if(!bar || !bar.classList.contains('on')) return;
+  if(!btn) return;
+  var r=btn.getBoundingClientRect();
+  bar.style.right=Math.max(10, window.innerWidth-r.right)+'px';
+  bar.style.bottom=Math.max(10, window.innerHeight-r.top+10)+'px';
 }
+function toggleSubbar(force){
+  var bar=$('#subbar'); if(!bar) return;
+  var on=(force===undefined)? !bar.classList.contains('on') : !!force;
+  bar.classList.toggle('on', on);
+  if(on){ placeSubbar(); var i=$('#cmpmail'); if(i) setTimeout(function(){ try{i.focus();}catch(e){} },60); }
+}
+/* 工具栏 UI 在另一个闭包里，用 window 暴露 */
+window.__orbisSub = { toggle: toggleSubbar, place: placeSubbar };
 function fitCmp(){
   var el=$('#cmp'), dock=$('#dock');
   if(!el||!dock) return;
@@ -8141,12 +8135,29 @@ body.plan-free #pcard .pc-more[data-pro] > button{color:rgba(232,163,74,.72)}
 
     var guide = mkBtn('uzGuide', '指南', '完整功能使用指南');
     var cmp = mkBtn('uzCmp', '对比', '把国家加入对比（最多 4 个）');
+    var sub = mkBtn('uzSub', '订阅', '数据订阅：留邮箱，数据出现大变时发邮件提醒');
 
     var sep = document.createElement('div');
     sep.className = 'sep';
     zoom.insertBefore(sep, zoom.firstChild);
-    zoom.insertBefore(cmp, sep);
+    zoom.insertBefore(sub, sep);
+    zoom.insertBefore(cmp, sub);
     zoom.insertBefore(guide, cmp);
+
+    sub.addEventListener('click', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (window.__orbisSub) window.__orbisSub.toggle();
+    });
+    document.addEventListener('click', function (e) {
+      var bar = document.getElementById('subbar');
+      if (!bar || !bar.classList.contains('on')) return;
+      if (bar.contains(e.target) || e.target === sub) return;
+      if (window.__orbisSub) window.__orbisSub.toggle(false);
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') if (window.__orbisSub) window.__orbisSub.toggle(false);
+    });
 
     guide.addEventListener('click', function (e) {
       e.preventDefault();
