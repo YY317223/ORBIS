@@ -410,7 +410,7 @@ body.introing #zoom,body.introing #foot,body.introing #cx{transition:opacity .8s
 #cstory .fx-date{font-size:9px;color:var(--ink3);margin-left:auto}
 
 /* 文化名片：国家视图左下角的横向图文画廊（真实照片） */
-#culture{position:absolute;left:24px;bottom:166px;width:min(600px,46vw);z-index:6;
+#culture{position:absolute;right:78px;bottom:152px;width:min(520px,42vw);z-index:6;
   padding:11px 13px 12px;border-radius:14px;background:rgba(10,15,24,.76);
   border:1px solid rgba(120,160,220,.18);
   backdrop-filter:blur(16px) saturate(1.2);-webkit-backdrop-filter:blur(16px) saturate(1.2);
@@ -452,7 +452,8 @@ body.introing #zoom,body.introing #foot,body.introing #cx{transition:opacity .8s
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #culture .citem em{display:block;margin-top:1px;font-style:normal;font-size:9px;color:#6E8098;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-@media (max-width:900px){#culture{width:calc(100vw - 48px);bottom:150px}}
+@media (max-width:1280px){#culture{width:min(430px,40vw);bottom:150px;right:70px}}
+@media (max-width:900px){#culture{width:calc(100vw - 130px);bottom:140px;right:62px}}
 
 #rfoot{padding:5px 9px 8px;border-top:1px solid rgba(120,160,220,.12)}
 #rdep{display:flex;align-items:center;gap:6px;background:none;border:0;color:var(--ink3);
