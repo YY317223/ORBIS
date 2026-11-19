@@ -819,6 +819,13 @@ body.panel-dragging *{cursor:grabbing!important}
 #cmpacts button{flex:1;height:27px;border-radius:8px;font:inherit;font-size:11px;cursor:pointer;
   color:var(--ink2);background:rgba(255,255,255,.05);border:1px solid rgba(120,160,220,.2)}
 #cmpacts button:hover{color:#fff;border-color:rgba(240,168,104,.5);background:rgba(240,168,104,.12)}
+#subbar{position:fixed;left:0;top:0;z-index:40;display:none;padding:8px 11px 7px;border-radius:12px;
+  background:rgba(10,15,24,.86);border:1px solid rgba(120,160,220,.2);
+  backdrop-filter:blur(16px) saturate(1.2);-webkit-backdrop-filter:blur(16px) saturate(1.2);
+  box-shadow:0 10px 28px rgba(0,0,0,.4)}
+#subbar.on{display:block}
+#subbar .sb-row{display:flex;align-items:center;gap:6px}
+#subbar .sb-ttl{font-size:10.5px;letter-spacing:.14em;color:var(--ink3);white-space:nowrap;margin-right:2px}
 #cmpsub{display:flex;gap:5px}
 #cmpmail{flex:1;min-width:0;height:27px;padding:0 9px;border-radius:8px;font:inherit;font-size:11px;
   color:var(--ink);background:rgba(8,13,22,.5);border:1px solid rgba(120,160,220,.2);outline:0}
@@ -1331,6 +1338,16 @@ body.panel-dragging *{cursor:grabbing!important}
   <div id="rfoot"><button id="rdep" class="on"><i></i>仅主权国家</button></div>
 </div>
 
+<div id="subbar">
+  <div class="sb-row">
+    <span class="sb-ttl">数据订阅</span>
+    <input id="cmpmail" type="email" autocomplete="email" placeholder="留邮箱，数据大变时发邮件提醒">
+    <button id="cmpsubbtn">订阅</button>
+    <a id="cmpunsub" title="取消这个邮箱的全部订阅">退订</a>
+  </div>
+  <div id="cmpmsg"></div>
+</div>
+
 <div id="cmp">
   <div class="hd"><b>对比</b><i id="cmpk">人均 GDP</i><button id="cmpadd" class="tgl add" title="添加任意国家到对比（跨洲）">＋ 添加</button><button id="cmptraj" class="tgl" title="切换到排名变化轨迹">轨迹</button><button id="cmpx" title="关闭">✕</button></div>
   <canvas id="cmpcv"></canvas>
@@ -1346,12 +1363,6 @@ body.panel-dragging *{cursor:grabbing!important}
       <button id="cmpcsv" title="导出对比数据为 CSV，可用 Excel / Numbers 打开">导出 CSV</button>
       <button id="cmplink" title="复制带对比状态的长链接">复制链接</button>
     </div>
-    <div id="cmpsub">
-      <input id="cmpmail" type="email" autocomplete="email" placeholder="留邮箱，数据大变时提醒">
-      <button id="cmpsubbtn">订阅</button>
-      <a id="cmpunsub" title="取消这个邮箱的全部订阅">退订</a>
-    </div>
-    <div id="cmpmsg"></div>
   </div>
 </div>
 
@@ -4093,6 +4104,30 @@ function addCityCompare(ct){
   renderCmp(); refreshHud();
 }
 /* 数据台高度会随指标/换行变化，对比卡不能写死 bottom，否则窄屏会被压住 */
+/* 订阅条浮在对比卡正上方：跟随对比卡的位置与宽度 */
+window.addEventListener('resize',function(){ try{ placeSubbar(); }catch(e){} });
+function placeSubbar(){
+  var el=$('#cmp'), bar=$('#subbar');
+  if(!el||!bar) return;
+  var cs=getComputedStyle(el);
+  var on=el.classList.contains('on') && cs.display!=='none';
+  if(!on){ bar.classList.remove('on'); return; }
+  var h=el.offsetHeight||0;
+  if(!h||!cs.width||cs.width==='auto'){ bar.classList.remove('on'); return; }
+  bar.classList.add('on');
+  var bottom=parseFloat(cs.bottom);
+  if(!isFinite(bottom)) bottom=132;
+  bar.style.width=cs.width;
+  if(el.classList.contains('ov')){
+    bar.style.left=cs.left;
+    bar.style.transform='none';
+  }else{
+    bar.style.left='50%';
+    bar.style.transform='translateX(-50%)';
+  }
+  bar.style.bottom=(bottom+h+8)+'px';
+  bar.style.top='auto';
+}
 function fitCmp(){
   var el=$('#cmp'), dock=$('#dock');
   if(!el||!dock) return;
@@ -4101,6 +4136,7 @@ function fitCmp(){
   requestAnimationFrame(function(){
     var t=dock.getBoundingClientRect().top;
     el.style.bottom=Math.max(120, Math.round(window.innerHeight-t+14))+'px';
+    placeSubbar();
   });
 }
 /* 数据台换行是异步的，单单下一帧还不够：盯住它的尺寸变化再摆一次 */
@@ -4136,6 +4172,7 @@ function renderCmp(){
   var k=cmpKey();
   if(!DS.cmp.length){
     CMPZ.a=0; CMPZ.b=YMAX;
+    setTimeout(placeSubbar,0);
     if(CMP_ARMED){
       cmpEl.classList.add('on');
       $('#cmpk').textContent='放到这里开始对比';
@@ -4203,6 +4240,9 @@ function renderCmp(){
   fitCmp();
   $('#cmpsub').style.display=DS.cmp.length?'':'none';
   if(DS.cmp.length){ $('#start').classList.add('hide'); syncLink(); }
+  requestAnimationFrame(placeSubbar);
+  setTimeout(placeSubbar,350);
+  setTimeout(placeSubbar,1200);
 }
 function shortNum(v){
   var a=Math.abs(v);
