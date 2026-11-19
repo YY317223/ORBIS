@@ -117,6 +117,14 @@ pre{white-space:pre-wrap;word-break:break-all;font:11px/1.7 ui-monospace,Consola
 .rv-item .r1 .t{margin-left:auto;font-size:10.5px;color:var(--ink3)}
 .rv-item .note{font-size:11px;color:var(--ink2);margin-top:7px;line-height:1.6}
 .rv-item .files{font-size:10px;color:var(--ink3);margin-top:5px}
+/* 待审列表分页条（复用 .pager / .btn，只补页码选中态） */
+.rv-pager{margin-top:14px;padding-top:13px;border-top:1px solid var(--line);gap:6px}
+.rv-pager .pg-info{margin-right:auto;color:var(--ink3)}
+.rv-pager .pg-info b{color:var(--ink2);font-weight:600}
+.rv-pager .btn{min-width:32px;padding:5px 8px}
+.rv-pager .btn.on{background:rgba(240,168,104,.16);border-color:var(--acc);color:var(--acc);font-weight:600}
+.rv-pager .btn.on:hover{background:rgba(240,168,104,.26)}
+.rv-pager .pg-ell{color:var(--ink3);font-size:11px;padding:0 1px}
 .rv-kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
 .rv-kv div{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
 .rv-kv .k{font-size:10px;color:var(--ink3);letter-spacing:.06em}
@@ -154,7 +162,7 @@ pre{white-space:pre-wrap;word-break:break-all;font:11px/1.7 ui-monospace,Consola
       <button data-p="subs"><i>✉</i><span>订阅管理</span></button>
       <button data-p="data"><i>▤</i><span>数据管理</span></button>
       <button data-p="review"><i>◉</i><span>数据审核</span></button>
-      <button data-p="crawler"><i>⟳</i><span>数据抓取</span></button>
+      <button data-p="crawler"><i>⟳</i><span>爬虫</span></button>
       <button data-p="mail"><i>✦</i><span>邮件中心</span></button>
       <button data-p="settings"><i>⚙</i><span>系统设置</span></button>
     </nav>
@@ -212,7 +220,7 @@ pre{white-space:pre-wrap;word-break:break-all;font:11px/1.7 ui-monospace,Consola
       </div>
     </section>
 
-    <!-- 抓取：两种更新模式 -->
+    <!-- 爬虫：两种更新模式 -->
     <section class="page" id="p-crawler">
       <div class="cards" id="cwCards"></div>
 
@@ -333,7 +341,7 @@ pre{white-space:pre-wrap;word-break:break-all;font:11px/1.7 ui-monospace,Consola
 
   /* 导航 */
   var TITLES={overview:['总览','OVERVIEW'],users:['用户管理','USERS'],subs:['订阅管理','SUBSCRIPTIONS'],
-    data:['数据管理','DATA'],review:['数据审核','DATA REVIEW'],crawler:['数据抓取','DATA FETCH'],
+    data:['数据管理','DATA'],review:['数据审核','DATA REVIEW'],crawler:['爬虫','CRAWLER'],
     mail:['邮件中心','MAIL'],settings:['系统设置','SETTINGS']};
   function loadPage(p){
     $$('#nav button').forEach(function(b){b.classList.toggle('on',b.dataset.p===p)});
@@ -447,31 +455,73 @@ pre{white-space:pre-wrap;word-break:break-all;font:11px/1.7 ui-monospace,Consola
   }});
 
   /* 数据审核：抓取 → 暂存 → 人工检查 → 发布 */
-  var RV_SEL=null;
+  var RV_SEL=null, RV_ROWS=[], RV_PAGE=1, RV_SIZE=6;   /* 每页最多 6 条 */
   function loadReview(){
     api('/api/admin/staging/list').then(function(r){
       if(!r.ok){toast('加载待审列表失败',true);return}
-      var rows=r.j.rows||[];
-      if(!rows.length){
+      RV_ROWS=r.j.rows||[];
+      if(!RV_ROWS.length){
         $('#rvList').innerHTML='<div class="empty"><span>◉</span>暂无待审数据 · 点上方按钮抓取新数据</div>';
         $('#rvDetailBox').style.display='none'; RV_SEL=null; return;
       }
-      $('#rvList').innerHTML=rows.map(function(x){
-        var badge=x.status==='published'?'<span class="badge ok">已发布</span>'
-          :'<span class="badge warn">待审核</span>';
-        return '<div class="rv-item'+(RV_SEL===x.id?' sel':'')+'" data-id="'+esc(x.id)+'">'+
-          '<div class="r1"><b>'+esc(x.source||'manual')+'</b>'+badge+
-          '<span class="id">'+esc(x.id)+'</span><span class="t">'+esc(x.created)+'</span></div>'+
-          (x.note?'<div class="note">'+esc(x.note)+'</div>':'')+
-          '<div class="files">'+esc((x.files||[]).join(', '))+' · '+(x.size||0)+' 字节</div></div>';
-      }).join('');
-      $$('#rvList .rv-item').forEach(function(el){
-        el.onclick=function(){ RV_SEL=el.dataset.id; loadReviewDetail(RV_SEL);
-          $$('#rvList .rv-item').forEach(function(x){x.classList.toggle('sel',x===el)}); };
-      });
-      if(RV_SEL&&rows.some(function(x){return x.id===RV_SEL})) loadReviewDetail(RV_SEL);
+      /* 条数变化后把页码夹到合法范围（例如驳回/发布后最后一页被清空） */
+      var total=Math.ceil(RV_ROWS.length/RV_SIZE);
+      if(RV_PAGE>total) RV_PAGE=total;
+      if(RV_PAGE<1) RV_PAGE=1;
+      renderRvList();
+      if(RV_SEL&&RV_ROWS.some(function(x){return x.id===RV_SEL})) loadReviewDetail(RV_SEL);
       else $('#rvDetailBox').style.display='none';
     });
+  }
+  /* 页码序列：首页、末页、当前页左右各一页，中间折叠成 … */
+  function rvPages(cur,total){
+    var out=[],i,prev=0;
+    for(i=1;i<=total;i++){
+      if(i===1||i===total||(i>=cur-1&&i<=cur+1)){
+        if(prev&&i-prev>1) out.push('…');
+        out.push(i); prev=i;
+      }
+    }
+    return out;
+  }
+  function renderRvList(){
+    var total=Math.ceil(RV_ROWS.length/RV_SIZE), start=(RV_PAGE-1)*RV_SIZE;
+    var html=RV_ROWS.slice(start,start+RV_SIZE).map(function(x){
+      var badge=x.status==='published'?'<span class="badge ok">已发布</span>'
+        :'<span class="badge warn">待审核</span>';
+      return '<div class="rv-item'+(RV_SEL===x.id?' sel':'')+'" data-id="'+esc(x.id)+'">'+
+        '<div class="r1"><b>'+esc(x.source||'manual')+'</b>'+badge+
+        '<span class="id">'+esc(x.id)+'</span><span class="t">'+esc(x.created)+'</span></div>'+
+        (x.note?'<div class="note">'+esc(x.note)+'</div>':'')+
+        '<div class="files">'+esc((x.files||[]).join(', '))+' · '+(x.size||0)+' 字节</div></div>';
+    }).join('');
+    /* 分页条 */
+    var selPage=0;
+    if(RV_SEL){ for(var i=0;i<RV_ROWS.length;i++){ if(RV_ROWS[i].id===RV_SEL){ selPage=Math.floor(i/RV_SIZE)+1; break; } } }
+    var pg='<div class="pager rv-pager">'+
+      '<span class="pg-info">共 <b>'+RV_ROWS.length+'</b> 条 · 第 <b>'+RV_PAGE+'</b> / '+total+' 页'+
+        (selPage&&selPage!==RV_PAGE?' · 详情里的批次在第 '+selPage+' 页':'')+'</span>'+
+      '<button class="btn" data-pg="'+(RV_PAGE-1)+'"'+(RV_PAGE<=1?' disabled':'')+'>← 上一页</button>';
+    rvPages(RV_PAGE,total).forEach(function(n){
+      pg+= n==='…' ? '<span class="pg-ell">…</span>'
+        : '<button class="btn'+(n===RV_PAGE?' on':'')+'" data-pg="'+n+'">'+n+'</button>';
+    });
+    pg+='<button class="btn" data-pg="'+(RV_PAGE+1)+'"'+(RV_PAGE>=total?' disabled':'')+'>下一页 →</button></div>';
+    $('#rvList').innerHTML=html+pg;
+    $$('#rvList .rv-item').forEach(function(el){
+      el.onclick=function(){ RV_SEL=el.dataset.id; loadReviewDetail(RV_SEL);
+        $$('#rvList .rv-item').forEach(function(x){x.classList.toggle('sel',x===el)}); };
+    });
+    $$('#rvList .rv-pager .btn').forEach(function(b){b.onclick=function(){
+      var n=parseInt(b.dataset.pg,10);
+      if(!n||n<1||n>total||n===RV_PAGE) return;
+      RV_PAGE=n; renderRvList();
+      /* 翻页后把列表顶端滚进视口，别让人停在底部看不见新内容 */
+      try{
+        var top=$('#rvList').getBoundingClientRect().top+window.pageYOffset-84;
+        if(window.pageYOffset>top) window.scrollTo({top:Math.max(0,top),behavior:'smooth'});
+      }catch(e){}
+    };});
   }
   function loadReviewDetail(bid){
     api('/api/admin/staging/get/'+encodeURIComponent(bid)).then(function(r){
@@ -694,7 +744,7 @@ pre{white-space:pre-wrap;word-break:break-all;font:11px/1.7 ui-monospace,Consola
     api('/api/admin/staging/fetch',{method:'POST',body:{kind:b.dataset.stage}}).then(function(r){
       b.disabled=false; b.textContent=old;
       toast(r.j.ok?'已抓取到待审区，请在下方检查':(r.j.error||'抓取失败'),!r.j.ok);
-      if(r.j.ok){ RV_SEL=r.j.batch.id; loadReview(); }
+      if(r.j.ok){ RV_SEL=r.j.batch.id; RV_PAGE=1; loadReview(); }   /* 新批次排在最前，回到第 1 页 */
     });
   }});
   $('#rvPublish').onclick=function(){
@@ -774,11 +824,11 @@ pre{white-space:pre-wrap;word-break:break-all;font:11px/1.7 ui-monospace,Consola
     });
   };
 
-  /* 抓取：两种更新模式 */
+  /* 爬虫：两种更新模式 */
   function fmtTime(s){ return s ? String(s).replace('T',' ').slice(0,16) : '—'; }
   function loadCrawler(){
     api('/api/admin/crawler/status').then(function(r){
-      if(!r.ok){toast('加载数据抓取状态失败',true);return}
+      if(!r.ok){toast('加载爬虫状态失败',true);return}
       var d=r.j||{}, a=d.auto||{}, lr=d.last_result||{};
       var okBadge = lr.ok===true?'<span class="badge ok">成功</span>':(lr.ok===false?'<span class="badge err">失败</span>':'<span class="badge info">—</span>');
       var cards=[

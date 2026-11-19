@@ -565,8 +565,6 @@ class Handler(BaseHTTPRequestHandler):
                 code, data = admin_api.trade_status()
                 return self._send(code, data)
             return self._send(404, {"ok": False, "error": "unknown admin api"})
-        if p.startswith("/assets/"):
-            return self.serve_asset(p)
         if p in ("/", "/index.html", "/orbis.html", "/太空地球.html"):
             return self.serve_page()
         if p == "/api/auth/me":
@@ -873,38 +871,6 @@ class Handler(BaseHTTPRequestHandler):
         if use_gz:
             self.send_header("Content-Encoding", "gzip")
             self.send_header("Vary", "Accept-Encoding")
-        self.end_headers()
-        if self.command != "HEAD":
-            self.wfile.write(body)
-
-    ASSET_TYPES = {".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png",
-                   ".webp": "image/webp", ".svg": "image/svg+xml", ".gif": "image/gif"}
-
-    def serve_asset(self, p):
-        """静态资源（国家文化照片等），只允许 /assets/ 下、禁止目录穿越。"""
-        rel = p.lstrip("/")
-        if not rel.startswith("assets/") or ".." in rel:
-            return self._send(404, "not found", "text/plain; charset=utf-8")
-        path = os.path.join(ROOT, rel)
-        if not os.path.isfile(path):
-            return self._send(404, "not found", "text/plain; charset=utf-8")
-        ext = os.path.splitext(path)[1].lower()
-        ctype = self.ASSET_TYPES.get(ext, "application/octet-stream")
-        st = os.stat(path)
-        etag = '"%x-%x"' % (st.st_mtime_ns, st.st_size)
-        if (self.headers.get("If-None-Match") or "").strip() == etag:
-            self.send_response(304)
-            self.send_header("ETag", etag)
-            self.send_header("Cache-Control", "public, max-age=604800")
-            self.end_headers()
-            return
-        with open(path, "rb") as f:
-            body = f.read()
-        self.send_response(200)
-        self.send_header("Content-Type", ctype)
-        self.send_header("Content-Length", str(len(body)))
-        self.send_header("ETag", etag)
-        self.send_header("Cache-Control", "public, max-age=604800")
         self.end_headers()
         if self.command != "HEAD":
             self.wfile.write(body)
