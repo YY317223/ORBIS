@@ -819,7 +819,7 @@ body.panel-dragging *{cursor:grabbing!important}
 #cmpacts button{flex:1;height:27px;border-radius:8px;font:inherit;font-size:11px;cursor:pointer;
   color:var(--ink2);background:rgba(255,255,255,.05);border:1px solid rgba(120,160,220,.2)}
 #cmpacts button:hover{color:#fff;border-color:rgba(240,168,104,.5);background:rgba(240,168,104,.12)}
-#subbar{position:fixed;right:84px;bottom:120px;z-index:40;display:none;width:368px;padding:10px 12px 9px;border-radius:12px;
+#subbar{position:fixed;right:84px;bottom:120px;z-index:40;display:none;width:360px;padding:10px 12px 9px;border-radius:12px;
   background:rgba(10,15,24,.86);border:1px solid rgba(120,160,220,.2);
   backdrop-filter:blur(16px) saturate(1.2);-webkit-backdrop-filter:blur(16px) saturate(1.2);
   box-shadow:0 10px 28px rgba(0,0,0,.4)}
@@ -834,7 +834,12 @@ body.panel-dragging *{cursor:grabbing!important}
 #subbar .sb-chip i{cursor:pointer;font-style:normal;opacity:.65;font-size:12px;line-height:1}
 #subbar .sb-chip i:hover{opacity:1;color:#fff}
 #subbar .sb-empty{font-size:10.5px;color:var(--ink3)}
-#subadd{max-width:104px;height:27px;border-radius:8px;border:1px solid rgba(120,160,220,.2);
+#subbar .sb-mail{margin-top:7px}
+#subbar .sb-mail input{width:100%;height:30px;border-radius:8px;
+  border:1px solid rgba(120,160,220,.24);background:rgba(8,13,22,.6);color:var(--ink);
+  font:inherit;font-size:12px;padding:0 10px;outline:0}
+#subbar .sb-mail input:focus{border-color:rgba(240,168,104,.55)}
+#subadd{max-width:118px;height:27px;border-radius:8px;border:1px solid rgba(120,160,220,.2);
   background:rgba(8,13,22,.6);color:var(--ink2);font:inherit;font-size:11px;padding:0 4px;outline:0}
 #subadd:hover{border-color:rgba(240,168,104,.45)}
 #cmpmail{flex:1;min-width:0;height:27px;padding:0 9px;border-radius:8px;font:inherit;font-size:11px;
@@ -1352,9 +1357,11 @@ body.panel-dragging *{cursor:grabbing!important}
   <div class="sb-row">
     <span class="sb-ttl">数据订阅</span>
     <select id="subadd" title="添加要监测的国家"></select>
-    <input id="cmpmail" type="email" autocomplete="email" placeholder="留邮箱，数据大变时提醒">
     <button id="cmpsubbtn">订阅</button>
     <a id="cmpunsub" title="取消这个邮箱的全部订阅">退订</a>
+  </div>
+  <div class="sb-row sb-mail">
+    <input id="cmpmail" type="email" autocomplete="email" placeholder="留邮箱，数据出现大变时发邮件提醒">
   </div>
   <div id="subchips" class="sb-chips"></div>
   <div id="cmpmsg"></div>
