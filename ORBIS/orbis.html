@@ -760,19 +760,30 @@ body.panel-dragging *{cursor:grabbing!important}
 #rrows em{margin-left:auto;font-style:normal;font-size:10px;color:#FFD9B4;flex:none}
 
 /* ---------------- 对比卡 ---------------- */
-#cmp{position:fixed;left:50%;bottom:132px;transform:translateX(-50%);width:min(470px,calc(100vw - 90px));display:none;z-index:14;
+#cmp{position:fixed;left:50%;bottom:132px;transform:translateX(-50%);width:min(660px,calc(100vw - 110px));display:none;z-index:14;
   border-radius:14px;padding:11px 15px 12px;
   background:rgba(9,14,22,.82);border:1px solid rgba(120,160,220,.2);
   backdrop-filter:blur(18px) saturate(1.2);-webkit-backdrop-filter:blur(18px) saturate(1.2);
   box-shadow:0 18px 46px rgba(0,0,0,.55)}
 #cmp.on{display:block}
+#cmpload{display:none;height:196px;align-items:center;justify-content:center;gap:9px;
+  font-size:11px;color:var(--ink3);letter-spacing:.06em}
+#cmpload i{width:13px;height:13px;border-radius:50%;border:1.5px solid rgba(160,190,220,.22);
+  border-top-color:#F0A868;animation:cmpspin .8s linear infinite;flex:none}
+@keyframes cmpspin{to{transform:rotate(360deg)}}
+#cmp.loading #cmpcv{display:none!important}
+#cmp.loading #cmpload{display:flex}
+#cmpzoom{margin:3px 0 0;font-size:9px;color:var(--ink3);letter-spacing:.04em;display:flex;
+  align-items:center;gap:6px;opacity:.8}
+#cmpzoom b{color:#F0A868;font-weight:600}
+#cmpzoom.hide{display:none}
 #cmp.hide{display:none}
 #cmp .hd{display:flex;align-items:center;gap:8px;margin-bottom:6px}
 #cmp .hd b{font-size:10.5px;letter-spacing:.14em;color:var(--ink2)}
 #cmp .hd i{font-style:normal;font-size:9.5px;color:var(--ink3)}
 #cmp .hd button{margin-left:auto;background:none;border:0;color:var(--ink3);font-size:13px;cursor:pointer;padding:0 2px}
 #cmp .hd button:hover{color:var(--acc)}
-#cmpcv{width:100%;height:112px;display:block}
+#cmpcv{width:100%;height:196px;display:block;cursor:crosshair}
 #cmptrajcv{width:100%;height:158px;display:none}
 #rankcv{width:100%;height:200px;display:none}
 .tgl{background:none;border:1px solid rgba(120,160,220,.24);color:var(--ink3);font:inherit;font-size:10px;
@@ -845,7 +856,7 @@ body.panel-dragging *{cursor:grabbing!important}
 #dchg b{color:var(--ink);font-weight:600}
 #dchg .u{color:#F0764C} #dchg .d{color:#4FBF92}
 /* 进入洲/国视图后，对比卡贴左侧（避让图例与比例尺） */
-#cmp.ov{position:fixed;left:26px;bottom:118px;transform:none;width:298px;z-index:34}
+#cmp.ov{position:fixed;left:26px;bottom:118px;transform:none;width:min(580px,46vw);z-index:34}
 
 #chelp{position:absolute;right:84px;bottom:22px;font-size:11px;color:var(--ink2);padding:8px 13px;border-radius:9px;
   background:rgba(8,13,22,.6);border:1px solid rgba(120,160,220,.16);pointer-events:none;z-index:32}
@@ -967,6 +978,9 @@ body.panel-dragging *{cursor:grabbing!important}
   #dock{width:calc(100vw - 32px);min-width:0;bottom:14px;padding:9px 11px}
   #dchips button{padding:5px 7px;font-size:11px}
   #cmp{bottom:118px}
+  #cmp.ov{width:calc(100vw - 52px);left:26px}
+  #cmp.ov #cmpcv{height:150px}
+  #cmp.ov #cmpload{height:150px}
   #chud{left:14px;top:14px} #ctitle .n{font-size:17px}
   #cstats{gap:12px;padding:9px 12px} #cstats .v{font-size:12px}
   #chelp{display:none} #clegend{left:14px;bottom:14px}
@@ -1297,7 +1311,9 @@ body.panel-dragging *{cursor:grabbing!important}
 <div id="cmp">
   <div class="hd"><b>对比</b><i id="cmpk">人均 GDP</i><button id="cmpadd" class="tgl add" title="添加任意国家到对比（跨洲）">＋ 添加</button><button id="cmptraj" class="tgl" title="切换到排名变化轨迹">轨迹</button><button id="cmpx" title="关闭">✕</button></div>
   <canvas id="cmpcv"></canvas>
+  <div id="cmpload"><i></i><span>正在加载对比数据…</span></div>
   <canvas id="cmptrajcv"></canvas>
+  <div id="cmpzoom" class="hide">滚轮缩放时间轴 · 双击复位</div>
   <div id="cmprows"></div>
   <div id="cmpstruct"></div>
   <div id="cmpfn"></div>
@@ -4071,12 +4087,22 @@ function disarmCompare(){
   if(CMP_ARM_TIMER){ clearTimeout(CMP_ARM_TIMER); CMP_ARM_TIMER=null; }
   if(typeof renderCmp==='function') renderCmp();
 }
+var CMPZ={a:0,b:YMAX};   /* 对比图当前时间窗（年索引，可小数） */
+function cmpZoomLabel(){
+  var el=$('#cmpzoom'); if(!el) return;
+  var span=CMPZ.b-CMPZ.a, full=YMAX||1, z=full/Math.max(span,1e-6);
+  if(z<1.08){ el.classList.add('hide'); return; }
+  el.classList.remove('hide');
+  el.innerHTML='已放大 <b>'+z.toFixed(1)+'×</b> · 滚轮继续缩放 / 双击复位';
+}
 function renderCmp(){
+  var wasOn=cmpEl.classList.contains('on');
   renderSlot();
   if(typeof rebuildLinks==='function') rebuildLinks();
   if(!isMember()){ cmpEl.classList.remove('on'); var _s=$('#cmpsub'); if(_s)_s.style.display='none'; return; }
   var k=cmpKey();
   if(!DS.cmp.length){
+    CMPZ.a=0; CMPZ.b=YMAX;
     if(CMP_ARMED){
       cmpEl.classList.add('on');
       $('#cmpk').textContent='放到这里开始对比';
@@ -4127,7 +4153,17 @@ function renderCmp(){
   }else{
     $('#cmpcv').style.display='';
     $('#cmptrajcv').style.display='none';
-    drawCmpChart();
+    if(!wasOn && !DS.cmp.length===false){
+      /* 首次打开：先给一个加载态，再画图，避免“瞬间蹦出来” */
+      cmpEl.classList.add('loading');
+      clearTimeout(renderCmp._lt);
+      renderCmp._lt=setTimeout(function(){
+        cmpEl.classList.remove('loading');
+        drawCmpChart();
+      }, 720);
+    }else{
+      drawCmpChart();
+    }
   }
   $('#cmpstruct').innerHTML=cmpStructHTML();
   $('#cmpfn').innerHTML=cmpText();
@@ -4158,7 +4194,10 @@ function drawCmpChart(){
   var y0=F(mn), y1=F(mx); if(y1-y0<1e-9) y1=y0+1;
   var pad=(y1-y0)*0.07; y0-=pad; y1+=pad;
   var L=40, R=8, T=8, B=15;
-  var X=function(i){ return L+(w-L-R)*i/YMAX; };
+  var zA=CMPZ.a, zB=CMPZ.b, zTotal=YMAX||1;
+  if(!(zB>zA) || zB-zA>zTotal){ zA=0; zB=zTotal; }
+  var zSpan=zB-zA;
+  var X=function(i){ return L+(w-L-R)*(i-zA)/zSpan; };
   var Y=function(v){ return h-B-(F(v)-y0)/(y1-y0)*(h-T-B); };
   // 刻度取整：对数轴取 10 的整数次幂（不够密就降到半档），线性轴取整十
   var ticks=[], e, tv;
@@ -4182,8 +4221,17 @@ function drawCmpChart(){
     g.fillText(shortNum(v),L-5,y);
   });
   g.textAlign='center'; g.textBaseline='top'; g.fillStyle='rgba(140,160,190,.6)';
-  g.fillText('2000',L+12,h-B+3);
-  g.fillText('2023',w-R-12,h-B+3);
+  var nSeg=(zSpan>=6?5:(zSpan>=2?4:3));
+  for(var ti=0;ti<nSeg;ti++){
+    var f=zA+zSpan*ti/(nSeg-1), fy=Math.floor(f), fr=f-fy, lab;
+    if(zSpan>=2.5){ lab=String(YEARS[0]+fy); }
+    else { var mo=Math.min(12,Math.floor(fr*12)+1); lab=(YEARS[0]+fy)+'.'+mo; }
+    var tx=X(f);
+    if(tx<L-1||tx>w-R+1) continue;
+    g.strokeStyle='rgba(120,160,220,.08)';
+    g.beginPath(); g.moveTo(tx,T); g.lineTo(tx,h-B); g.stroke();
+    g.fillText(lab, Math.max(L+11,Math.min(w-R-11,tx)), h-B+3);
+  }
   if(DS.yi<YMAX){
     var xv=X(DS.yi);
     g.strokeStyle='rgba(240,168,104,.45)'; g.setLineDash([3,3]);
@@ -4209,7 +4257,30 @@ function drawCmpChart(){
       g.strokeStyle='rgba(4,9,16,.85)'; g.lineWidth=1.2; g.stroke();
     }
   });
+  if(typeof cmpZoomLabel==='function') cmpZoomLabel();
 }
+/* 对比图：滚轮缩放时间轴（最细可到“天”级窗口），双击复位 */
+(function(){
+  var cv=$('#cmpcv'); if(!cv) return;
+  cv.addEventListener('wheel',function(e){
+    if(!DS.cmp.length) return;
+    e.preventDefault(); e.stopPropagation();
+    var r=cv.getBoundingClientRect(), w=r.width, L=40, R=8;
+    var t=(e.clientX-r.left-L)/Math.max(1,w-L-R); t=Math.max(0,Math.min(1,t));
+    var total=YMAX||1, span=CMPZ.b-CMPZ.a;
+    var factor=Math.exp((e.deltaY>0?1:-1)*0.18);
+    var ns=Math.max(0.02, Math.min(total, span*factor));   /* 0.02 年约 7 天 */
+    var anchorX=CMPZ.a+span*t, a2=anchorX-ns*t;
+    a2=Math.max(0,Math.min(total-ns,a2));
+    CMPZ.a=a2; CMPZ.b=a2+ns;
+    drawCmpChart();
+  },{passive:false});
+  cv.addEventListener('dblclick',function(e){
+    e.preventDefault(); e.stopPropagation();
+    CMPZ.a=0; CMPZ.b=YMAX; drawCmpChart();
+  });
+})();
+
 /* 人口结构对比：年龄三段堆叠条 + 城镇化率（数据字段 age / urb，此前长期沉睡，此处唤醒） */
 function cmpStructHTML(){
   var list=DS.cmp.filter(function(c){
@@ -4485,7 +4556,17 @@ Array.prototype.forEach.call(rankEl.querySelectorAll('.seg button'),function(b){
 
 /* ---- 首屏引导：一键故事。点一下直接进到有结论的状态，不用面对空地球 ---- */
 var START_OFF=false;
-function hideStart(){ START_OFF=true; $('#start').classList.add('hide'); }
+function hideStart(temp){
+  $('#start').classList.add('hide');
+  if(temp){
+    clearTimeout(hideStart._t);
+    hideStart._t=setTimeout(function(){
+      if(!CV.open && !DS.cmp.length && !START_OFF) $('#start').classList.remove('hide');
+    }, 2800);
+    return;
+  }
+  START_OFF=true;   /* 只有点右上角 ✕ 才是永久关闭 */
+}
 $('#startx').onclick=function(e){ e.stopPropagation(); hideStart(); };
 
 function sceneC(iso){
@@ -4522,7 +4603,7 @@ var SCENES={
 };
 function playScene(id){
   var S=SCENES[id]; if(!S) return;
-  hideStart();                       /* 先关，避免 closeOverlay 的延迟回调又把它放出来 */
+  hideStart(true);                   /* 临时关闭：动作结束/回到地球后自动回来 */
   stopPlay();
   if(CV.open) closeOverlay();
   DS.cmp=[];
@@ -7286,6 +7367,48 @@ body.plan-free #pcard .pc-more[data-pro] > button{color:rgba(232,163,74,.72)}
     ctx.beginPath(); ctx.moveTo(80, 40.5); ctx.lineTo(W - 80, 40.5); ctx.stroke();
   }
 
+  /* —— 分享名片背景：用该国最鲜明的地标/动物/文化照片 —— */
+  var SPCULT = {};          /* iso -> {img, state} */
+  var LAST_SNAP = null;     /* 记录最近一次参数，图片到位后重绘 */
+  function spCultGet(iso) {
+    var key = String(iso || '').toUpperCase();
+    var rec = SPCULT[key];
+    if (rec) return rec.img;
+    SPCULT[key] = { img: null, state: 'loading' };
+    var im = new Image();
+    im.onload = function () {
+      SPCULT[key] = { img: im, state: 'ok' };
+      /* 图晚到了：用同样的参数重画一次，预览自动更新 */
+      if (LAST_SNAP && LAST_SNAP.iso === iso) { try { makeSnap(iso, LAST_SNAP.yi); } catch (e) {} }
+    };
+    im.onerror = function () { SPCULT[key] = { img: null, state: 'fail' }; };
+    im.src = 'assets/culture/' + key + '/0.jpg';
+    return null;
+  }
+  function spCultBg(ctx, im) {
+    var W = SNAP_W, H = SNAP_H;
+    var band = Math.round(H * 0.36);          /* 顶部通栏：地标/动物/文化照片 */
+    var s = Math.max(W / im.width, band / im.height);
+    var dw = im.width * s, dh = im.height * s;
+    ctx.save();
+    ctx.beginPath(); ctx.rect(0, 0, W, band); ctx.clip();
+    ctx.drawImage(im, (W - dw) / 2, (band - dh) * 0.35, dw, dh);
+    ctx.restore();
+    /* 纵向压暗：顶部略暗、底部渐黑，与正文自然衔接 */
+    var gv = ctx.createLinearGradient(0, 0, 0, band);
+    gv.addColorStop(0, 'rgba(8,9,10,.40)');
+    gv.addColorStop(.48, 'rgba(8,9,10,.58)');
+    gv.addColorStop(.82, 'rgba(8,9,10,.90)');
+    gv.addColorStop(1, 'rgba(8,9,10,1)');
+    ctx.fillStyle = gv; ctx.fillRect(0, 0, W, band);
+    /* 左侧压暗：保证 ORBIS 字标与国名可读 */
+    var gl = ctx.createLinearGradient(0, 0, W * 0.82, 0);
+    gl.addColorStop(0, 'rgba(8,9,10,.74)');
+    gl.addColorStop(.55, 'rgba(8,9,10,.34)');
+    gl.addColorStop(1, 'rgba(8,9,10,0)');
+    ctx.fillStyle = gl; ctx.fillRect(0, 0, W, band);
+  }
+
   function makeSnap(iso, yi) {
     var m = IDX[iso], s = SER[iso];
     var cv = document.createElement('canvas');
@@ -7294,6 +7417,11 @@ body.plan-free #pcard .pc-more[data-pro] > button{color:rgba(232,163,74,.72)}
     var L = 72, R = SNAP_W - 72, W = SNAP_W - 144;
 
     spBackground(ctx, SNAP_W, SNAP_H);
+
+    /* 先用该国最鲜明的地标/动物/文化照片做顶部通栏，再叠页头与正文 */
+    LAST_SNAP = { iso: iso, yi: yi };
+    var cim = spCultGet(iso);
+    if (cim) spCultBg(ctx, cim);
 
     /* —— 页头 —— */
     ctx.textAlign = 'left';
