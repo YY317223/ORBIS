@@ -409,9 +409,9 @@ body.introing #zoom,body.introing #foot,body.introing #cx{transition:opacity .8s
 #cstory .fx-badge.down{color:#2E9A8A;background:rgba(46,154,138,.12)}
 #cstory .fx-date{font-size:9px;color:var(--ink3);margin-left:auto}
 
-/* 文化名片：国家视图左下角的横向滚动画廊 */
+/* 文化名片：国家视图左下角的横向图文画廊（真实照片） */
 #culture{position:absolute;left:24px;bottom:166px;width:min(600px,46vw);z-index:6;
-  padding:11px 13px 12px;border-radius:14px;background:rgba(10,15,24,.74);
+  padding:11px 13px 12px;border-radius:14px;background:rgba(10,15,24,.76);
   border:1px solid rgba(120,160,220,.18);
   backdrop-filter:blur(16px) saturate(1.2);-webkit-backdrop-filter:blur(16px) saturate(1.2);
   box-shadow:0 14px 40px rgba(0,0,0,.46)}
@@ -426,29 +426,34 @@ body.introing #zoom,body.introing #foot,body.introing #cx{transition:opacity .8s
   color:#C2D0DE;background:rgba(255,255,255,.05);border:1px solid rgba(120,160,220,.2);
   font:inherit;font-size:12px;line-height:1;padding:0}
 #culture .cnav button:hover{background:rgba(240,168,104,.16);border-color:rgba(240,168,104,.45);color:#FFD9B4}
-#culture .ctrack{display:flex;gap:9px;overflow-x:auto;overflow-y:hidden;padding-bottom:3px;
+#culture .ctrack{display:flex;gap:10px;overflow-x:auto;overflow-y:hidden;padding-bottom:3px;
   scrollbar-width:thin;scrollbar-color:rgba(160,190,220,.32) transparent;cursor:grab;
   -webkit-mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 26px),transparent 100%);
   mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 26px),transparent 100%)}
 #culture .ctrack::-webkit-scrollbar{height:5px}
 #culture .ctrack::-webkit-scrollbar-thumb{background:rgba(160,190,220,.26);border-radius:3px}
-#culture .ctrack.dragging{cursor:grabbing;scroll-behavior:auto}
-#culture .citem{flex:0 0 auto;width:102px;padding:0;background:none;border:0;cursor:pointer;
+#culture .ctrack.dragging{cursor:grabbing}
+#culture .citem{flex:0 0 auto;width:132px;padding:0;background:none;border:0;cursor:pointer;
   text-align:left;color:inherit;font:inherit}
-#culture .cart{position:relative;display:grid;place-items:center;width:102px;height:72px;border-radius:10px;
+#culture .cart{position:relative;display:grid;place-items:center;width:132px;height:88px;border-radius:10px;
   background:linear-gradient(158deg,var(--cd) 0%,#0a0f18 78%);
   border:1px solid var(--cl);overflow:hidden;transition:border-color .25s,transform .25s}
-#culture .cart:after{content:"";position:absolute;inset:0;
-  background:linear-gradient(160deg,rgba(255,255,255,.05) 0%,transparent 42%,rgba(0,0,0,.3) 100%)}
-#culture .cico{font-size:29px;line-height:1;position:relative;z-index:1;
-  filter:drop-shadow(0 3px 8px rgba(0,0,0,.55));transition:transform .3s}
+#culture .cart .cico{font-size:32px;line-height:1;font-style:normal;opacity:1;transition:opacity .2s;
+  filter:drop-shadow(0 3px 8px rgba(0,0,0,.55))}
+#culture .cart .cimg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:2;
+  opacity:0;transition:opacity .35s}
+#culture .cart.has .cimg{opacity:1}
+#culture .cart.has .cico{display:none}
+#culture .cart:after{content:"";position:absolute;inset:0;z-index:3;pointer-events:none;
+  background:linear-gradient(160deg,rgba(255,255,255,.05) 0%,transparent 45%,rgba(0,0,0,.18) 100%)}
 #culture .citem:hover .cart{border-color:var(--c);transform:translateY(-1px)}
-#culture .citem:hover .cico{transform:scale(1.13)}
+#culture .citem:hover .cico{transform:scale(1.1)}
 #culture .citem b{display:block;margin-top:6px;font-size:11px;font-weight:600;color:#E8E6E2;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #culture .citem em{display:block;margin-top:1px;font-style:normal;font-size:9px;color:#6E8098;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media (max-width:900px){#culture{width:calc(100vw - 48px);bottom:150px}}
+
 #rfoot{padding:5px 9px 8px;border-top:1px solid rgba(120,160,220,.12)}
 #rdep{display:flex;align-items:center;gap:6px;background:none;border:0;color:var(--ink3);
   font:inherit;font-size:9.5px;cursor:pointer;padding:2px;letter-spacing:.02em}
@@ -2645,84 +2650,41 @@ function openContinent(key,sx,sy){
 }
 
 /* ---- 进入国家 ---- */
-/* ===== 文化名片：国家视图左下的横向图文画廊 ===== */
+/* ===== 文化名片：国家视图左下的横向图文画廊（照片来自 assets/culture/<ISO>/<i>.jpg） ===== */
 var CULT_PAL=['#C9A55D','#7FB3D5','#E0A06A','#8FBF9F','#B591C9','#D98F8F','#6FB4A8','#D8A0B4'];
-/* 每国一条：[图标, 中文, English] */
-var CULTURE={
-  CHN:[['🧱','长城','Great Wall'],['🐼','大熊猫','Giant Panda'],['🗿','兵马俑','Terracotta Army'],['🏔️','珠穆朗玛峰','Mount Everest'],['🚄','高铁','High-speed Rail'],['🍵','茶文化','Tea Culture']],
-  NPL:[['🏔️','珠穆朗玛峰','Mount Everest'],['🛕','博达哈大佛塔','Boudhanath'],['🙏','合十礼','Namaste'],['🐐','牦牛','Yak']],
-  JPN:[['🗻','富士山','Mount Fuji'],['🌸','樱花','Cherry Blossom'],['⛩️','鸟居','Torii Gate'],['🍣','寿司','Sushi'],['👘','和服','Kimono'],['🚄','新干线','Shinkansen']],
-  KOR:[['🥬','泡菜','Kimchi'],['👘','韩服','Hanbok'],['🏯','景福宫','Gyeongbokgung'],['🎤','K-POP','K-Pop'],['🍜','拉面','Ramyeon']],
-  IND:[['🕌','泰姬陵','Taj Mahal'],['🍛','咖喱','Curry'],['🧘','瑜伽','Yoga'],['🎬','宝莱坞','Bollywood'],['🐘','大象','Elephant']],
-  USA:[['🗽','自由女神像','Statue of Liberty'],['🍔','汉堡','Hamburger'],['🎬','好莱坞','Hollywood'],['⚾','棒球','Baseball'],['🏜️','大峡谷','Grand Canyon']],
-  GBR:[['🕰️','大本钟','Big Ben'],['🚌','双层巴士','Routemaster'],['☕','下午茶','Afternoon Tea'],['🪨','巨石阵','Stonehenge'],['🎸','英伦摇滚','Britpop']],
-  FRA:[['🗼','埃菲尔铁塔','Eiffel Tower'],['🍷','葡萄酒','Wine'],['🥐','可颂','Croissant'],['🖼️','卢浮宫','Louvre'],['🌹','香水','Perfume']],
-  DEU:[['🏰','新天鹅堡','Neuschwanstein'],['🍺','啤酒','Beer'],['🚗','汽车工业','Automobile'],['🌭','香肠','Bratwurst'],['🎄','圣诞市集','Christmas Market']],
-  ITA:[['🏛️','斗兽场','Colosseum'],['🍕','披萨','Pizza'],['🍝','意面','Pasta'],['🎭','歌剧','Opera'],['🎨','文艺复兴','Renaissance']],
-  ESP:[['💃','弗拉门戈','Flamenco'],['🐂','斗牛','Bullfighting'],['🥘','海鲜饭','Paella'],['🏛️','高迪建筑','Gaudi']],
-  RUS:[['⛪','圣瓦西里大教堂','St. Basil'],['🍸','伏特加','Vodka'],['🩰','芭蕾','Ballet'],['🪆','套娃','Matryoshka']],
-  BRA:[['🙏','基督像','Christ the Redeemer'],['🎭','狂欢节','Carnival'],['⚽','足球','Football'],['☕','咖啡','Coffee'],['🥁','桑巴','Samba']],
-  EGY:[['🔺','金字塔','Pyramids'],['🗿','狮身人面像','Sphinx'],['👑','法老','Pharaoh'],['🚢','尼罗河','Nile']],
-  TUR:[['🎈','卡帕多奇亚热气球','Cappadocia'],['🕌','蓝色清真寺','Blue Mosque'],['🥙','烤肉','Kebab'],['🧶','土耳其地毯','Carpet']],
-  MEX:[['🛕','玛雅金字塔','Mayan Pyramid'],['🌮','塔可','Taco'],['💀','亡灵节','Dia de Muertos'],['🌵','仙人掌','Cactus']],
-  AUS:[['🦘','袋鼠','Kangaroo'],['🏛️','悉尼歌剧院','Opera House'],['🐠','大堡礁','Great Barrier Reef'],['🏄','冲浪','Surfing']],
-  CAN:[['🍁','枫叶','Maple Leaf'],['💧','尼亚加拉瀑布','Niagara Falls'],['🏒','冰球','Ice Hockey'],['🌌','极光','Aurora']],
-  IDN:[['🛕','婆罗浮屠','Borobudur'],['🏝️','巴厘岛','Bali'],['🎭','皮影戏','Wayang'],['🍚','炒饭','Nasi Goreng']],
-  VNM:[['⛰️','下龙湾','Ha Long Bay'],['🍜','河粉','Pho'],['👒','斗笠','Conical Hat'],['☕','越南咖啡','Coffee']],
-  THA:[['🐘','大象','Elephant'],['🛕','玉佛寺','Temple'],['🍲','冬阴功','Tom Yum'],['🥊','泰拳','Muay Thai']],
-  SAU:[['🕋','麦加','Mecca'],['🏜️','沙漠','Desert'],['🌴','椰枣','Dates']],
-  ARE:[['🏙️','哈利法塔','Burj Khalifa'],['🏜️','沙漠冲沙','Desert Safari'],['☕','阿拉伯咖啡','Arabic Coffee']],
-  ZAF:[['🏔️','桌山','Table Mountain'],['🦁','野生动物','Wildlife'],['🏉','橄榄球','Rugby']],
-  KEN:[['🦁','马赛马拉','Masai Mara'],['🏃','长跑','Long-distance Running'],['☕','红茶','Tea']],
-  ARG:[['💃','探戈','Tango'],['🥩','烤肉','Asado'],['⚽','足球','Football']],
-  PER:[['⛰️','马丘比丘','Machu Picchu'],['🦙','羊驼','Alpaca'],['🥔','土豆','Potato']],
-  GRC:[['🏛️','帕特农神庙','Parthenon'],['🫒','橄榄','Olive'],['🏺','古希腊陶器','Pottery'],['🏝️','爱琴海','Aegean']],
-  NLD:[['🌬️','风车','Windmill'],['🌷','郁金香','Tulip'],['🚲','自行车','Bicycle']],
-  CHE:[['🏔️','阿尔卑斯','Alps'],['⌚','钟表','Watches'],['🍫','巧克力','Chocolate'],['🧀','奶酪','Cheese']],
-  SWE:[['🌌','极光','Aurora'],['🍡','瑞典肉丸','Meatballs'],['🛋️','北欧设计','Nordic Design']],
-  NOR:[['⛰️','峡湾','Fjords'],['🐟','三文鱼','Salmon'],['🌌','极光','Aurora']],
-  FIN:[['🧖','桑拿','Sauna'],['🌲','森林','Forest'],['🎅','圣诞老人村','Santa Claus']],
-  PRT:[['🚋','里斯本电车','Tram 28'],['🥧','蛋挞','Pastel de Nata'],['🎸','法多','Fado']],
-  POL:[['🥟','波兰饺子','Pierogi'],['🏰','瓦维尔城堡','Wawel'],['🎹','肖邦','Chopin']],
-  AUT:[['🎼','维也纳音乐','Vienna Music'],['🏰','美泉宫','Schoenbrunn'],['🍰','萨赫蛋糕','Sachertorte']],
-  CZE:[['🍺','比尔森啤酒','Pilsner'],['🏰','布拉格城堡','Prague Castle'],['🎻','德沃夏克','Dvorak']],
-  ISR:[['🕍','哭墙','Western Wall'],['🫓','鹰嘴豆泥','Hummus'],['🏜️','死海','Dead Sea']],
-  IRN:[['🕌','波斯波利斯','Persepolis'],['🧶','波斯地毯','Persian Rug'],['🍚','藏红花饭','Saffron Rice']],
-  PAK:[['🏔️','乔戈里峰','K2'],['🕌','巴德夏希清真寺','Badshahi Mosque'],['🏏','板球','Cricket']],
-  PHL:[['🏝️','长滩岛','Boracay'],['🚌','吉普尼','Jeepney'],['🥭','芒果','Mango']],
-  MYS:[['🕌','双子塔','Petronas Towers'],['🍜','叻沙','Laksa'],['🌴','热带雨林','Rainforest']],
-  SGP:[['🦁','鱼尾狮','Merlion'],['🏙️','滨海湾','Marina Bay'],['🍜','海南鸡饭','Hainanese Chicken Rice']],
-  NZL:[['🥝','奇异果','Kiwi Fruit'],['🐑','绵羊','Sheep'],['🏉','橄榄球','Rugby'],['⛰️','南岛雪山','Southern Alps']],
-  CHL:[['🗿','复活节岛石像','Moai'],['🍷','葡萄酒','Wine'],['🏔️','安第斯山','Andes']],
-  COL:[['☕','咖啡','Coffee'],['💃','萨尔萨','Salsa'],['🌺','兰花','Orchid']],
-  CUB:[['🚬','雪茄','Cigar'],['🎺','颂乐','Son Cubano'],['🚗','老爷车','Classic Cars']],
-  MAR:[['🕌','哈桑二世清真寺','Hassan II Mosque'],['🏜️','撒哈拉','Sahara'],['🍵','薄荷茶','Mint Tea']],
-  NGA:[['🥁','鼓乐','Talking Drum'],['🎬','诺莱坞','Nollywood'],['👗','阿索克','Aso Oke']],
-  ETH:[['☕','咖啡起源','Coffee Origin'],['⛪','岩石教堂','Rock Churches'],['🏃','长跑','Running']],
-  IRL:[['🍀','三叶草','Shamrock'],['🍺','健力士','Guinness'],['🎻','踢踏舞','Step Dance']],
-  BEL:[['🍫','巧克力','Chocolate'],['🍟','薯条','Fries'],['🍺','修道院啤酒','Trappist Beer']],
-  DNK:[['🧜','小美人鱼','Little Mermaid'],['🏰','城堡','Castles'],['🚲','自行车','Cycling']]
-};
+var CULTURE={"CHN":[["长城","Great Wall"],["大熊猫","Giant Panda"],["兵马俑","Terracotta Army"],["珠穆朗玛峰","Mount Everest"],["高铁","High-speed Rail"],["茶文化","Tea Culture"]],"JPN":[["富士山","Mount Fuji"],["樱花","Cherry Blossom"],["鸟居","Torii Gate"],["寿司","Sushi"]],"KOR":[["景福宫","Gyeongbokgung"],["泡菜","Kimchi"],["韩服","Hanbok"],["首尔塔","N Seoul Tower"]],"PRK":[["平壤凯旋门","Arch of Triumph"],["妙香山","Myohyang"],["阿里郎","Arirang"]],"MNG":[["那达慕","Naadam"],["蒙古包","Ger"],["戈壁沙漠","Gobi Desert"]],"IND":[["泰姬陵","Taj Mahal"],["恒河","Ganges"],["瑜伽","Yoga"],["宝莱坞","Bollywood"]],"PAK":[["乔戈里峰","K2"],["巴德夏希清真寺","Badshahi Mosque"],["印度河","Indus"]],"BGD":[["孙德尔本斯红树林","Sundarbans"],["达卡老城","Old Dhaka"],["黄麻手工艺","Jute Craft"]],"LKA":[["狮子岩","Sigiriya"],["锡兰红茶","Ceylon Tea"],["佛牙寺","Temple of the Tooth"]],"NPL":[["珠穆朗玛峰","Mount Everest"],["博达哈大佛塔","Boudhanath"],["加德满都杜巴广场","Kathmandu Durbar"]],"BTN":[["虎穴寺","Tiger's Nest"],["宗堡","Dzong"],["雷龙旗","Druk"]],"MDV":[["环礁","Atoll"],["白沙滩","White Sand Beach"],["珊瑚礁","Coral Reef"]],"AFG":[["巴米扬大佛","Bamiyan"],["兴都库什山","Hindu Kush"],["地毯","Afghan Rug"]],"KAZ":[["草原","Steppe"],["拜科努尔","Baikonur"],["恰伦峡谷","Charyn Canyon"]],"UZB":[["撒马尔罕","Samarkand"],["雷吉斯坦广场","Registan"],["丝绸","Silk Road"]],"KGZ":[["伊塞克湖","Issyk-Kul"],["天山","Tian Shan"],["毡房","Yurt"]],"TJK":[["帕米尔高原","Pamir"],["伊斯坎德尔湖","Iskanderkul"],["杜尚别","Dushanbe"]],"TKM":[["地狱之门","Darvaza Gas Crater"],["汗血马","Akhal-Teke"],["地毯","Turkmen Carpet"]],"MMR":[["仰光大金塔","Shwedagon"],["蒲甘佛塔","Bagan"],["茵莱湖","Inle Lake"]],"THA":[["大皇宫","Grand Palace"],["大象","Elephant"],["泰拳","Muay Thai"],["水上市场","Floating Market"]],"LAO":[["琅勃拉邦","Luang Prabang"],["塔銮","Pha That Luang"],["湄公河","Mekong"]],"KHM":[["吴哥窟","Angkor Wat"],["金边皇宫","Royal Palace"],["高棉微笑","Khmer Smile"]],"VNM":[["下龙湾","Ha Long Bay"],["河粉","Pho"],["会安古城","Hoi An"],["斗笠","Conical Hat"]],"MYS":[["双子塔","Petronas Towers"],["槟城","Penang"],["热带雨林","Rainforest"]],"SGP":[["鱼尾狮","Merlion"],["滨海湾花园","Gardens by the Bay"],["海南鸡饭","Hainanese Chicken Rice"]],"BRN":[["奥马尔清真寺","Omar Ali Mosque"],["水上村","Kampong Ayer"],["雨林","Rainforest"]],"PHL":[["长滩岛","Boracay"],["吉普尼","Jeepney"],["巧克力山","Chocolate Hills"]],"IDN":[["婆罗浮屠","Borobudur"],["巴厘岛","Bali"],["皮影戏","Wayang"],["火山","Volcano"]],"TLS":[["基督像","Cristo Rei"],["咖啡","Coffee"],["阿陶罗岛","Atauro"]],"PSE":[["圆顶清真寺","Dome of the Rock"],["橄榄树","Olive Tree"],["伯利恒","Bethlehem"]],"ISR":[["哭墙","Western Wall"],["死海","Dead Sea"],["雅法老城","Jaffa"]],"JOR":[["佩特拉古城","Petra"],["死海","Dead Sea"],["瓦地伦","Wadi Rum"]],"LBN":[["巴勒贝克神庙","Baalbek"],["雪松","Cedar"],["贝鲁特","Beirut"]],"SYR":[["帕尔米拉","Palmyra"],["大马士革古城","Damascus"],["阿勒颇城堡","Aleppo"]],"IRQ":[["巴比伦","Babylon"],["底格里斯河","Tigris"],["萨迈拉大清真寺","Samarra"]],"IRN":[["波斯波利斯","Persepolis"],["波斯地毯","Persian Rug"],["伊斯法罕清真寺","Isfahan"]],"SAU":[["麦加","Mecca"],["沙漠","Desert"],["椰枣","Dates"]],"YEM":[["萨那老城","Sana'a"],["索科特拉岛","Socotra"],["咖啡","Coffee"]],"OMN":[["尼兹瓦堡","Nizwa Fort"],["乳香","Frankincense"],["沙漠","Desert"]],"ARE":[["哈利法塔","Burj Khalifa"],["沙漠冲沙","Desert Safari"],["阿拉伯咖啡","Arabic Coffee"]],"QAT":[["伊斯兰艺术博物馆","Museum of Islamic Art"],["珍珠岛","The Pearl"],["沙漠","Desert"]],"BHR":[["巴林堡","Qal'at al-Bahrain"],["珍珠养殖","Pearl Diving"],["椰枣","Dates"]],"KWT":[["科威特塔","Kuwait Towers"],["沙漠","Desert"],["大清真寺","Grand Mosque"]],"CYP":[["帕福斯古城","Paphos"],["地中海","Mediterranean"],["哈鲁米奶酪","Halloumi"]],"GEO":[["第比利斯老城","Tbilisi"],["高加索山","Caucasus"],["葡萄酒","Wine"]],"ARM":[["格加尔德修道院","Geghard"],["塞凡湖","Lake Sevan"],["杏","Apricot"]],"AZE":[["巴库老城","Baku"],["火焰塔","Flame Towers"],["地毯","Carpet"]],"TUR":[["圣索菲亚","Hagia Sophia"],["卡帕多奇亚","Cappadocia"],["土耳其地毯","Carpet"],["烤肉","Kebab"]],"AUS":[["悉尼歌剧院","Opera House"],["袋鼠","Kangaroo"],["大堡礁","Great Barrier Reef"],["乌鲁鲁","Uluru"]],"NZL":[["南岛雪山","Southern Alps"],["毛利文化","Maori Culture"],["奇异果","Kiwi Fruit"]],"FJI":[["珊瑚礁","Coral Reef"],["卡瓦","Kava"],["草裙舞","Meke Dance"]],"PNG":[["部落面具","Tribal Mask"],["天堂鸟","Bird of Paradise"],["珊瑚礁","Coral Reef"]],"SLB":[["二战遗址","WWII Wrecks"],["独木舟","Canoe"],["珊瑚海","Coral Sea"]],"VUT":[["亚苏尔火山","Yasur Volcano"],["裸族村落","Custom Village"],["珊瑚礁","Coral Reef"]],"WSM":[["传统纹身","Tatau"],["瀑布","Waterfall"],["火舞","Fire Dance"]],"TON":[["鲸鱼","Whale Watching"],["珊瑚礁","Coral Reef"],["草裙","Ta'ovala"]],"TUV":[["环礁","Atoll"],["潟湖","Lagoon"],["椰林","Coconut Palm"]],"KIR":[["环礁","Atoll"],["渔猎","Fishing"],["潟湖","Lagoon"]],"PLW":[["牛奶湖","Milky Way"],["水母湖","Jellyfish Lake"],["岩石岛","Rock Islands"]],"MHL":[["环礁","Atoll"],["独木舟","Canoe"],["二战遗址","WWII Wrecks"]],"FSM":[["南马都尔遗址","Nan Madol"],["珊瑚礁","Coral Reef"],["石币","Stone Money"]],"NCL":[["心形礁","Heart of Voh"],["泻湖","Lagoon"],["卡纳克文化","Kanak Culture"]],"PYF":[["波拉波拉岛","Bora Bora"],["草裙舞","Tahitian Dance"],["黑珍珠","Black Pearl"]],"GUM":[["恋人岬","Two Lovers Point"],["查莫罗文化","Chamorro"],["珊瑚礁","Coral Reef"]],"MNP":[["军舰岛","Managaha"],["自杀崖","Banzai Cliff"],["查莫罗文化","Chamorro"]],"ASM":[["国家公园","National Park"],["传统纹身","Tatau"],["潟湖","Lagoon"]],"COK":[["艾图塔基泻湖","Aitutaki"],["黑珍珠","Black Pearl"],["草裙舞","Dance"]],"NIU":[["珊瑚岛","Coral Island"],["洞穴","Caves"],["编织","Weaving"]],"PCN":[["邦蒂号遗址","Bounty Bay"],["悬崖","Cliffs"],["木雕","Carving"]],"WLF":[["潟湖","Lagoon"],["火山","Volcano"],["传统村落","Village"]],"NFK":[["松树","Norfolk Pine"],["殖民遗址","Convict Site"],["海岸","Coast"]],"HKG":[["维多利亚港","Victoria Harbour"],["天坛大佛","Big Buddha"],["点心","Dim Sum"]],"GBR":[["大本钟","Big Ben"],["巨石阵","Stonehenge"],["双层巴士","Routemaster"],["下午茶","Afternoon Tea"]],"FRA":[["埃菲尔铁塔","Eiffel Tower"],["卢浮宫","Louvre"],["葡萄酒","Wine"],["可颂","Croissant"]],"DEU":[["新天鹅堡","Neuschwanstein"],["勃兰登堡门","Brandenburg Gate"],["啤酒","Beer"],["汽车","Automobile"]],"ITA":[["斗兽场","Colosseum"],["威尼斯","Venice"],["披萨","Pizza"],["文艺复兴","Renaissance"]],"ESP":[["圣家堂","Sagrada Familia"],["弗拉门戈","Flamenco"],["海鲜饭","Paella"],["斗牛","Bullfighting"]],"PRT":[["贝伦塔","Belem Tower"],["蛋挞","Pastel de Nata"],["法多","Fado"]],"NLD":[["风车","Windmill"],["郁金香","Tulip"],["运河","Canal"],["自行车","Bicycle"]],"BEL":[["大广场","Grand Place"],["巧克力","Chocolate"],["修道院啤酒","Trappist Beer"],["薯条","Fries"]],"LUX":[["卢森堡老城","Old Quarters"],["城堡","Castle"],["葡萄酒","Wine"]],"CHE":[["阿尔卑斯山","Alps"],["钟表","Watches"],["巧克力","Chocolate"],["奶酪","Cheese"]],"AUT":[["美泉宫","Schoenbrunn"],["维也纳音乐","Vienna Music"],["萨赫蛋糕","Sachertorte"]],"LIE":[["瓦杜兹城堡","Vaduz Castle"],["阿尔卑斯","Alps"],["邮票","Stamps"]],"AND":[["比利牛斯山","Pyrenees"],["滑雪","Skiing"],["罗马式教堂","Romanesque Church"]],"SMR":[["瓜伊塔塔","Guaita Tower"],["中世纪老城","Old Town"],["邮票","Stamps"]],"MLT":[["瓦莱塔","Valletta"],["蓝洞","Blue Grotto"],["姆迪纳古城","Mdina"]],"GRC":[["帕特农神庙","Parthenon"],["圣托里尼","Santorini"],["橄榄","Olive"],["古希腊陶器","Pottery"]],"ALB":[["培拉特古城","Berat"],["亚得里亚海","Adriatic"],["地堡","Bunkers"]],"MNE":[["科托尔湾","Kotor Bay"],["杜米托尔山","Durmitor"],["老城","Old Town"]],"BIH":[["莫斯塔尔古桥","Mostar Bridge"],["萨拉热窝","Sarajevo"],["咖啡","Coffee"]],"HRV":[["杜布罗夫尼克","Dubrovnik"],["十六湖","Plitvice Lakes"],["海滨","Coast"]],"SRB":[["贝尔格莱德要塞","Belgrade Fortress"],["东正教堂","Orthodox Church"],["烤肉","Cevapi"]],"SVN":[["布莱德湖","Lake Bled"],["朱利安阿尔卑斯","Julian Alps"],["龙桥","Dragon Bridge"]],"MKD":[["奥赫里德湖","Lake Ohrid"],["斯科普里","Skopje"],["修道院","Monastery"]],"ROU":[["布朗城堡","Bran Castle"],["特兰西瓦尼亚","Transylvania"],["多瑙河三角洲","Danube Delta"]],"BGR":[["里拉修道院","Rila Monastery"],["玫瑰谷","Rose Valley"],["酸奶","Yogurt"]],"MDA":[["葡萄园","Vineyard"],["克里科瓦酒窖","Cricova"],["修道院","Monastery"]],"UKR":[["圣索菲亚大教堂","St. Sophia"],["基辅","Kyiv"],["向日葵","Sunflower"]],"BLR":[["米尔城堡","Mir Castle"],["别洛韦日森林","Bialowieza"],["明斯克","Minsk"]],"POL":[["瓦维尔城堡","Wawel"],["克拉科夫","Krakow"],["波兰饺子","Pierogi"],["肖邦","Chopin"]],"CZE":[["布拉格城堡","Prague Castle"],["查理大桥","Charles Bridge"],["比尔森啤酒","Pilsner"]],"SVK":[["布拉迪斯拉发城堡","Bratislava Castle"],["塔特拉山","Tatras"],["木教堂","Wooden Church"]],"HUN":[["国会大厦","Parliament"],["布达城堡","Buda Castle"],["温泉浴场","Thermal Bath"]],"LTU":[["特拉凯城堡","Trakai Castle"],["十字架山","Hill of Crosses"],["琥珀","Amber"]],"LVA":[["里加老城","Riga Old Town"],["新艺术建筑","Art Nouveau"],["波罗的海","Baltic"]],"EST":[["塔林老城","Tallinn Old Town"],["中世纪城墙","City Wall"],["数字化社会","e-Estonia"]],"FIN":[["桑拿","Sauna"],["极光","Aurora"],["圣诞老人村","Santa Claus"],["湖泊","Lakes"]],"SWE":[["极光","Aurora"],["斯德哥尔摩老城","Gamla Stan"],["肉丸","Meatballs"],["北欧设计","Nordic Design"]],"NOR":[["峡湾","Fjords"],["极光","Aurora"],["三文鱼","Salmon"],["维京船","Viking Ship"]],"DNK":[["小美人鱼","Little Mermaid"],["新港","Nyhavn"],["乐高","LEGO"],["自行车","Cycling"]],"ISL":[["极光","Aurora"],["间歇泉","Geysir"],["冰川","Glacier"],["蓝湖","Blue Lagoon"]],"IRL":[["莫赫悬崖","Cliffs of Moher"],["三叶草","Shamrock"],["健力士","Guinness"],["踢踏舞","Step Dance"]],"FRO":[["草顶屋","Turf House"],["海鹦","Puffin"],["峡湾","Fjord"]],"IMN":[["三曲腿旗","Triskelion"],["老电车","Heritage Railway"],["海崖","Sea Cliffs"]],"GGY":[["圣彼得港","St. Peter Port"],["海崖","Cliffs"],["奶牛","Guernsey Cow"]],"JEY":[["泽西牛","Jersey Cow"],["城堡","Castle"],["海滩","Beach"]],"ALA":[["群岛","Archipelago"],["帆船","Sailing"],["海事博物馆","Maritime Museum"]],"USA":[["自由女神像","Statue of Liberty"],["大峡谷","Grand Canyon"],["好莱坞","Hollywood"],["汉堡","Hamburger"]],"CAN":[["尼亚加拉瀑布","Niagara Falls"],["枫叶","Maple Leaf"],["极光","Aurora"],["冰球","Ice Hockey"]],"MEX":[["奇琴伊察","Chichen Itza"],["亡灵节","Dia de Muertos"],["塔可","Taco"],["仙人掌","Cactus"]],"GTM":[["蒂卡尔遗址","Tikal"],["安提瓜古城","Antigua"],["火山","Volcano"]],"BLZ":[["大蓝洞","Great Blue Hole"],["玛雅遗址","Mayan Ruins"],["珊瑚礁","Coral Reef"]],"SLV":[["圣安娜火山","Santa Ana Volcano"],["冲浪","Surfing"],["咖啡","Coffee"]],"HND":[["科潘玛雅遗址","Copan"],["珊瑚礁","Coral Reef"],["雨林","Rainforest"]],"NIC":[["奥梅特佩岛","Ometepe"],["火山","Volcano"],["殖民老城","Granada"]],"CRI":[["雨林","Rainforest"],["树懒","Sloth"],["火山","Volcano"],["咖啡","Coffee"]],"PAN":[["巴拿马运河","Panama Canal"],["老城","Casco Viejo"],["雨林","Rainforest"]],"CUB":[["哈瓦那老城","Old Havana"],["老爷车","Classic Cars"],["雪茄","Cigar"],["颂乐","Son Cubano"]],"JAM":[["雷鬼音乐","Reggae"],["蓝山咖啡","Blue Mountain Coffee"],["海滩","Beach"]],"HTI":[["拉费里埃城堡","Citadelle"],["彩绘巴士","Tap-Tap"],["伏都文化","Vodou"]],"DOM":[["殖民城","Zona Colonial"],["海滩","Beach"],["梅伦格舞","Merengue"]],"BHS":[["粉色沙滩","Pink Sands"],["珊瑚礁","Coral Reef"],["海盗文化","Pirate Lore"]],"BRB":[["海滩","Beach"],["朗姆酒","Rum"],["甘蔗田","Sugarcane"]],"TTO":[["狂欢节","Carnival"],["钢鼓","Steelpan"],["鸟岛","Bird Sanctuary"]],"GRD":[["肉豆蔻","Nutmeg"],["瀑布","Waterfall"],["海滩","Beach"]],"LCA":[["皮通山","Pitons"],["火山","Volcano"],["海滩","Beach"]],"VCT":[["多巴哥岛群","Tobago Cays"],["火山","Volcano"],["帆船","Sailing"]],"ATG":[["纳尔逊船坞","Nelson's Dockyard"],["海滩","Beach"],["帆船周","Sailing Week"]],"KNA":[["硫磺山要塞","Brimstone Hill"],["海滩","Beach"],["甘蔗","Sugarcane"]],"DMA":[["沸湖","Boiling Lake"],["雨林","Rainforest"],["瀑布","Waterfall"]],"PRI":[["圣胡安老城","Old San Juan"],["荧光海湾","Bioluminescent Bay"],["萨尔萨","Salsa"]],"VIR":[["海滩","Beach"],["珊瑚礁","Coral Reef"],["殖民建筑","Colonial"]],"VGB":[["帆船","Sailing"],["白沙滩","White Sand"],["珊瑚礁","Coral Reef"]],"CYM":[["七英里海滩","Seven Mile Beach"],["魔鬼鱼","Stingray City"],["潜水","Diving"]],"BMU":[["粉红沙滩","Pink Sand"],["百慕大三角","Bermuda Triangle"],["帆船","Sailing"]],"TCA":[["白沙滩","White Beach"],["珊瑚礁","Coral Reef"],["潜水","Diving"]],"AIA":[["白沙滩","White Beach"],["珊瑚礁","Coral Reef"],["帆船","Sailing"]],"MSR":[["苏弗里耶尔火山","Soufriere Hills"],["雨林","Rainforest"],["海滩","Beach"]],"ABW":[["白沙滩","White Beach"],["仙人掌","Cactus"],["狂欢节","Carnival"]],"CUW":[["威廉斯塔德","Willemstad"],["彩色房子","Colorful Houses"],["潜水","Diving"]],"SXM":[["朱莉安娜机场","Maho Beach"],["海滩","Beach"],["嘉年华","Carnival"]],"MAF":[["海滩","Beach"],["法式美食","French Cuisine"],["帆船","Sailing"]],"SPM":[["法式渔村","French Village"],["鳕鱼","Cod Fishing"],["海崖","Cliffs"]],"GRL":[["冰川","Glacier"],["极光","Aurora"],["因纽特文化","Inuit Culture"],["狗拉雪橇","Dogsled"]],"COL":[["咖啡庄园","Coffee Farm"],["卡塔赫纳老城","Cartagena"],["萨尔萨","Salsa"],["兰花","Orchid"]],"VEN":[["天使瀑布","Angel Falls"],["加勒比海滩","Caribbean"],["阿雷帕","Arepa"]],"GUY":[["凯厄图尔瀑布","Kaieteur Falls"],["雨林","Rainforest"],["印第安文化","Amerindian"]],"SUR":[["雨林","Rainforest"],["殖民老城","Paramaribo"],["多元文化","Multicultural"]],"ECU":[["加拉帕戈斯","Galapagos"],["安第斯山","Andes"],["巴拿马草帽","Panama Hat"]],"PER":[["马丘比丘","Machu Picchu"],["纳斯卡线条","Nazca Lines"],["羊驼","Alpaca"],["土豆","Potato"]],"BRA":[["基督像","Christ the Redeemer"],["亚马逊雨林","Amazon"],["狂欢节","Carnival"],["足球","Football"]],"BOL":[["乌尤尼盐沼","Salar de Uyuni"],["的喀喀湖","Titicaca"],["安第斯织物","Andean Textile"]],"PRY":[["瓜拉尼文化","Guarani"],["伊泰普大坝","Itaipu"],["马黛茶","Mate"]],"URY":[["埃斯特角城","Punta del Este"],["马黛茶","Mate"],["探戈","Tango"],["烤肉","Asado"]],"ARG":[["探戈","Tango"],["冰川","Perito Moreno"],["烤肉","Asado"],["足球","Football"]],"CHL":[["复活节岛石像","Moai"],["阿塔卡马沙漠","Atacama"],["安第斯山","Andes"],["葡萄酒","Wine"]],"FLK":[["企鹅","Penguin"],["海崖","Cliffs"],["牧羊","Sheep Farming"]],"RUS":[["红场","Red Square"],["圣瓦西里大教堂","St. Basil's"],["伏特加","Vodka"],["芭蕾","Ballet"]],"EGY":[["金字塔","Pyramids"],["狮身人面像","Sphinx"],["尼罗河","Nile"],["法老","Pharaoh"]],"MAR":[["哈桑二世清真寺","Hassan II Mosque"],["撒哈拉沙漠","Sahara"],["马拉喀什","Marrakech"],["薄荷茶","Mint Tea"]],"DZA":[["撒哈拉","Sahara"],["卡斯巴老城","Kasbah"],["卡斯巴","Algiers"]],"TUN":[["迦太基遗址","Carthage"],["蓝白小镇","Sidi Bou Said"],["撒哈拉","Sahara"]],"LBY":[["莱普提斯古城","Leptis Magna"],["撒哈拉","Sahara"],["的黎波里老城","Tripoli"]],"SDN":[["麦罗埃金字塔","Meroe Pyramids"],["尼罗河","Nile"],["喀土穆","Khartoum"]],"SSD":[["尼罗河","Nile"],["丁卡文化","Dinka"],["草原","Savanna"]],"ETH":[["拉利贝拉岩石教堂","Lalibela"],["咖啡起源","Coffee Origin"],["阿克苏姆方尖碑","Axum"]],"ERI":[["阿斯马拉老城","Asmara"],["红海","Red Sea"],["达赫拉克群岛","Dahlak"]],"DJI":[["阿萨尔湖","Lake Assal"],["红海","Red Sea"],["盐湖","Salt Lake"]],"SOM":[["骆驼","Camel"],["索马里海岸","Somali Coast"],["香料","Spices"]],"KEN":[["马赛马拉","Masai Mara"],["野生动物迁徙","Great Migration"],["长跑","Running"],["红茶","Tea"]],"TZA":[["乞力马扎罗山","Kilimanjaro"],["塞伦盖蒂","Serengeti"],["桑给巴尔","Zanzibar"]],"UGA":[["山地大猩猩","Mountain Gorilla"],["尼罗河源头","Nile Source"],["维多利亚湖","Lake Victoria"]],"RWA":[["山地大猩猩","Mountain Gorilla"],["千丘之国","Land of Hills"],["咖啡","Coffee"]],"BDI":[["鼓乐","Royal Drummers"],["坦噶尼喀湖","Tanganyika"],["茶","Tea"]],"COD":[["刚果河","Congo River"],["雨林","Rainforest"],["倭黑猩猩","Bonobo"]],"COG":[["刚果河","Congo River"],["雨林","Rainforest"],["萨普时尚","La Sape"]],"GAB":[["雨林","Rainforest"],["洛佩-奥坎德","Lope Park"],["大猩猩","Gorilla"]],"GNQ":[["雨林","Rainforest"],["比奥科岛","Bioko"],["火山","Volcano"]],"CMR":[["喀麦隆火山","Mount Cameroon"],["雨林","Rainforest"],["足球","Football"]],"CAF":[["雨林","Rainforest"],["桑加河","Sangha"],["野生动物","Wildlife"]],"TCD":[["恩内迪高原","Ennedi"],["撒哈拉","Sahara"],["乍得湖","Lake Chad"]],"NER":[["撒哈拉","Sahara"],["阿加德兹","Agadez"],["长颈鹿","Giraffe"]],"NGA":[["诺莱坞","Nollywood"],["鼓乐","Talking Drum"],["拉各斯","Lagos"],["阿索克","Aso Oke"]],"BEN":[["水上村","Ganvie"],["巫毒文化","Vodun"],["阿波美王宫","Abomey"]],"TGO":[["洛美","Lome"],["传统市场","Market"],["棕榈","Palm"]],"GHA":[["海岸角城堡","Cape Coast Castle"],["肯特布","Kente Cloth"],["可可","Cocoa"]],"CIV":[["可可","Cocoa"],["亚穆苏克罗大教堂","Yamoussoukro"],["面具舞","Mask Dance"]],"BFA":[["辛杜面具","Sindou Peaks"],["传统面具","Masks"],["萨赫勒","Sahel"]],"MLI":[["廷巴克图","Timbuktu"],["杰内大清真寺","Djenne Mosque"],["尼日尔河","Niger River"]],"SEN":[["玫瑰湖","Lake Retba"],["戈雷岛","Goree"],["萨巴尔鼓","Sabar"]],"GMB":[["冈比亚河","Gambia River"],["鸟类","Birdwatching"],["海滩","Beach"]],"GIN":[["富塔贾隆高原","Fouta Djallon"],["雨林","Rainforest"],["鼓乐","Djembe"]],"GNB":[["比热戈斯群岛","Bijagos"],["红树林","Mangrove"],["腰果","Cashew"]],"SLE":[["白沙滩","Beach"],["廷基索河","Tiwai"],["钻石","Diamond"]],"LBR":[["雨林","Rainforest"],["海岸","Coast"],["棕榈","Palm"]],"CPV":[["火山岛","Volcano Island"],["莫尔纳音乐","Morna"],["白沙滩","Beach"]],"MRT":[["欣盖提古城","Chinguetti"],["撒哈拉","Sahara"],["铁矿石列车","Iron Ore Train"]],"ESH":[["撒哈拉","Sahara"],["沙丘","Dunes"],["游牧","Nomad"]],"STP":[["火山岛","Volcano Island"],["可可庄园","Cocoa Plantation"],["雨林","Rainforest"]],"AGO":[["卡兰杜拉瀑布","Kalandula"],["宽扎河","Kwanza"],["桑巴","Semba"]],"ZMB":[["维多利亚瀑布","Victoria Falls"],["赞比西河","Zambezi"],["野生动物","Wildlife"]],"ZWE":[["维多利亚瀑布","Victoria Falls"],["大津巴布韦遗址","Great Zimbabwe"],["石雕","Stone Sculpture"]],"MWI":[["马拉维湖","Lake Malawi"],["茶","Tea"],["野生动物","Wildlife"]],"MOZ":[["巴扎鲁托群岛","Bazaruto"],["姆韦内齐","Muenze"],["腰果","Cashew"]],"NAM":[["索苏斯盐沼","Sossusvlei"],["纳米布沙漠","Namib"],["野生动物","Wildlife"],["辛巴族","Himba"]],"BWA":[["奥卡万戈三角洲","Okavango"],["大象","Elephant"],["卡拉哈里","Kalahari"]],"ZAF":[["桌山","Table Mountain"],["好望角","Cape Point"],["野生动物","Wildlife"],["葡萄酒","Wine"]],"LSO":[["山地王国","Mountain Kingdom"],["马莱楚尼亚瀑布","Maletsunyane"],["骑马","Pony"]],"SWZ":[["芦苇舞节","Umhlanga"],["野生动物","Wildlife"],["传统村落","Village"]],"MDG":[["狐猴","Lemur"],["猴面包树","Baobab"],["雨林","Rainforest"]],"MUS":[["七色土","Seven Colored Earth"],["珊瑚礁","Coral Reef"],["甘蔗园","Sugarcane"]],"SYC":[["花岗岩海滩","Granite Beach"],["海椰子","Coco de Mer"],["珊瑚礁","Coral Reef"]],"COM":[["香料","Ylang-Ylang"],["火山","Volcano"],["珊瑚礁","Coral Reef"]],"ATF":[["企鹅","Penguin"],["海豹","Seal"],["亚南极","Subantarctic"]],"HMD":[["冰川","Glacier"],["企鹅","Penguin"],["火山","Volcano"]],"IOT":[["珊瑚环礁","Coral Atoll"],["海鸟","Seabird"],["潟湖","Lagoon"]],"SGS":[["王企鹅","King Penguin"],["冰川","Glacier"],["捕鲸站","Whaling Station"]],"SHN":[["拿破仑故居","Napoleon's Tomb"],["海崖","Cliffs"],["火山","Volcano"]]};
 function cultMix(hex,a){
   var r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
   return 'rgb('+Math.round(10+(r-10)*a)+','+Math.round(15+(g-15)*a)+','+Math.round(24+(b-24)*a)+')';
 }
+var CULT_BASE='assets/culture/';
 function renderCulture(c){
   var box=$('#culture'), tr=$('#culture-track'); if(!box||!tr) return;
-  var items=(c&&CULTURE[String(c.iso3||'').toUpperCase()])||null;
+  var iso=String((c&&c.iso3)||'').toUpperCase();
+  var items=CULTURE[iso];
   if(!items||!items.length){ box.classList.add('off'); tr.innerHTML=''; return; }
   box.classList.remove('off');
   tr.innerHTML=items.map(function(it,i){
     var col=CULT_PAL[i%CULT_PAL.length];
-    return '<button class="citem" data-i="'+i+'" title="'+it[1]+' · '+it[2]+'">'+
+    var zh=it[0]||'', en=it[1]||'';
+    return '<button class="citem" data-i="'+i+'" title="'+zh+(en?' · '+en:'')+'">'+
       '<span class="cart" style="--c:'+col+';--cd:'+cultMix(col,.30)+';--cl:'+cultMix(col,.45)+'">'+
-      '<i class="cico">'+it[0]+'</i></span><b>'+it[1]+'</b><em>'+it[2]+'</em></button>';
+      '<i class="cico">'+zh.slice(0,1)+'</i>'+
+      '<img class="cimg" loading="lazy" alt="'+zh+'" src="'+CULT_BASE+iso+'/'+i+'.jpg">'+
+      '</span><b>'+zh+'</b><em>'+en+'</em></button>';
   }).join('');
+  Array.prototype.forEach.call(tr.querySelectorAll('.citem'),function(card){
+    var img=card.querySelector('.cimg'), cart=card.querySelector('.cart');
+    if(!img||!cart) return;
+    if(img.complete && img.naturalWidth>0){ cart.classList.add('has'); return; }
+    img.addEventListener('load',function(){ cart.classList.add('has'); });
+    img.addEventListener('error',function(){ img.remove(); });
+  });
   tr.scrollLeft=0;
   var n=$('#culture-n'); if(n) n.textContent=items.length+' 张';
   if(!box._bound){
     box._bound=true;
-    function step(){ var w=tr.firstElementChild?tr.firstElementChild.offsetWidth:102; return (w+9)*3; }
+    function step(){ var w=tr.firstElementChild?tr.firstElementChild.offsetWidth:132; return (w+10)*2; }
     $('#culture-prev').onclick=function(e){ e.stopPropagation(); tr.scrollBy({left:-step(),behavior:'smooth'}); };
     $('#culture-next').onclick=function(e){ e.stopPropagation(); tr.scrollBy({left:step(),behavior:'smooth'}); };
     tr.addEventListener('wheel',function(e){
