@@ -1111,6 +1111,29 @@ body.panel-dragging *{cursor:grabbing!important}
 #insight .ins-body{flex:1;min-height:0;overflow-y:auto;padding:16px 22px}
 #insight .ins-pane{display:none}
 #insight .ins-pane.on{display:block}
+/* 趋势预测 */
+#insight #ins-predout{font-size:12px;line-height:1.8;color:var(--ink2)}
+.pd-tier{margin:18px 0 0}
+.pd-tier:first-child{margin-top:4px}
+.pd-tier>h4{margin:0 0 10px;font-size:11px;letter-spacing:.14em;color:var(--acc);font-weight:600;
+  padding-bottom:6px;border-bottom:1px solid rgba(240,168,104,.24)}
+.pd-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px}
+.pd-card{background:rgba(255,255,255,.035);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.pd-card .pd-k{font-size:10px;color:var(--ink3);letter-spacing:.08em}
+.pd-card .pd-v{font-size:17px;font-weight:600;color:var(--ink);margin:5px 0 2px;font-variant-numeric:tabular-nums}
+.pd-card .pd-v small{font-size:11px;font-weight:400;color:var(--ink2)}
+.pd-card .pd-ci{font-size:10.5px;color:var(--acc2)}
+.pd-card .pd-note{font-size:10px;color:var(--ink3);line-height:1.6;margin-top:7px}
+.pd-badge{display:inline-block;font-size:9.5px;padding:2px 7px;border-radius:5px;margin-left:7px;vertical-align:middle}
+.pd-badge.hi{background:rgba(94,200,140,.15);color:#7fd6a5}
+.pd-badge.mid{background:rgba(240,168,104,.15);color:var(--acc)}
+.pd-badge.low{background:rgba(160,170,190,.14);color:var(--ink3)}
+.pd-row{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px solid rgba(120,160,220,.08);font-size:11px}
+.pd-row:last-child{border-bottom:0}
+.pd-row b{color:var(--ink);font-weight:500;font-variant-numeric:tabular-nums}
+.pd-flag{padding:7px 10px;border-left:2px solid var(--acc);background:rgba(240,168,104,.07);margin:6px 0;font-size:11px}
+.pd-disc{margin-top:16px;padding:10px 12px;border:1px dashed var(--line);border-radius:8px;
+  font-size:10px;color:var(--ink3);line-height:1.7}
 #insight .ins-foot{display:flex;justify-content:space-between;padding:11px 22px;border-top:1px solid var(--line);
   font-size:9.5px;color:var(--ink3)}
 
@@ -1435,6 +1458,7 @@ body.panel-dragging *{cursor:grabbing!important}
       <button data-tab="fx">汇率变化榜</button>
       <button data-tab="twin">轨迹孪生</button>
       <button data-tab="scatter">相关性散点</button>
+      <button data-tab="predict">趋势预测</button>
       <button data-tab="report">一键洞察报告</button>
     </div>
     <div class="ins-body">
@@ -1456,7 +1480,16 @@ body.panel-dragging *{cursor:grabbing!important}
         <div id="ins-twinout"></div>
       </div>
       <div id="ins-scatter" class="ins-pane"><canvas id="inscv"></canvas><p class="ins-cap" id="inscap"></p></div>
-      <div id="ins-report" class="ins-pane">
+      <div id="ins-predict" class="ins-pane">
+      <div class="ins-repbar">
+        <select id="ins-pred-country"></select>
+        <span style="font-size:11px;color:var(--ink3)">参照国</span>
+        <select id="ins-pred-ref"><option value="">无</option></select>
+        <button id="ins-predgo">生成预测</button>
+      </div>
+      <div id="ins-predout"></div>
+    </div>
+    <div id="ins-report" class="ins-pane">
         <div class="ins-repbar">
           <select id="ins-repcountry"></select>
           <button id="ins-repgen">生成报告</button>
@@ -5989,6 +6022,96 @@ function twinSparkEl(cv,c){
   g.strokeStyle='rgba(127,178,255,.85)'; g.lineWidth=1.2; g.stroke();
 }
 
+/* ===== 趋势预测：调用 /api/predict，渲染第一档/第二档结果 ===== */
+var PRED_DEFAULT='CHN';
+function fillPredCountries(){
+  var sel=$('#ins-pred-country'), ref=$('#ins-pred-ref'); if(!sel||!ref) return;
+  var list=CS.filter(function(c){ return !c.off && c.iso3 &&
+    !['WLD','AFE','AFW','ARB','CEB','EAR','EAS','EUU','FCS','HIC','HPC','IBD','IBT','IDA','IDX','INX','LAC','LCN','LDC','LIC','LMC','LMY','LTE','MEA','MIC','MNA','NAC','OED','OSS','PRE','PSS','SAS','SSF','SST','UMC','WLD'].includes(c.iso3); });
+  list.sort(function(a,b){ return (b.pop&&b.pop[b.pop.length-1]||0)-(a.pop&&a.pop[a.pop.length-1]||0); });
+  var opt=list.map(function(c){
+    return '<option value="'+esc(c.iso3)+'"'+(c.iso3===PRED_DEFAULT?' selected':'')+'>'+esc(c.n)+'</option>';
+  }).join('');
+  sel.innerHTML=opt;
+  ref.innerHTML='<option value="">无</option>'+opt;
+  if(ref.querySelector('option[value="USA"]')) ref.value='USA';
+}
+function pdYear(y,ci){
+  if(y==null||y==='') return '<span style="color:var(--ink3)">—</span>';
+  return y+(ci?(' <span class="pd-ci">('+ci[0]+'–'+ci[1]+')</span>'):'');
+}
+function renderPredict(d){
+  var box=$('#ins-predout'); if(!box) return;
+  if(!d.ok){ box.innerHTML='<p style="color:var(--err)">'+esc(d.error||'预测失败')+'</p>'; return; }
+  var t1=d.tier1, t2=d.tier2, h='';
+  h+='<div style="font-size:11px;color:var(--ink3);margin-bottom:6px">'+
+     esc(d.name||d.iso)+' · 基于 '+d.years[0]+'–'+d.years[1]+' 年度数据 · '+esc(d.generated_from||'')+'</div>';
+  /* 第一档 */
+  h+='<div class="pd-tier"><h4>第一档 · 趋势外推（可信度较高）</h4><div class="pd-grid">';
+  var pp=t1.population_peak;
+  var ppStatus={growing:'仍在增长',declining:'已进入下降',forecast:'预计见顶'}[pp.status]||pp.status;
+  var ppBadge=pp.confidence==='中高'?'hi':(pp.confidence==='中'?'mid':'low');
+  h+='<div class="pd-card"><div class="pd-k">人口峰值 <span class="pd-badge '+ppBadge+'">'+esc(pp.confidence||'—')+'</span></div>'+
+     '<div class="pd-v">'+esc(ppStatus)+'</div>'+
+     '<div class="pd-ci">'+(pp.status==='forecast'?pdYear(pp.peak_year,pp.peak_year_ci):'')+'</div>'+
+     '<div class="pd-note">'+esc(pp.note||'')+'</div></div>';
+  var ag=t1.aging;
+  var agStatus={crossed:'已到来',forecast:'预计出现',later:'尚远'}[ag.status]||ag.status;
+  var agBadge=ag.confidence==='中高'||ag.confidence==='高'?'hi':(ag.confidence==='中'?'mid':'low');
+  h+='<div class="pd-card"><div class="pd-k">老龄化拐点 <span class="pd-badge '+agBadge+'">'+esc(ag.confidence||'—')+'</span></div>'+
+     '<div class="pd-v">'+(ag.status==='crossed'?'已到来':(ag.status==='forecast'?'预计 '+ag.cross_year:'尚远'))+'</div>'+
+     '<div class="pd-ci">'+(ag.status==='forecast'?pdYear(ag.cross_year,ag.cross_year_ci):'')+'</div>'+
+     '<div class="pd-note">老年 '+ag.a65+'% vs 少儿 '+ag.a0+'% · '+esc(ag.note||'')+'</div></div>';
+  var cv=t1.convergence;
+  h+='<div class="pd-card"><div class="pd-k">人均 GDP 收敛 <span class="pd-badge mid">'+esc(cv.confidence||'—')+'</span></div>'+
+     '<div class="pd-v">'+(cv.cagr!=null?cv.cagr+'%':'—')+' <small>/年 近10年</small></div>'+
+     '<div class="pd-ci">'+
+       (cv.high_income_year?('达 $20k：'+pdYear(cv.high_income_year,cv.high_income_ci)):'')+
+       (cv.catch_up_year?('<br>追上 '+esc(cv.ref_name||'参照国')+'：'+pdYear(cv.catch_up_year,cv.catch_up_ci)):'')+
+       (!cv.high_income_year&&!cv.catch_up_year&&cv.catch_up_note?esc(cv.catch_up_note):'')+
+     '</div><div class="pd-note">'+esc(cv.note||'')+'</div></div>';
+  var st=t1.structure, ub=st.urbanization||{};
+  var ind=st.industry&&st.industry.items||{};
+  h+='<div class="pd-card"><div class="pd-k">城镇化与产业 <span class="pd-badge mid">中</span></div>'+
+     '<div class="pd-v">'+(ub.last!=null?ub.last+'%':'—')+' <small>当前城镇化</small></div>'+
+     '<div class="pd-ci">'+(ub.proj_10y!=null?('10年后约 '+ub.proj_10y+'%'):'')+'</div>'+
+     '<div class="pd-note">'+
+       ['agr','ind','srv'].map(function(k){ var it=ind[k]; return it&&it.last!=null?(it.label+' '+it.last+'%→'+it.proj_10y+'%'):''; }).filter(Boolean).join(' · ')+
+       '<br>'+esc(ub.note||'')+'</div></div>';
+  h+='</div></div>';
+  /* 第二档 */
+  h+='<div class="pd-tier"><h4>第二档 · 参考性判断（设约束，非结论）</h4><div class="pd-grid">';
+  var an=t2.anomaly;
+  h+='<div class="pd-card"><div class="pd-k">异常预警 <span class="pd-badge low">参考</span></div>'+
+     '<div class="pd-v">'+(an.count||0)+' <small>项偏离趋势</small></div>'+
+     '<div class="pd-note">'+(an.flags&&an.flags.length?an.flags.map(function(f){return f.label+' '+f.direction+'（'+f.z+'σ）';}).join(' · '):'无显著偏离')+
+     '<br>约束：'+esc(an.constraint||'')+'</div></div>';
+  var tr=t2.trap_risk;
+  var lv=tr.level, lvBadge=lv==='高'?'mid':(lv==='不适用'?'hi':'low');
+  h+='<div class="pd-card"><div class="pd-k">中等收入陷阱风险 <span class="pd-badge '+lvBadge+'">参考</span></div>'+
+     '<div class="pd-v">'+esc(lv||'—')+'</div>'+
+     '<div class="pd-note">'+(tr.conditions?tr.conditions.map(function(c){return (c.hit?'● ':'○ ')+c.name;}).join('<br>'):esc(tr.note||''))+
+     '<br>'+esc(tr.note||'')+'</div></div>';
+  h+='</div></div>';
+  h+='<div class="pd-disc">'+esc(d.disclaimer||'')+'</div>';
+  box.innerHTML=h;
+}
+function runPredict(){
+  var sel=$('#ins-pred-country'), ref=$('#ins-pred-ref'); if(!sel) return;
+  var iso=sel.value, rf=ref?ref.value:'';
+  if(!iso) return;
+  var btn=$('#ins-predgo'); if(btn){ btn.disabled=true; btn.textContent='计算中…'; }
+  var url='/api/predict?iso='+encodeURIComponent(iso)+(rf?('&ref='+encodeURIComponent(rf)):'');
+  var apiBase=(typeof API_BASE!=='undefined')?API_BASE:'';
+  fetch(apiBase+url,{credentials:'include'})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(!d.ok && d.error && /登录|auth/i.test(d.error)) { renderPredict({ok:false,error:'请先登录'}); }
+      else renderPredict(d);
+    })
+    .catch(function(e){ renderPredict({ok:false,error:'请求失败: '+e.message}); })
+    .finally(function(){ if(btn){ btn.disabled=false; btn.textContent='生成预测'; } });
+}
 function defaultRepCountry(){ return sceneC('CHN')||CS[0]; }
 function fillRepCountries(){
   var sel=$('#ins-repcountry');
@@ -6064,9 +6187,11 @@ Array.prototype.forEach.call(document.querySelectorAll('#insight .ins-tabs butto
     e.stopPropagation(); INS.tab=b.dataset.tab;
     Array.prototype.forEach.call(document.querySelectorAll('#insight .ins-tabs button'),function(x){x.classList.toggle('on',x===b);});
     Array.prototype.forEach.call(document.querySelectorAll('#insight .ins-pane'),function(p){p.classList.toggle('on',p.id==='ins-'+INS.tab);});
+    if(INS.tab==='predict'){ fillPredCountries(); }
     insRender();
   };
 });
+$('#ins-predgo').onclick=function(e){ e.stopPropagation(); runPredict(); };
 $('#ins-repgen').onclick=function(e){ e.stopPropagation(); genReport(); };
 $('#ins-twingo').onclick=function(e){ e.stopPropagation(); renderTwins(); };
 Array.prototype.forEach.call(document.querySelectorAll('#ins-fx .fx-bar button'),function(b){

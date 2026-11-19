@@ -162,7 +162,7 @@ pre{white-space:pre-wrap;word-break:break-all;font:11px/1.7 ui-monospace,Consola
       <button data-p="subs"><i>✉</i><span>订阅管理</span></button>
       <button data-p="data"><i>▤</i><span>数据管理</span></button>
       <button data-p="review"><i>◉</i><span>数据审核</span></button>
-      <button data-p="crawler"><i>⟳</i><span>爬虫</span></button>
+      <button data-p="crawler"><i>⟳</i><span>数据抓取</span></button>
       <button data-p="mail"><i>✦</i><span>邮件中心</span></button>
       <button data-p="settings"><i>⚙</i><span>系统设置</span></button>
     </nav>
@@ -341,7 +341,7 @@ pre{white-space:pre-wrap;word-break:break-all;font:11px/1.7 ui-monospace,Consola
 
   /* 导航 */
   var TITLES={overview:['总览','OVERVIEW'],users:['用户管理','USERS'],subs:['订阅管理','SUBSCRIPTIONS'],
-    data:['数据管理','DATA'],review:['数据审核','DATA REVIEW'],crawler:['爬虫','CRAWLER'],
+    data:['数据管理','DATA'],review:['数据审核','DATA REVIEW'],crawler:['数据抓取','DATA FETCH'],
     mail:['邮件中心','MAIL'],settings:['系统设置','SETTINGS']};
   function loadPage(p){
     $$('#nav button').forEach(function(b){b.classList.toggle('on',b.dataset.p===p)});
@@ -828,7 +828,7 @@ pre{white-space:pre-wrap;word-break:break-all;font:11px/1.7 ui-monospace,Consola
   function fmtTime(s){ return s ? String(s).replace('T',' ').slice(0,16) : '—'; }
   function loadCrawler(){
     api('/api/admin/crawler/status').then(function(r){
-      if(!r.ok){toast('加载爬虫状态失败',true);return}
+      if(!r.ok){toast('加载数据抓取状态失败',true);return}
       var d=r.j||{}, a=d.auto||{}, lr=d.last_result||{};
       var okBadge = lr.ok===true?'<span class="badge ok">成功</span>':(lr.ok===false?'<span class="badge err">失败</span>':'<span class="badge info">—</span>');
       var cards=[
