@@ -578,6 +578,14 @@ class Handler(BaseHTTPRequestHandler):
         if p == "/api/wb":
             doc = load_doc()
             return self._send(200, doc or {"ok": False})
+        if p == "/api/predict":
+            try:
+                import predict as _predict
+                iso = (q.get("iso", [""])[0] or "")
+                ref = (q.get("ref", [""])[0] or "") or None
+                return self._send(200, _predict.predict(iso, ref))
+            except Exception as e:  # noqa: BLE001
+                return self._send(500, {"ok": False, "error": "预测失败: %s" % e})
         if p == "/api/fx":
             fx = STATE["fx"] or load_fx()
             # 数据过时就后台刷新，本次先返回缓存（不阻塞响应）
