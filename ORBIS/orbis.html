@@ -4168,7 +4168,7 @@ function renderCmp(){
   var wasOn=cmpEl.classList.contains('on');
   renderSlot();
   if(typeof rebuildLinks==='function') rebuildLinks();
-  if(!isMember()){ cmpEl.classList.remove('on'); var _s=$('#cmpsub'); if(_s)_s.style.display='none'; return; }
+  if(!isMember()){ cmpEl.classList.remove('on'); setTimeout(placeSubbar,0); return; }
   var k=cmpKey();
   if(!DS.cmp.length){
     CMPZ.a=0; CMPZ.b=YMAX;
@@ -4182,14 +4182,14 @@ function renderCmp(){
       $('#cmpcv').style.display='none';
       $('#cmptrajcv').style.display='none';
       $('#cmpfoot').style.display='none';
-      $('#cmpsub').style.display='none';
+      setTimeout(placeSubbar,0);
       fitCmp();
       return;
     }
     cmpEl.classList.remove('on');
     $('#cmpcv').style.display='';
     $('#cmpfoot').style.display='';
-    $('#cmpsub').style.display='none';
+    setTimeout(placeSubbar,0);
     if(!CV.open && !START_OFF) $('#start').classList.remove('hide');   // 对比清空后引导卡回来
     return;
   }
@@ -4238,7 +4238,7 @@ function renderCmp(){
   $('#cmpstruct').innerHTML=cmpStructHTML();
   $('#cmpfn').innerHTML=cmpText();
   fitCmp();
-  $('#cmpsub').style.display=DS.cmp.length?'':'none';
+  requestAnimationFrame(placeSubbar);
   if(DS.cmp.length){ $('#start').classList.add('hide'); syncLink(); }
   requestAnimationFrame(placeSubbar);
   setTimeout(placeSubbar,350);
