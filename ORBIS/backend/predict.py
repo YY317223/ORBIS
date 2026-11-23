@@ -236,6 +236,9 @@ def predict_structure(doc, iso):
             ind[key] = {"label": label, "ok": False}
     out["industry"] = {"ok": True, "items": ind,
                        "note": "三次产业占比近 12 年线性趋势（占比之和可能≠100，因数据年份略有差异）。"}
+    # 顶层统一带 confidence/note，与其他预测项结构一致（便于前端统一渲染与契约测试）
+    out["confidence"] = "中"
+    out["note"] = "城镇化趋向饱和 + 三次产业线性趋势，均为中长期结构判断。"
     return out
 
 

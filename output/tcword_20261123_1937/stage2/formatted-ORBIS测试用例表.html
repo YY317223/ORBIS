@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="docx-page-size" content="A4">
+<title>ORBIS 测试用例表</title>
+<style>
+  @page { @bottom-center { content: "第 " counter(page) " 页 / 共 " counter(pages) " 页"; } }
+  @page cover { @bottom-center { content: none; } }
+  section[role="cover"] { page: cover; }
+  :root{
+    --ff-body:"SimSun","宋体",serif;
+    --ff-head:"SimHei","黑体",sans-serif;
+    --fs-body:12pt; --fs-cover:28pt; --fs-sub:14pt; --fs-h1:18pt; --fs-h2:14pt; --fs-table:10.5pt;
+    --color-text:#1a1a1a; --color-bg:#ffffff; --color-primary:#2F5597;
+    --ink:#1a1a1a; --muted:#555; --line:#b8c4d4; --head:#2F5597; --headtxt:#fff;
+    --alt:#f4f6fa; --ok:#1e7a4a; --okbg:#e6f4ea; --p0:#9c6500; --p0bg:#fff3cd;
+  }
+  body{ font-family:var(--ff-body); font-size:var(--fs-body); color:var(--ink); line-height:1.6; }
+  section[role="cover"]{ text-align:center; padding-top:5cm; }
+  .cover-title{ font-family:var(--ff-head); font-size:var(--fs-cover); font-weight:bold; color:var(--head); margin:0 0 0.6cm; }
+  .cover-sub{ font-size:var(--fs-sub); color:var(--muted); margin:0 0 3cm; }
+  .cover-meta{ font-size:var(--fs-body); color:var(--muted); line-height:2; }
+  h1{ font-family:var(--ff-head); font-size:var(--fs-h1); color:var(--head); margin:0 0 0.5cm; }
+  h2{ font-family:var(--ff-head); font-size:var(--fs-h2); color:var(--head); margin:0.7cm 0 0.3cm; }
+  p{ text-indent:2em; margin:0 0 0.3cm; text-align:justify; }
+  p.noind{ text-indent:0; }
+  table{ width:100%; border-collapse:collapse; margin:0.3cm 0 0.5cm; font-size:var(--fs-table); }
+  caption{ text-align:left; font-family:var(--ff-head); font-size:var(--fs-body); color:var(--head); margin-bottom:0.2cm; }
+  th{ background:var(--head); color:var(--headtxt); font-family:var(--ff-head);
+      font-weight:bold; border:1px solid var(--line); padding:6px 8px; text-align:center; }
+  td{ border:1px solid var(--line); padding:5px 8px; vertical-align:top; text-align:left; }
+  tbody tr:nth-child(even) td{ background:var(--alt); }
+  td.c{ text-align:center; }
+  .ok{ color:var(--ok); background:var(--okbg); font-weight:bold; }
+  .p0{ color:var(--p0); background:var(--p0bg); }
+  .note{ border-left:3px solid var(--head); padding:0.2cm 0.4cm; background:var(--alt); }
+</style>
+</head>
+<body>
+
+<section role="cover">
+  <p class="cover-title" style="text-indent:0">ORBIS · 从太空看地球</p>
+  <p class="cover-sub" style="text-indent:0">测试用例表</p>
+  <p class="cover-meta" style="text-indent:0">
+    测试方式：Python unittest + urllib（纯标准库）<br>
+    测试服务端口：18790<br>
+    用例总数：21 条　通过：21 条　通过率：100%<br>
+    生成日期：2026-11-23
+  </p>
+</section>
+
+<section role="body" data-page-restart="1">
+  <h1>ORBIS 测试用例表</h1>
+  <p>本文档为 ORBIS·从太空看地球项目的测试用例集，用于答辩展示与测试交接。测试采用 Python 标准库 unittest + urllib 实现，共 21 条用例，全部执行通过，通过率 100%。</p>
+
+  <h2>测试执行汇总</h2>
+  <table>
+    <caption>表 1　测试分类汇总</caption>
+    <thead><tr><th>测试分类</th><th>用例数</th><th>通过数</th><th>失败数</th><th>通过率</th></tr></thead>
+    <tbody>
+      <tr><td>基础接口</td><td class="c">4</td><td class="c">4</td><td class="c">0</td><td class="c">100%</td></tr>
+      <tr><td>预测接口</td><td class="c">6</td><td class="c">6</td><td class="c">0</td><td class="c">100%</td></tr>
+      <tr><td>鉴权边界</td><td class="c">3</td><td class="c">3</td><td class="c">0</td><td class="c">100%</td></tr>
+      <tr><td>数据完整性</td><td class="c">4</td><td class="c">4</td><td class="c">0</td><td class="c">100%</td></tr>
+      <tr><td>审核流程</td><td class="c">4</td><td class="c">4</td><td class="c">0</td><td class="c">100%</td></tr>
+      <tr><td><b>合计</b></td><td class="c"><b>21</b></td><td class="c"><b>21</b></td><td class="c"><b>0</b></td><td class="c"><b>100%</b></td></tr>
+    </tbody>
+  </table>
+
+  <h2>一、基础接口测试</h2>
+  <table>
+    <thead><tr><th>编号</th><th>用例名称</th><th>前置条件</th><th>测试步骤</th><th>预期结果</th><th>优先级</th><th>结果</th></tr></thead>
+    <tbody>
+      <tr><td>TC-API-001</td><td>状态接口返回必需字段</td><td>服务已启动</td><td>GET /api/status</td><td>HTTP 200；ok=true；含 last_fetch/age_hours/source_updated</td><td class="c p0">P0</td><td class="c ok">通过</td></tr>
+      <tr><td>TC-API-002</td><td>世行数据规模校验</td><td>wb.json 就绪</td><td>GET /api/wb，检查 years/countries/indicators</td><td>26 年（2000-2025）；≥260 国；10 指标</td><td class="c p0">P0</td><td class="c ok">通过</td></tr>
+      <tr><td>TC-API-003</td><td>汇率接口返回币种快照</td><td>fx.json 就绪</td><td>GET /api/fx</td><td>200；含 currencies 字段；币种数 &gt;100</td><td class="c p0">P0</td><td class="c ok">通过</td></tr>
+      <tr><td>TC-API-004</td><td>国家详情接口-中国</td><td>wb.json 就绪</td><td>GET /api/country/detail?iso=CHN</td><td>200；ok 不为 false</td><td class="c">P1</td><td class="c ok">通过</td></tr>
+    </tbody>
+  </table>
+
+  <h2>二、预测接口测试</h2>
+  <table>
+    <thead><tr><th>编号</th><th>用例名称</th><th>前置条件</th><th>测试步骤</th><th>预期结果</th><th>优先级</th><th>结果</th></tr></thead>
+    <tbody>
+      <tr><td>TC-PRED-001</td><td>中国预测返回完整两级结构</td><td>wb.json 就绪</td><td>GET /api/predict?iso=CHN</td><td>200；tier1 四项与 tier2 两项齐全；含 disclaimer</td><td class="c p0">P0</td><td class="c ok">通过</td></tr>
+      <tr><td>TC-PRED-002</td><td>带参照国的收敛预测</td><td>wb.json 就绪</td><td>GET /api/predict?iso=IND&amp;ref=CHN</td><td>200；convergence 含 cagr</td><td class="c p0">P0</td><td class="c ok">通过</td></tr>
+      <tr><td>TC-PRED-003</td><td>非法 iso 不崩溃</td><td>服务已启动</td><td>GET /api/predict?iso=XXX</td><td>200；ok=false；含 error（非 500）</td><td class="c p0">P0</td><td class="c ok">通过</td></tr>
+      <tr><td>TC-PRED-004</td><td>高收入国家陷阱评分边界</td><td>wb.json 就绪</td><td>GET /api/predict?iso=JPN</td><td>trap_risk.level = 不适用（日本人均&gt;12k）</td><td class="c p0">P0</td><td class="c ok">通过</td></tr>
+      <tr><td>TC-PRED-005</td><td>预测项均带 confidence/note</td><td>wb.json 就绪</td><td>GET /api/predict?iso=USA，遍历 tier1/tier2</td><td>每项含 confidence 与 note（发现 structure 缺失后已修复）</td><td class="c p0">P0</td><td class="c ok">通过</td></tr>
+      <tr><td>TC-PRED-006</td><td>预测区间与数据年份</td><td>wb.json 就绪</td><td>GET /api/predict?iso=CHN，检查 years/peak_year_ci</td><td>years=[2000,2025]；forecast 态含 2 元素区间</td><td class="c">P1</td><td class="c ok">通过</td></tr>
+    </tbody>
+  </table>
+
+  <h2>三、鉴权边界测试</h2>
+  <table>
+    <thead><tr><th>编号</th><th>用例名称</th><th>前置条件</th><th>测试步骤</th><th>预期结果</th><th>优先级</th><th>结果</th></tr></thead>
+    <tbody>
+      <tr><td>TC-AUTH-001</td><td>未登录访问管理接口被拒</td><td>无管理员 cookie</td><td>GET /api/admin/users</td><td>返回 401/403/302，不泄露用户列表</td><td class="c p0">P0</td><td class="c ok">通过</td></tr>
+      <tr><td>TC-AUTH-002</td><td>管理员正确密码登录</td><td>admin/orbis2026</td><td>POST /api/admin/login 正确凭据</td><td>200；ok=true</td><td class="c p0">P0</td><td class="c ok">通过</td></tr>
+      <tr><td>TC-AUTH-003</td><td>错误密码登录失败</td><td>错误密码</td><td>POST /api/admin/login 错误凭据</td><td>ok=false 或拒绝</td><td class="c p0">P0</td><td class="c ok">通过</td></tr>
+    </tbody>
+  </table>
+
+  <h2>四、数据完整性测试</h2>
+  <table>
+    <thead><tr><th>编号</th><th>用例名称</th><th>前置条件</th><th>测试步骤</th><th>预期结果</th><th>优先级</th><th>结果</th></tr></thead>
+    <tbody>
+      <tr><td>TC-DATA-001</td><td>各国指标数组长度对齐</td><td>wb.json 就绪</td><td>遍历 261 国×10 指标，比对 len 与 years 长度</td><td>全部 = 26，无不齐</td><td class="c p0">P0</td><td class="c ok">通过</td></tr>
+      <tr><td>TC-DATA-002</td><td>中国人口 2022 转负</td><td>wb.json 就绪</td><td>读取 CHN.pop 的 2021/2022 差值</td><td>2021 增量为正；2022 增量为负</td><td class="c">P1</td><td class="c ok">通过</td></tr>
+      <tr><td>TC-DATA-003</td><td>日本老龄化拐点已过</td><td>wb.json 就绪</td><td>调用 predict_aging(JPN)</td><td>status=crossed</td><td class="c">P1</td><td class="c ok">通过</td></tr>
+      <tr><td>TC-DATA-004</td><td>缺测国家不崩溃</td><td>wb.json 就绪</td><td>predict(AKT) 空数据国家</td><td>ok=false 且给 reason/error，不抛异常</td><td class="c">P1</td><td class="c ok">通过</td></tr>
+    </tbody>
+  </table>
+
+  <h2>五、审核流程测试</h2>
+  <table>
+    <thead><tr><th>编号</th><th>用例名称</th><th>前置条件</th><th>测试步骤</th><th>预期结果</th><th>优先级</th><th>结果</th></tr></thead>
+    <tbody>
+      <tr><td>TC-FLOW-001</td><td>批次创建-列表-详情</td><td>临时暂存区</td><td>staging.create → list_batches → get_batch</td><td>1 个批次；status=pending；fx.json publishable</td><td class="c p0">P0</td><td class="c ok">通过</td></tr>
+      <tr><td>TC-FLOW-002</td><td>驳回批次清空列表</td><td>已有待审批次</td><td>staging.reject(bid)</td><td>ok=true；列表清空</td><td class="c p0">P0</td><td class="c ok">通过</td></tr>
+      <tr><td>TC-FLOW-003</td><td>摘要生成正确</td><td>临时暂存区</td><td>create(wb.json 假数据) → get_batch</td><td>countries=2；events=1；years=[2000,2025]</td><td class="c">P1</td><td class="c ok">通过</td></tr>
+      <tr><td>TC-FLOW-004</td><td>重复发布防护</td><td>临时发布目标</td><td>publish(bid) 两次</td><td>第一次成功；第二次 ok=false 含"已发布"</td><td class="c p0">P0</td><td class="c ok">通过</td></tr>
+    </tbody>
+  </table>
+
+  <h2>覆盖说明与测试驱动修复</h2>
+  <p>测试范围覆盖接口契约（状态、数据、汇率、预测、鉴权）、数据完整性（261 国 × 26 年 × 10 指标）、预测边界（高收入国家陷阱评分必须"不适用"、非法国家不崩溃）、审核流程（创建、驳回、摘要、重复发布防护）四个维度。</p>
+  <p class="note">其中 TC-PRED-005 是一例测试驱动修复：执行时发现 tier1.structure 顶层缺少 confidence 与 note 字段，与其他预测项结构不一致。据此修复 predict.py 的 predict_structure() 函数，补齐顶层字段后回归通过，并同步至线上。这体现了测试对接口一致性的守护作用。</p>
+  <p>未覆盖范围：前端动画（headless 环境下 requestAnimationFrame 被冻结，改用逻辑断言而非像素比对）、性能压测、SMTP 真实发信（当前未配置，邮件落盘至 outbox 目录）。</p>
+</section>
+
+</body>
+</html>

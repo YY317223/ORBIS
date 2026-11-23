@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<title>ORBIS 测试报告</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:#0d1218;color:#dfe9ef}
+.wrap{max-width:900px;margin:0 auto;padding:40px 24px}
+h1{font-size:28px;margin:0 0 6px;color:#f2f5f7;letter-spacing:.04em}
+.sub{color:#8a9aa6;font-size:13px;margin-bottom:32px}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:32px}
+.card{background:#151d26;border:1px solid #253242;border-radius:12px;padding:18px}
+.card .k{font-size:11px;color:#8a9aa6;letter-spacing:.08em}
+.card .v{font-size:30px;font-weight:600;margin-top:6px;font-variant-numeric:tabular-nums}
+.card.pass .v{color:#5DCAA5}.card.fail .v{color:#E24B4A}.card.rate .v{color:#F0A868}
+h2{font-size:16px;margin:0 0 14px;color:#f2f5f7;border-left:3px solid #F0A868;padding-left:10px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:10px 12px;color:#8a9aa6;font-weight:500;border-bottom:1px solid #253242}
+td{padding:9px 12px;border-bottom:1px solid #1c2733}
+.mono{font-family:ui-monospace,Consolas,monospace;color:#9fb4c4;font-size:12px}
+.badge{display:inline-block;padding:2px 9px;border-radius:5px;font-size:11px}
+.badge.pass{background:rgba(93,202,165,.14);color:#5DCAA5}
+.badge.fail{background:rgba(226,75,74,.14);color:#E24B4A}
+.note{margin-top:26px;padding:14px 16px;border:1px dashed #2c3b4b;border-radius:10px;color:#8a9aa6;font-size:12px;line-height:1.8}
+@media(max-width:640px){.cards{grid-template-columns:repeat(2,1fr)}}
+</style></head><body><div class="wrap">
+<h1>ORBIS · 测试报告</h1>
+<div class="sub">生成时间：2026-11-23 18:53 · Python unittest · 纯标准库</div>
+<div class="cards">
+  <div class="card"><div class="k">用例总数</div><div class="v">21</div></div>
+  <div class="card pass"><div class="k">通过</div><div class="v">21</div></div>
+  <div class="card fail"><div class="k">失败</div><div class="v">0</div></div>
+  <div class="card rate"><div class="k">通过率</div><div class="v">100</div></div>
+</div>
+<h2>测试用例明细</h2>
+<table><thead><tr><th>编号</th><th>用例名称</th><th>结果</th></tr></thead><tbody><tr><td class="mono">TC-AUTH-001</td><td>未登录访问管理接口被拒绝</td><td><span class="badge pass">PASS</span></td></tr><tr><td class="mono">TC-AUTH-002</td><td>管理员正确密码登录成功</td><td><span class="badge pass">PASS</span></td></tr><tr><td class="mono">TC-AUTH-003</td><td>错误密码登录失败</td><td><span class="badge pass">PASS</span></td></tr><tr><td class="mono">TC-API-001</td><td>状态接口返回必需字段</td><td><span class="badge pass">PASS</span></td></tr><tr><td class="mono">TC-API-002</td><td>世行数据规模 261国×26年×10指标</td><td><span class="badge pass">PASS</span></td></tr><tr><td class="mono">TC-API-003</td><td>汇率接口返回币种快照</td><td><span class="badge pass">PASS</span></td></tr><tr><td class="mono">TC-API-004</td><td>国家详情接口-中国</td><td><span class="badge pass">PASS</span></td></tr><tr><td class="mono">TC-PRED-001</td><td>中国预测返回完整两级结构</td><td><span class="badge pass">PASS</span></td></tr><tr><td class="mono">TC-PRED-002</td><td>带参照国的收敛预测</td><td><span class="badge pass">PASS</span></td></tr><tr><td class="mono">TC-PRED-003</td><td>非法 iso 返回 ok:false 而非 500</td><td><span class="badge pass">PASS</span></td></tr><tr><td class="mono">TC-PRED-004</td><td>高收入国家陷阱评分必须为&#x27;不适用&#x27;（边界约束）</td><td><span class="badge pass">PASS</span></td></tr><tr><td class="mono">TC-PRED-005</td><td>每个预测项都带 confidence 与 note</td><td><span class="badge pass">PASS</span></td></tr><tr><td class="mono">TC-PRED-006</td><td>预测基于 2000-2025，给区间不给单点</td><td><span class="badge pass">PASS</span></td></tr><tr><td class="mono">TC-DATA-001</td><td>各国指标数组长度 = 年份数</td><td><span class="badge pass">PASS</span></td></tr><tr><td class="mono">TC-DATA-002</td><td>中国人口 2022 起转负（已知事实校验）</td><td><span class="badge pass">PASS</span></td></tr><tr><td class="mono">TC-DATA-003</td><td>日本老龄化拐点已过</td><td><span class="badge pass">PASS</span></td></tr><tr><td class="mono">TC-DATA-004</td><td>缺测严重的国家不崩溃，返回 ok:false 或合理结果</td><td><span class="badge pass">PASS</span></td></tr><tr><td class="mono">TC-FLOW-001</td><td>创建批次→列表可见→详情完整</td><td><span class="badge pass">PASS</span></td></tr><tr><td class="mono">TC-FLOW-002</td><td>驳回批次后列表清空</td><td><span class="badge pass">PASS</span></td></tr><tr><td class="mono">TC-FLOW-003</td><td>摘要生成正确（wb 按国家数/事件数）</td><td><span class="badge pass">PASS</span></td></tr><tr><td class="mono">TC-FLOW-004</td><td>已发布批次不能重复发布</td><td><span class="badge pass">PASS</span></td></tr></tbody></table>
+<div class="note">
+<b>测试范围</b>：接口契约（状态/数据/汇率/预测/鉴权）、数据完整性（261国×26年×10指标）、
+预测边界（高收入国家不适用陷阱评分、非法国家不崩溃）、审核流程（批次创建/驳回/摘要/重复发布防护）。<br>
+<b>测试驱动修复</b>：TC-PRED-005 发现 tier1.structure 顶层缺少 confidence/note，
+与其他预测项结构不一致，已修复 predict.py 并回归通过。<br>
+<b>未覆盖</b>：前端动画（headless 下 rAF 冻结，改用逻辑断言）、性能压测、SMTP 真实发信（未配置）。
+</div>
+</div></body></html>
