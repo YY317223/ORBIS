@@ -878,7 +878,10 @@ class Handler(BaseHTTPRequestHandler):
             self.wfile.write(body)
 
     ASSET_TYPES = {".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png",
-                   ".webp": "image/webp", ".svg": "image/svg+xml", ".gif": "image/gif"}
+                   ".webp": "image/webp", ".svg": "image/svg+xml", ".gif": "image/gif",
+                   ".html": "text/html; charset=utf-8",
+                   ".css": "text/css; charset=utf-8", ".js": "application/javascript; charset=utf-8",
+                   ".woff2": "font/woff2", ".ico": "image/x-icon", ".mp4": "video/mp4"}
 
     def serve_asset(self, p):
         """静态资源（国家文化照片等），只允许 /assets/ 下、禁止目录穿越。"""
